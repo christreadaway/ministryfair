@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>St. Theresa Ministry Fair</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: linear-gradient(145deg, #faf8f5 0%, #f5f0e8 100%);
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #8B2635 0%, #6B1D29 100%);
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(107, 29, 41, 0.3);
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .header p {
+      margin-top: 8px;
+      font-size: 15px;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 24px 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .welcome-text {
+      font-size: 17px;
+      line-height: 1.7;
+      color: #4a4a4a;
+      margin-bottom: 24px;
+    }
+    .form { display: flex; flex-direction: column; gap: 18px; }
+    .input-row { display: flex; gap: 12px; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .input, .select {
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid #e8e4de;
+      border-radius: 10px;
+      outline: none;
+      font-family: 'Inter', -apple-system, sans-serif;
+      width: 100%;
+    }
+    .input:focus, .select:focus { border-color: #8B2635; }
+    .select { background: white; cursor: pointer; }
+    .btn {
+      background: linear-gradient(135deg, #8B2635 0%, #6B1D29 100%);
+      color: white;
+      border: none;
+      padding: 16px 24px;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Crimson Pro', Georgia, serif;
+      letter-spacing: 0.3px;
+      box-shadow: 0 4px 14px rgba(139, 38, 53, 0.35);
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn:disabled { opacity: 0.7; cursor: wait; }
+    .btn-secondary {
+      background: white;
+      color: #8B2635;
+      border: 2px solid #8B2635;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Crimson Pro', Georgia, serif;
+      width: 100%;
+    }
+    .btn-green { background: linear-gradient(135deg, #4a9c6d 0%, #3d8259 100%); box-shadow: 0 4px 14px rgba(74, 156, 109, 0.35); }
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f2ff 100%);
+      border-radius: 10px;
+      border: 1px solid #d0e3ff;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-top: 3px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .checkbox-group label {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .consent-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      margin-top: 16px;
+      margin-bottom: 4px;
+      text-align: center;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .profile-badge {
+      background: linear-gradient(135deg, #f5f0e8 0%, #ebe4d8 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .profile-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #8B2635;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .profile-name { font-size: 17px; font-weight: 600; color: #333; }
+    .profile-email { font-size: 13px; color: #666; }
+    .profile-phone { font-size: 13px; color: #666; }
+    .logout-link {
+      background: none;
+      border: none;
+      color: #8B2635;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      text-decoration: underline;
+    }
+    .logout-link:hover {
+      color: #6B1D29;
+    }
+    .search-box { margin-bottom: 20px; }
+    .section-title { font-size: 22px; font-weight: 600; color: #333; margin: 0 0 20px; }
+    .ministry-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .ministry-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .ministry-card.interested {
+      border-color: #4a9c6d;
+      background: linear-gradient(135deg, #f0f9f4 0%, #e8f5ed 100%);
+    }
+    .ministry-icon {
+      font-size: 32px;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #faf8f5;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    .ministry-info { flex: 1; }
+    .ministry-name { font-size: 18px; font-weight: 600; color: #333; margin: 0; }
+    .ministry-desc { font-size: 14px; color: #666; margin: 4px 0 0; line-height: 1.5; }
+    .badge {
+      background: #4a9c6d;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a9c6d 0%, #3d8259 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 24px rgba(74, 156, 109, 0.35);
+    }
+    .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .hidden { display: none; }
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 16px;
+    }
+    .checkbox-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #faf8f5;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .checkbox-option:hover {
+      background: #f0ebe3;
+    }
+    .checkbox-option input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .checkbox-option label {
+      font-size: 15px;
+      color: #333;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .organizer-box {
+      background: linear-gradient(135deg, #f5f0e8 0%, #ebe4d8 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+      text-align: left;
+    }
+    .organizer-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .organizer-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    .organizer-contact {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .organizer-contact a {
+      color: #8B2635;
+      text-decoration: none;
+    }
+    .organizer-contact a:hover {
+      text-decoration: underline;
+    }
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 16px;
+    }
+    .btn-remove {
+      background: white;
+      color: #c53030;
+      border: 2px solid #c53030;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Crimson Pro', Georgia, serif;
+      width: 100%;
+    }
+    .btn-remove:hover {
+      background: #fff5f5;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.hidden {
+      display: none;
+    }
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      padding: 28px 24px;
+      max-width: 340px;
+      margin: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .modal-text {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .modal-buttons button {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING VIEW -->
+<div id="view-loading">
+  <header class="header">
+    <h1>St. Theresa Ministry Fair</h1>
+    <p>Serve and participate in your Catholic community</p>
+  </header>
+  <div class="content">
+    <div class="card">
+      <div class="loading">Loading ministries...</div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER VIEW -->
+<div id="view-register" class="hidden">
+  <header class="header">
+    <h1>St. Theresa Ministry Fair</h1>
+    <p>Serve and participate in your Catholic community</p>
+  </header>
+  <div class="content">
+    <div class="card">
+      <p class="welcome-text">
+        Welcome! Let's get you signed up so you can explore our ministries and express interest in serving.
+      </p>
+      <form class="form" id="register-form">
+        <div class="input-row">
+          <div class="input-group">
+            <label class="label">First Name</label>
+            <input type="text" class="input" id="firstName" required autocomplete="given-name" placeholder="John">
+          </div>
+          <div class="input-group">
+            <label class="label">Last Name</label>
+            <input type="text" class="input" id="lastName" required autocomplete="family-name" placeholder="Smith">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="label">Email</label>
+          <input type="email" class="input" id="email" required autocomplete="email" placeholder="john@example.com">
+        </div>
+        <div class="input-group">
+          <label class="label">Cell Phone</label>
+          <input type="tel" class="input" id="phone" required autocomplete="tel" placeholder="(512) 555-1234" maxlength="14">
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="joinParish">
+          <label for="joinParish">I'm not yet a parishioner but I'd like to join St. Theresa Catholic Church.</label>
+        </div>
+        <p class="consent-text">
+          By clicking Continue, you give St. Theresa Catholic Church permission to contact you by email or phone about the ministries you express interest in.
+        </p>
+        <button type="submit" class="btn">Continue to Ministries →</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MINISTRIES VIEW -->
+<div id="view-ministries" class="hidden">
+  <header class="header">
+    <h1>St. Theresa Ministry Fair</h1>
+    <p id="interest-count">Tap a ministry to learn more</p>
+  </header>
+  <div class="content">
+    <div class="profile-badge">
+      <div class="profile-icon" id="profile-initials"></div>
+      <div style="flex: 1;">
+        <div class="profile-name" id="profile-name"></div>
+        <div class="profile-email" id="profile-email"></div>
+        <div class="profile-phone" id="profile-phone"></div>
+      </div>
+      <button class="logout-link" id="logout-btn">Log out</button>
+    </div>
+    <h2 class="section-title">Our Ministries</h2>
+    <div class="search-box">
+      <input type="text" class="input" id="ministry-search" placeholder="🔍 Search ministries...">
+    </div>
+    <div id="ministry-list"></div>
+    <button class="btn-secondary hidden" id="show-all-btn">Show All Ministries</button>
+  </div>
+</div>
+
+<!-- MINISTRY DETAIL VIEW -->
+<div id="view-detail" class="hidden">
+  <header class="header">
+    <h1 id="detail-name"></h1>
+    <p id="detail-icon"></p>
+  </header>
+  <div class="content">
+    <div class="card">
+      <p class="welcome-text" id="detail-desc"></p>
+      <div id="detail-questions"></div>
+      <div class="btn-group">
+        <button class="btn" id="interest-btn">I'm Interested!</button>
+        <button class="btn-remove hidden" id="remove-btn">Remove Interest</button>
+        <button class="btn-secondary" id="back-btn">← Back to All Ministries</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMATION MODAL -->
+<div id="confirm-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <h3 class="modal-title">Remove Interest?</h3>
+    <p class="modal-text">Are you sure you want to remove your interest in <strong id="modal-ministry-name"></strong>?</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="modal-cancel">Cancel</button>
+      <button class="btn-remove" id="modal-confirm">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMED VIEW -->
+<div id="view-confirmed" class="hidden">
+  <header class="header">
+    <h1>Thank You!</h1>
+    <p>Your interest has been recorded</p>
+  </header>
+  <div class="content">
+    <div class="card" style="text-align: center;">
+      <div class="success-icon">✓</div>
+      <h2 class="section-title" style="margin-bottom: 12px;">You're on the list!</h2>
+      <p class="welcome-text" style="margin-bottom: 8px;">
+        The <strong id="confirmed-ministry"></strong> ministry leader will reach out to you soon.
+      </p>
+      <div id="organizer-info"></div>
+      <p style="font-size: 15px; color: #666; margin-bottom: 28px; margin-top: 20px;">
+        Feel free to visit other tables and express interest in more ministries.
+      </p>
+      <button class="btn" id="explore-btn">Explore More Ministries</button>
+    </div>
+    <div id="interests-list" style="margin-top: 24px;"></div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION - Edit these for your parish
+// ============================================
+const CONFIG = {
+  // ========== EDIT THESE FOR YOUR PARISH ==========
+  organizationName: 'Your Parish Name',
+  appTitle: 'Ministry Fair',
+  tagline: 'Find your place to serve',
+  apiUrl: 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE',
+  primaryColor: '#8B2635',      // Burgundy - change to match your parish
+  primaryColorDark: '#6B1D29'   // Darker shade for gradients
+  // ================================================
+};
+
+// API URL - this both fetches ministry data AND receives signups
+const API_URL = CONFIG.apiUrl;
+
+// Fallback ministries in case API fails
+const FALLBACK_MINISTRIES = [
+  { id: 'music', name: 'Music Ministry', description: 'Supports parish liturgies through choirs, cantors, and instrumentalists.', icon: '🎵', questions: [] },
+  { id: 'hospitality', name: 'Hospitality Ministers', description: 'Welcomes parishioners and assists during Masses and parish events.', icon: '🚪', questions: [] }
+];
+
+// State
+let MINISTRIES = [];
+let profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+let interests = [];
+let currentMinistry = null;
+let showAll = false;
+let searchTerm = '';
+
+// Phone number formatting
+function formatPhoneNumber(value) {
+  if (!value) return '';
+  // Strip all non-digits
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  
+  // Format as (xxx) xxx-xxxx
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return '(' + digits;
+  if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+}
+
+// Check URL for ministry param
+const urlParams = new URLSearchParams(window.location.search);
+const ministryParam = urlParams.get('m');
+
+// Load saved data
+const savedProfile = localStorage.getItem('ministry-fair-profile');
+const savedInterests = localStorage.getItem('ministry-fair-interests');
+if (savedProfile) profile = JSON.parse(savedProfile);
+if (savedInterests) interests = JSON.parse(savedInterests);
+
+// Views
+const views = {
+  loading: document.getElementById('view-loading'),
+  register: document.getElementById('view-register'),
+  ministries: document.getElementById('view-ministries'),
+  detail: document.getElementById('view-detail'),
+  confirmed: document.getElementById('view-confirmed')
+};
+
+function showView(viewName) {
+  Object.values(views).forEach(v => v.classList.add('hidden'));
+  views[viewName].classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+// Fetch ministries from Google Sheet
+async function loadMinistries() {
+  try {
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(API_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    const data = await response.json();
+    if (data.ministries && data.ministries.length > 0) {
+      MINISTRIES = data.ministries;
+    } else {
+      console.warn('No ministries returned, using fallback');
+      MINISTRIES = FALLBACK_MINISTRIES;
+    }
+  } catch (error) {
+    console.error('Error loading ministries:', error);
+    MINISTRIES = FALLBACK_MINISTRIES;
+  }
+  
+  // Always initialize the app, even if fetch failed
+  initializeApp();
+}
+
+function initializeApp() {
+  if (savedProfile) {
+    if (ministryParam) {
+      currentMinistry = MINISTRIES.find(m => m.id === ministryParam);
+      if (currentMinistry) {
+        showMinistryDetail(currentMinistry);
+      } else {
+        showMinistriesList();
+      }
+    } else {
+      showMinistriesList();
+    }
+  } else {
+    showView('register');
+  }
+}
+
+// Start loading
+loadMinistries();
+
+// Apply configuration to page
+function applyConfig() {
+  // Update page title
+  document.title = CONFIG.appTitle;
+  
+  // Update all header titles and taglines
+  document.querySelectorAll('.header h1').forEach(el => {
+    if (el.id !== 'detail-name') {
+      el.textContent = CONFIG.appTitle;
+    }
+  });
+  document.querySelectorAll('.header p').forEach(el => {
+    if (!el.id || el.id === 'interest-count') return;
+    el.textContent = CONFIG.tagline;
+  });
+  
+  // Update taglines specifically
+  const taglines = document.querySelectorAll('.header p:not([id]), .header p#interest-count');
+  
+  // Update consent text
+  const consentText = document.querySelector('.consent-text');
+  if (consentText) {
+    consentText.textContent = `By clicking Continue, you give ${CONFIG.organizationName} permission to contact you by email or phone about the ministries you express interest in.`;
+  }
+  
+  // Update join parish checkbox
+  const joinLabel = document.querySelector('label[for="joinParish"]');
+  if (joinLabel) {
+    joinLabel.textContent = `I'm not yet a parishioner but I'd like to join ${CONFIG.organizationName}.`;
+  }
+}
+
+// Apply config on load
+applyConfig();
+
+// Apply phone formatting to input
+const phoneInput = document.getElementById('phone');
+if (phoneInput) {
+  phoneInput.addEventListener('input', function(e) {
+    const input = e.target;
+    const formatted = formatPhoneNumber(input.value);
+    input.value = formatted;
+  });
+}
+
+// Register form
+document.getElementById('register-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  profile = {
+    firstName: document.getElementById('firstName').value,
+    lastName: document.getElementById('lastName').value,
+    email: document.getElementById('email').value,
+    phone: document.getElementById('phone').value,
+    wantsToJoinParish: document.getElementById('joinParish').checked
+  };
+  localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
+  
+  if (ministryParam) {
+    currentMinistry = MINISTRIES.find(m => m.id === ministryParam);
+    if (currentMinistry) {
+      showMinistryDetail(currentMinistry);
+      return;
+    }
+  }
+  showMinistriesList();
+});
+
+function showMinistriesList() {
+  showView('ministries');
+  
+  // Update profile display
+  document.getElementById('profile-initials').textContent = profile.firstName[0] + profile.lastName[0];
+  document.getElementById('profile-name').textContent = profile.firstName + ' ' + profile.lastName;
+  document.getElementById('profile-email').textContent = profile.email;
+  document.getElementById('profile-phone').textContent = formatPhoneNumber(profile.phone);
+  
+  // Update interest count
+  const count = interests.length;
+  document.getElementById('interest-count').textContent = count > 0 
+    ? count + ' interest' + (count > 1 ? 's' : '') + ' expressed'
+    : 'Tap a ministry to learn more';
+  
+  // Set up search
+  const searchInput = document.getElementById('ministry-search');
+  searchInput.value = searchTerm;
+  searchInput.oninput = function() {
+    searchTerm = this.value.toLowerCase();
+    renderMinistryList();
+  };
+  
+  renderMinistryList();
+}
+
+function renderMinistryList() {
+  const list = document.getElementById('ministry-list');
+  
+  // Filter by search term (name, description, or organizer name)
+  let filtered = MINISTRIES;
+  if (searchTerm) {
+    filtered = MINISTRIES.filter(m => 
+      m.name.toLowerCase().includes(searchTerm) || 
+      m.description.toLowerCase().includes(searchTerm) ||
+      (m.organizerName && m.organizerName.toLowerCase().includes(searchTerm))
+    );
+  }
+  
+  // Sort: interested ministries first, then alphabetical
+  const sorted = [...filtered].sort((a, b) => {
+    const aInterested = interests.some(i => i.ministryId === a.id);
+    const bInterested = interests.some(i => i.ministryId === b.id);
+    
+    if (aInterested && !bInterested) return -1;
+    if (!aInterested && bInterested) return 1;
+    return a.name.localeCompare(b.name);
+  });
+  
+  // Apply show all limit only when not searching
+  const displayed = (showAll || searchTerm) ? sorted : sorted.slice(0, 5);
+  
+  if (displayed.length === 0) {
+    list.innerHTML = '<div class="no-results">No ministries found matching "' + searchTerm + '"</div>';
+  } else {
+    list.innerHTML = displayed.map(m => {
+      const interested = interests.some(i => i.ministryId === m.id);
+      return `
+        <div class="ministry-card ${interested ? 'interested' : ''}" data-id="${m.id}">
+          <div class="ministry-icon">${m.icon}</div>
+          <div class="ministry-info">
+            <h3 class="ministry-name">${m.name}</h3>
+            <p class="ministry-desc">${m.description}</p>
+          </div>
+          ${interested ? '<span class="badge">Interested</span>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Show/hide "show all" button
+  const showAllBtn = document.getElementById('show-all-btn');
+  if (!showAll && !searchTerm && MINISTRIES.length > 5) {
+    showAllBtn.classList.remove('hidden');
+    showAllBtn.textContent = 'Show All ' + MINISTRIES.length + ' Ministries';
+  } else {
+    showAllBtn.classList.add('hidden');
+  }
+  
+  // Add click handlers
+  list.querySelectorAll('.ministry-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const ministry = MINISTRIES.find(m => m.id === card.dataset.id);
+      showMinistryDetail(ministry);
+    });
+  });
+}
+
+document.getElementById('show-all-btn').addEventListener('click', () => {
+  showAll = true;
+  renderMinistryList();
+});
+
+function showMinistryDetail(ministry) {
+  currentMinistry = ministry;
+  showView('detail');
+  
+  document.getElementById('detail-name').textContent = ministry.name;
+  document.getElementById('detail-icon').textContent = ministry.icon;
+  document.getElementById('detail-desc').textContent = ministry.description;
+  
+  // Render questions
+  const questionsDiv = document.getElementById('detail-questions');
+  if (ministry.questions && ministry.questions.length > 0) {
+    questionsDiv.innerHTML = '<div class="form">' + ministry.questions.map(q => {
+      if (q.type === 'select') {
+        return `
+          <div class="input-group">
+            <label class="label">${q.label}</label>
+            <select class="select" data-qid="${q.id}">
+              <option value="">Select...</option>
+              ${q.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (q.type === 'checkbox') {
+        return `
+          <div class="input-group">
+            <label class="label">${q.label}</label>
+            <div class="checkbox-options" data-qid="${q.id}" data-type="checkbox">
+              ${q.options.map((opt, idx) => `
+                <div class="checkbox-option">
+                  <input type="checkbox" id="q-${q.id}-${idx}" value="${opt}">
+                  <label for="q-${q.id}-${idx}">${opt}</label>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="input-group">
+            <label class="label">${q.label}</label>
+            <input type="text" class="input" data-qid="${q.id}" placeholder="Your answer">
+          </div>
+        `;
+      }
+    }).join('') + '</div>';
+  } else {
+    questionsDiv.innerHTML = '';
+  }
+  
+  // Update button states based on interest
+  const interestBtn = document.getElementById('interest-btn');
+  const removeBtn = document.getElementById('remove-btn');
+  const alreadyInterested = interests.some(i => i.ministryId === ministry.id);
+  
+  interestBtn.textContent = alreadyInterested ? '✓ Update Interest' : "I'm Interested!";
+  interestBtn.className = alreadyInterested ? 'btn btn-green' : 'btn';
+  
+  if (alreadyInterested) {
+    removeBtn.classList.remove('hidden');
+  } else {
+    removeBtn.classList.add('hidden');
+  }
+}
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  currentMinistry = null;
+  showMinistriesList();
+});
+
+// Remove interest button - shows confirmation modal
+document.getElementById('remove-btn').addEventListener('click', () => {
+  document.getElementById('modal-ministry-name').textContent = currentMinistry.name;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+});
+
+// Modal cancel button
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.add('hidden');
+});
+
+// Modal backdrop click to close
+document.querySelector('.modal-backdrop').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.add('hidden');
+});
+
+// Modal confirm button - removes interest
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  // Send removal to API
+  const payload = {
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    email: profile.email,
+    phone: profile.phone,
+    wantsToJoinParish: profile.wantsToJoinParish || false,
+    ministry: currentMinistry.name,
+    action: 'Removed'
+  };
+  
+  fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error('API error:', err));
+  
+  // Remove from interests array
+  interests = interests.filter(i => i.ministryId !== currentMinistry.id);
+  localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
+  
+  // Hide modal
+  document.getElementById('confirm-modal').classList.add('hidden');
+  
+  // Go back to ministries list
+  currentMinistry = null;
+  showMinistriesList();
+});
+
+document.getElementById('interest-btn').addEventListener('click', async function() {
+  const btn = this;
+  const originalText = btn.textContent;
+  
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    
+    // Gather question answers
+    const answers = {};
+    
+    // Handle select and text inputs
+    document.querySelectorAll('#detail-questions [data-qid]:not([data-type="checkbox"])').forEach(el => {
+      answers[el.dataset.qid] = el.value;
+    });
+    
+    // Handle checkbox groups
+    document.querySelectorAll('#detail-questions [data-type="checkbox"]').forEach(group => {
+      const qid = group.dataset.qid;
+      const checked = [];
+      group.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+        checked.push(cb.value);
+      });
+      answers[qid] = checked.join(', ');
+    });
+    
+    // Build payload
+    const questions = currentMinistry.questions || [];
+    const payload = {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      phone: profile.phone,
+      wantsToJoinParish: profile.wantsToJoinParish || false,
+      ministry: currentMinistry.name,
+      action: 'Signup',
+      q1: questions[0] ? answers[questions[0].id] || '' : '',
+      q2: questions[1] ? answers[questions[1].id] || '' : '',
+      q3: questions[2] ? answers[questions[2].id] || '' : ''
+    };
+    
+    // Submit to API (don't await - no-cors returns opaque response anyway)
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(err => console.error('API error:', err));
+    
+    // Update local state
+    const newInterest = {
+      ministryId: currentMinistry.id,
+      ministryName: currentMinistry.name,
+      answers: answers,
+      timestamp: new Date().toISOString()
+    };
+    
+    interests = [...interests.filter(i => i.ministryId !== currentMinistry.id), newInterest];
+    localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
+    
+    // Show confirmation
+    showConfirmation();
+    
+  } catch (error) {
+    console.error('Error submitting interest:', error);
+    alert('Something went wrong. Please try again.');
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+function showConfirmation() {
+  if (!currentMinistry) {
+    console.error('No current ministry for confirmation');
+    showMinistriesList();
+    return;
+  }
+  
+  showView('confirmed');
+  document.getElementById('confirmed-ministry').textContent = currentMinistry.name;
+  
+  // Show organizer info if available
+  const organizerDiv = document.getElementById('organizer-info');
+  if (currentMinistry.organizerName) {
+    let contactHtml = '';
+    if (currentMinistry.organizerEmail) {
+      contactHtml += `<a href="mailto:${currentMinistry.organizerEmail}">${currentMinistry.organizerEmail}</a>`;
+    }
+    if (currentMinistry.organizerPhone) {
+      if (contactHtml) contactHtml += ' · ';
+      const formattedPhone = formatPhoneNumber(currentMinistry.organizerPhone);
+      contactHtml += `<a href="tel:${currentMinistry.organizerPhone}">${formattedPhone}</a>`;
+    }
+    
+    organizerDiv.innerHTML = `
+      <div class="organizer-box">
+        <div class="organizer-title">Ministry Contact</div>
+        <div class="organizer-name">${currentMinistry.organizerName}</div>
+        ${contactHtml ? `<div class="organizer-contact">${contactHtml}</div>` : ''}
+      </div>
+    `;
+  } else {
+    organizerDiv.innerHTML = '';
+  }
+  
+  // Show all interests
+  const listDiv = document.getElementById('interests-list');
+  if (interests.length > 0) {
+    listDiv.innerHTML = '<h3 class="section-title" style="font-size: 18px;">Your Interests Today</h3>' +
+      interests.map(i => {
+        const m = MINISTRIES.find(min => min.id === i.ministryId);
+        return `
+          <div class="ministry-card" style="cursor: default;">
+            <div class="ministry-icon">${m ? m.icon : '📋'}</div>
+            <div class="ministry-info">
+              <h3 class="ministry-name">${i.ministryName}</h3>
+            </div>
+            <span class="badge">✓</span>
+          </div>
+        `;
+      }).join('');
+  } else {
+    listDiv.innerHTML = '';
+  }
+}
+
+document.getElementById('explore-btn').addEventListener('click', () => {
+  currentMinistry = null;
+  showMinistriesList();
+});
+
+// Logout button
+document.getElementById('logout-btn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to log out? Your interest selections on this device will be cleared.')) {
+    localStorage.removeItem('ministry-fair-profile');
+    localStorage.removeItem('ministry-fair-interests');
+    profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+    interests = [];
+    currentMinistry = null;
+    showAll = false;
+    searchTerm = '';
+    showView('register');
+  }
+});
+</script>
+
+</body>
+</html>
