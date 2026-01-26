@@ -182,3 +182,11 @@ A: Yes! Works for volunteer signups, small group fairs, event registration, etc.
 MIT License — Free to use, modify, and distribute.
 
 Built with ❤️ for parish communities everywhere.
+
+---
+
+## Support
+
+This app is free and open source. If it's helped your parish, consider supporting the creator:
+
+[Support Modernizing Catholic](https://www.patreon.com/c/christreadaway)

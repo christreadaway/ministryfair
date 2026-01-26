@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>St. Theresa Ministry Fair</title>
+  <title>Ministry Fair</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -372,8 +372,8 @@
 <!-- LOADING VIEW -->
 <div id="view-loading">
   <header class="header">
-    <h1>St. Theresa Ministry Fair</h1>
-    <p>Serve and participate in your Catholic community</p>
+    <h1 class="app-title"></h1>
+    <p class="app-tagline"></p>
   </header>
   <div class="content">
     <div class="card">
@@ -385,8 +385,8 @@
 <!-- REGISTER VIEW -->
 <div id="view-register" class="hidden">
   <header class="header">
-    <h1>St. Theresa Ministry Fair</h1>
-    <p>Serve and participate in your Catholic community</p>
+    <h1 class="app-title"></h1>
+    <p class="app-tagline"></p>
   </header>
   <div class="content">
     <div class="card">
@@ -410,15 +410,13 @@
         </div>
         <div class="input-group">
           <label class="label">Cell Phone</label>
-          <input type="tel" class="input" id="phone" required autocomplete="tel" placeholder="(512) 555-1234" maxlength="14">
+          <input type="tel" class="input" id="phone" required autocomplete="tel" placeholder="(555) 555-1234" maxlength="14">
         </div>
         <div class="checkbox-group">
           <input type="checkbox" id="joinParish">
-          <label for="joinParish">I'm not yet a parishioner but I'd like to join St. Theresa Catholic Church.</label>
+          <label for="joinParish" id="joinParishLabel"></label>
         </div>
-        <p class="consent-text">
-          By clicking Continue, you give St. Theresa Catholic Church permission to contact you by email or phone about the ministries you express interest in.
-        </p>
+        <p class="consent-text" id="consentText"></p>
         <button type="submit" class="btn">Continue to Ministries →</button>
       </form>
     </div>
@@ -428,7 +426,7 @@
 <!-- MINISTRIES VIEW -->
 <div id="view-ministries" class="hidden">
   <header class="header">
-    <h1>St. Theresa Ministry Fair</h1>
+    <h1 class="app-title"></h1>
     <p id="interest-count">Tap a ministry to learn more</p>
   </header>
   <div class="content">
@@ -618,43 +616,39 @@ function initializeApp() {
   }
 }
 
-// Start loading
-loadMinistries();
-
-// Apply configuration to page
+// Apply configuration to page - runs immediately
 function applyConfig() {
   // Update page title
   document.title = CONFIG.appTitle;
   
-  // Update all header titles and taglines
-  document.querySelectorAll('.header h1').forEach(el => {
-    if (el.id !== 'detail-name') {
-      el.textContent = CONFIG.appTitle;
-    }
+  // Update all elements with app-title class
+  document.querySelectorAll('.app-title').forEach(el => {
+    el.textContent = CONFIG.appTitle;
   });
-  document.querySelectorAll('.header p').forEach(el => {
-    if (!el.id || el.id === 'interest-count') return;
+  
+  // Update all elements with app-tagline class
+  document.querySelectorAll('.app-tagline').forEach(el => {
     el.textContent = CONFIG.tagline;
   });
   
-  // Update taglines specifically
-  const taglines = document.querySelectorAll('.header p:not([id]), .header p#interest-count');
-  
   // Update consent text
-  const consentText = document.querySelector('.consent-text');
+  const consentText = document.getElementById('consentText');
   if (consentText) {
     consentText.textContent = `By clicking Continue, you give ${CONFIG.organizationName} permission to contact you by email or phone about the ministries you express interest in.`;
   }
   
-  // Update join parish checkbox
-  const joinLabel = document.querySelector('label[for="joinParish"]');
+  // Update join parish checkbox label
+  const joinLabel = document.getElementById('joinParishLabel');
   if (joinLabel) {
     joinLabel.textContent = `I'm not yet a parishioner but I'd like to join ${CONFIG.organizationName}.`;
   }
 }
 
-// Apply config on load
+// Apply config immediately (before ministries load)
 applyConfig();
+
+// Start loading ministries
+loadMinistries();
 
 // Apply phone formatting to input
 const phoneInput = document.getElementById('phone');
