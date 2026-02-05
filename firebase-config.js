@@ -46,6 +46,28 @@ const FirebaseAuth = {
     }
   },
 
+  // Sign up with email and password
+  async signUp(email, password) {
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      return { success: true, user: userCredential.user };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Sign in with email and password
+  async signIn(email, password) {
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      return { success: true, user: userCredential.user };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Sign out
   async signOut() {
     try {
@@ -60,5 +82,16 @@ const FirebaseAuth = {
   // Get current user
   getCurrentUser() {
     return auth.currentUser;
+  },
+
+  // Send password reset email
+  async sendPasswordReset(email) {
+    try {
+      await auth.sendPasswordResetEmail(email);
+      return { success: true };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
