@@ -67,65 +67,121 @@ function doPost(e) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
-    
-    if (!ministriesSheet) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ error: 'Ministries sheet not found' }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    const data = ministriesSheet.getDataRange().getValues();
-    const ministries = [];
-    
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (!row[0]) continue;
-      
-      const ministry = {
-        id: row[0],
-        name: row[1],
-        description: row[2],
-        icon: row[3] || '📋',
-        organizerName: row[4] || '',
-        organizerEmail: row[5] || '',
-        organizerPhone: row[6] || '',
-        questions: []
-      };
-      
-      // Tags are in column K (index 10) - comma-separated
-      const tagsData = row[10];
-      if (tagsData) {
-        ministry.tags = tagsData.toString().split(',').map(s => s.trim()).filter(s => s);
-      }
+    const action = (e && e.parameter && e.parameter.action) || 'ministries';
 
-      // Questions are in columns H, I, J (index 7, 8, 9)
-      for (let q = 0; q < 3; q++) {
-        const questionData = row[7 + q];
-        if (questionData) {
-          const parts = questionData.split('|');
-          const question = {
-            id: 'q' + (q + 1),
-            type: parts[0] || 'text',
-            label: parts[1] || '',
-            options: parts[2] ? parts[2].split(',').map(s => s.trim()) : []
-          };
-          ministry.questions.push(question);
-        }
-      }
-
-      ministries.push(ministry);
+    if (action === 'signups') {
+      return getSignups(ss, e.parameter);
     }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({ ministries: ministries }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
+
+    // Default: return ministries
+    return getMinistries(ss);
+
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({ error: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function getMinistries(ss) {
+  const ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+
+  if (!ministriesSheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'Ministries sheet not found' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = ministriesSheet.getDataRange().getValues();
+  const ministries = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+
+    const ministry = {
+      id: row[0],
+      name: row[1],
+      description: row[2],
+      icon: row[3] || '📋',
+      organizerName: row[4] || '',
+      organizerEmail: row[5] || '',
+      organizerPhone: row[6] || '',
+      questions: []
+    };
+
+    // Tags are in column K (index 10) - comma-separated
+    const tagsData = row[10];
+    if (tagsData) {
+      ministry.tags = tagsData.toString().split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    // Questions are in columns H, I, J (index 7, 8, 9)
+    for (let q = 0; q < 3; q++) {
+      const questionData = row[7 + q];
+      if (questionData) {
+        const parts = questionData.split('|');
+        const question = {
+          id: 'q' + (q + 1),
+          type: parts[0] || 'text',
+          label: parts[1] || '',
+          options: parts[2] ? parts[2].split(',').map(s => s.trim()) : []
+        };
+        ministry.questions.push(question);
+      }
+    }
+
+    ministries.push(ministry);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ministries: ministries }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getSignups(ss, params) {
+  const signupsSheet = ss.getSheetByName(SIGNUPS_SHEET_NAME);
+
+  if (!signupsSheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ signups: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = signupsSheet.getDataRange().getValues();
+  const signups = [];
+  // Headers: Date, Time, First, Last, Email, Phone, New Parishioner, Ministry, Action, Q1, Q2, Q3
+
+  const ministryFilter = params && params.ministry ? params.ministry : null;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+
+    const signup = {
+      date: row[0],
+      time: row[1],
+      firstName: row[2],
+      lastName: row[3],
+      email: row[4],
+      phone: row[5],
+      newParishioner: row[6],
+      ministry: row[7],
+      action: row[8] || 'Signup',
+      q1: row[9] || '',
+      q2: row[10] || '',
+      q3: row[11] || ''
+    };
+
+    // Filter by ministry name if specified
+    if (ministryFilter && signup.ministry !== ministryFilter) continue;
+
+    signups.push(signup);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ signups: signups }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getOrCreateSheet(spreadsheet, sheetName, headers) {

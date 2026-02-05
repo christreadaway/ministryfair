@@ -665,6 +665,149 @@
       margin: 2px 0 0;
       font-family: 'Inter', -apple-system, sans-serif;
     }
+
+    /* Signup list table styles */
+    .signup-row {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    }
+    .signup-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .signup-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    .signup-date {
+      font-size: 12px;
+      color: #999;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .signup-details {
+      font-size: 13px;
+      color: #666;
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    .signup-details a {
+      color: #8B2635;
+      text-decoration: none;
+    }
+    .signup-details a:hover { text-decoration: underline; }
+    .signup-ministry-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f0ebe3;
+      color: #666;
+      margin-top: 4px;
+    }
+    .signup-action-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .signup-action-tag.action-signup {
+      background: #e8f5ed;
+      color: #2d7a4a;
+    }
+    .signup-action-tag.action-removed {
+      background: #fde8e8;
+      color: #c53030;
+    }
+    .signup-count {
+      font-size: 14px;
+      color: #666;
+      font-family: 'Inter', -apple-system, sans-serif;
+      margin-bottom: 16px;
+    }
+    .filter-group {
+      margin-bottom: 16px;
+    }
+    .filter-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .ministry-manage-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ministry-manage-icon {
+      font-size: 28px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #faf8f5;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .ministry-manage-info {
+      flex: 1;
+    }
+    .ministry-manage-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+    .ministry-manage-info p {
+      font-size: 12px;
+      color: #666;
+      margin: 2px 0 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .ministry-manage-stats {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .ministry-manage-stats .stat-number {
+      font-size: 20px;
+      font-weight: 600;
+      color: #8B2635;
+    }
+    .ministry-manage-stats .stat-label {
+      font-size: 11px;
+      color: #999;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .empty-state p {
+      font-size: 15px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -867,6 +1010,84 @@
   </div>
 </div>
 
+<!-- MY MINISTRY SIGNUPS VIEW (Ministry Leader) -->
+<div id="view-my-signups" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p>Ministry Signups</p>
+  </header>
+  <div class="content">
+    <button class="back-link" id="my-signups-back-btn">&#8249; Back</button>
+    <div class="profile-badge">
+      <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
+      <div style="flex: 1;">
+        <div class="profile-name js-profile-name"></div>
+        <div class="profile-email js-profile-email"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
+      </div>
+      <button class="logout-link js-logout-btn">Log out</button>
+    </div>
+    <div class="filter-group">
+      <label>Select your ministry:</label>
+      <select class="select" id="my-ministry-select"></select>
+    </div>
+    <p class="signup-count" id="my-signups-count"></p>
+    <div id="my-signups-list"></div>
+  </div>
+</div>
+
+<!-- ALL SIGNUPS VIEW (Admin) -->
+<div id="view-all-signups" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p>All Signup Activity</p>
+  </header>
+  <div class="content">
+    <button class="back-link" id="all-signups-back-btn">&#8249; Back</button>
+    <div class="profile-badge">
+      <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
+      <div style="flex: 1;">
+        <div class="profile-name js-profile-name"></div>
+        <div class="profile-email js-profile-email"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
+      </div>
+      <button class="logout-link js-logout-btn">Log out</button>
+    </div>
+    <div class="filter-group">
+      <label>Filter by ministry:</label>
+      <select class="select" id="all-signups-filter"></select>
+    </div>
+    <p class="signup-count" id="all-signups-count"></p>
+    <div id="all-signups-list"></div>
+  </div>
+</div>
+
+<!-- MANAGE MINISTRIES VIEW (Admin) -->
+<div id="view-manage" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p>Ministry Management</p>
+  </header>
+  <div class="content">
+    <button class="back-link" id="manage-back-btn">&#8249; Back</button>
+    <div class="profile-badge">
+      <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
+      <div style="flex: 1;">
+        <div class="profile-name js-profile-name"></div>
+        <div class="profile-email js-profile-email"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
+      </div>
+      <button class="logout-link js-logout-btn">Log out</button>
+    </div>
+    <h2 class="section-title">Ministries Overview</h2>
+    <p class="signup-count" id="manage-count"></p>
+    <div id="manage-ministries-list"></div>
+  </div>
+</div>
+
 <!-- MINISTRY DETAIL VIEW -->
 <div id="view-detail" class="hidden">
   <header class="header">
@@ -1040,6 +1261,9 @@ const views = {
   aiInput: document.getElementById('view-ai-input'),
   suggestions: document.getElementById('view-suggestions'),
   ministries: document.getElementById('view-ministries'),
+  mySignups: document.getElementById('view-my-signups'),
+  allSignups: document.getElementById('view-all-signups'),
+  manage: document.getElementById('view-manage'),
   detail: document.getElementById('view-detail'),
   confirmed: document.getElementById('view-confirmed')
 };
@@ -1347,13 +1571,13 @@ function handleChoiceClick(choiceId) {
       showAIInput();
       break;
     case 'my-ministry':
-      alert('Coming soon! Ministry leader signup view is under development.');
+      showMySignups();
       break;
     case 'manage-ministries':
-      alert('Coming soon! Ministry management is under development.');
+      showManageMinistries();
       break;
     case 'view-all-signups':
-      alert('Coming soon! Admin signup dashboard is under development.');
+      showAllSignups();
       break;
   }
 }
@@ -1953,6 +2177,193 @@ document.getElementById('explore-btn').addEventListener('click', function() {
   currentMinistry = null;
   showChoiceScreen();
 });
+
+// ============================================
+// MY MINISTRY SIGNUPS VIEW (Ministry Leader)
+// ============================================
+async function showMySignups() {
+  updateAllProfileBadges();
+  showView('mySignups');
+
+  // Populate ministry dropdown
+  var select = document.getElementById('my-ministry-select');
+  select.innerHTML = '<option value="">-- Choose a ministry --</option>' +
+    MINISTRIES.map(function(m) {
+      return '<option value="' + m.name + '">' + m.icon + ' ' + m.name + '</option>';
+    }).join('');
+
+  document.getElementById('my-signups-count').textContent = '';
+  document.getElementById('my-signups-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">👆</div><p>Select your ministry above to see signups</p></div>';
+
+  select.onchange = function() {
+    if (select.value) {
+      loadSignupsForMinistry(select.value);
+    } else {
+      document.getElementById('my-signups-count').textContent = '';
+      document.getElementById('my-signups-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">👆</div><p>Select your ministry above to see signups</p></div>';
+    }
+  };
+}
+
+async function loadSignupsForMinistry(ministryName) {
+  var list = document.getElementById('my-signups-list');
+  var countEl = document.getElementById('my-signups-count');
+  list.innerHTML = '<div class="loading">Loading signups...</div>';
+
+  try {
+    var url = API_URL + (API_URL.includes('?') ? '&' : '?') + 'action=signups&ministry=' + encodeURIComponent(ministryName);
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    var data = await response.json();
+    var signups = (data.signups || []).filter(function(s) { return s.action === 'Signup'; });
+
+    countEl.textContent = signups.length + ' signup' + (signups.length !== 1 ? 's' : '');
+    renderSignupsList(list, signups, false);
+  } catch (err) {
+    console.error('Error loading signups:', err);
+    countEl.textContent = '';
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📡</div><p>Could not load signups. Make sure your API URL is configured and the script is deployed.</p></div>';
+  }
+}
+
+document.getElementById('my-signups-back-btn').addEventListener('click', function() {
+  showChoiceScreen();
+});
+
+// ============================================
+// ALL SIGNUPS VIEW (Admin)
+// ============================================
+async function showAllSignups() {
+  updateAllProfileBadges();
+  showView('allSignups');
+
+  // Populate filter dropdown
+  var filterSelect = document.getElementById('all-signups-filter');
+  filterSelect.innerHTML = '<option value="">All ministries</option>' +
+    MINISTRIES.map(function(m) {
+      return '<option value="' + m.name + '">' + m.icon + ' ' + m.name + '</option>';
+    }).join('');
+
+  document.getElementById('all-signups-count').textContent = '';
+  document.getElementById('all-signups-list').innerHTML = '<div class="loading">Loading all signups...</div>';
+
+  // Load all signups
+  loadAllSignups('');
+
+  filterSelect.onchange = function() {
+    loadAllSignups(filterSelect.value);
+  };
+}
+
+var cachedAllSignups = null;
+
+async function loadAllSignups(ministryFilter) {
+  var list = document.getElementById('all-signups-list');
+  var countEl = document.getElementById('all-signups-count');
+
+  try {
+    // Fetch all signups (cache for filter changes)
+    if (!cachedAllSignups) {
+      list.innerHTML = '<div class="loading">Loading all signups...</div>';
+      var url = API_URL + (API_URL.includes('?') ? '&' : '?') + 'action=signups';
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+      var response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      var data = await response.json();
+      cachedAllSignups = data.signups || [];
+    }
+
+    var filtered = cachedAllSignups;
+    if (ministryFilter) {
+      filtered = cachedAllSignups.filter(function(s) { return s.ministry === ministryFilter; });
+    }
+
+    // Sort newest first
+    filtered = filtered.slice().reverse();
+
+    countEl.textContent = filtered.length + ' record' + (filtered.length !== 1 ? 's' : '');
+    renderSignupsList(list, filtered, true);
+  } catch (err) {
+    console.error('Error loading signups:', err);
+    countEl.textContent = '';
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📡</div><p>Could not load signups. Make sure your API URL is configured and the script is deployed.</p></div>';
+  }
+}
+
+document.getElementById('all-signups-back-btn').addEventListener('click', function() {
+  cachedAllSignups = null;
+  showChoiceScreen();
+});
+
+// ============================================
+// MANAGE MINISTRIES VIEW (Admin)
+// ============================================
+function showManageMinistries() {
+  updateAllProfileBadges();
+  showView('manage');
+
+  var countEl = document.getElementById('manage-count');
+  countEl.textContent = MINISTRIES.length + ' ministr' + (MINISTRIES.length !== 1 ? 'ies' : 'y') + ' configured';
+
+  var list = document.getElementById('manage-ministries-list');
+
+  // Count signups per ministry from local interests
+  list.innerHTML = MINISTRIES.map(function(m) {
+    var orgInfo = m.organizerName ? m.organizerName : 'No organizer set';
+    return '<div class="ministry-manage-card">' +
+      '<div class="ministry-manage-icon">' + m.icon + '</div>' +
+      '<div class="ministry-manage-info">' +
+        '<h4>' + m.name + '</h4>' +
+        '<p>' + orgInfo + '</p>' +
+        (m.tags && m.tags.length > 0 ? '<p style="margin-top: 2px; color: #999;">' + m.tags.join(', ') + '</p>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  if (MINISTRIES.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No ministries loaded. Check your API URL configuration.</p></div>';
+  }
+}
+
+document.getElementById('manage-back-btn').addEventListener('click', function() {
+  showChoiceScreen();
+});
+
+// ============================================
+// SHARED: Render signups list
+// ============================================
+function renderSignupsList(container, signups, showMinistry) {
+  if (signups.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No signups yet</p></div>';
+    return;
+  }
+
+  container.innerHTML = signups.map(function(s) {
+    var actionClass = s.action === 'Removed' ? 'action-removed' : 'action-signup';
+    var answers = '';
+    if (s.q1) answers += '<br>Q1: ' + s.q1;
+    if (s.q2) answers += '<br>Q2: ' + s.q2;
+    if (s.q3) answers += '<br>Q3: ' + s.q3;
+
+    return '<div class="signup-row">' +
+      '<div class="signup-row-header">' +
+        '<span class="signup-name">' + s.firstName + ' ' + s.lastName + '</span>' +
+        '<span class="signup-date">' + s.date + ' ' + s.time + '</span>' +
+      '</div>' +
+      '<div class="signup-details">' +
+        '<a href="mailto:' + s.email + '">' + s.email + '</a>' +
+        (s.phone ? ' · ' + s.phone : '') +
+        (showMinistry ? '<br><span class="signup-ministry-tag">' + s.ministry + '</span> ' : '') +
+        '<span class="signup-action-tag ' + actionClass + '">' + s.action + '</span>' +
+        (s.newParishioner === 'Yes' ? ' <span class="signup-action-tag action-signup">New Parishioner</span>' : '') +
+        answers +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
 
 // Logout buttons (multiple across views)
 document.querySelectorAll('.js-logout-btn').forEach(function(btn) {
