@@ -11,6 +11,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+  <!-- PDF.js for parsing uploaded PDFs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -808,6 +810,122 @@
       font-size: 15px;
       line-height: 1.5;
     }
+
+    /* Admin settings sections */
+    .settings-section {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+    .settings-section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 4px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .settings-section .settings-desc {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 14px;
+      line-height: 1.4;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .settings-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 12px;
+    }
+    .settings-row .input-group { flex: 1; margin-bottom: 0; }
+    .settings-row .btn { width: auto; margin-top: 0; padding: 12px 20px; font-size: 14px; flex-shrink: 0; }
+    .file-upload-area {
+      border: 2px dashed #d0ccc4;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .file-upload-area:hover {
+      border-color: #8B2635;
+      background: #fdf8f8;
+    }
+    .file-upload-area.has-file {
+      border-color: #4a9c6d;
+      border-style: solid;
+      background: #f0f9f4;
+    }
+    .file-upload-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .file-upload-text {
+      font-size: 14px;
+      color: #666;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .file-upload-text strong {
+      color: #8B2635;
+    }
+    .file-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-top: 6px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .file-status {
+      font-size: 12px;
+      color: #4a9c6d;
+      font-family: 'Inter', -apple-system, sans-serif;
+      margin-top: 4px;
+    }
+    .key-input-wrapper {
+      position: relative;
+    }
+    .key-input-wrapper .input {
+      padding-right: 44px;
+    }
+    .key-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      color: #999;
+    }
+    .saved-indicator {
+      display: inline-block;
+      font-size: 12px;
+      color: #4a9c6d;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .saved-indicator.show {
+      opacity: 1;
+    }
+    .btn-danger {
+      background: white;
+      color: #c53030;
+      border: 1px solid #e8e4de;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .btn-danger:hover { border-color: #c53030; }
   </style>
 </head>
 <body>
@@ -1082,7 +1200,49 @@
       </div>
       <button class="logout-link js-logout-btn">Log out</button>
     </div>
-    <h2 class="section-title">Ministries Overview</h2>
+    <!-- AI Configuration -->
+    <div class="settings-section">
+      <h3>AI Suggestions Configuration</h3>
+      <p class="settings-desc">Connect an AI provider so volunteers can get personalized ministry suggestions from free-form text.</p>
+      <div class="input-group" style="margin-bottom: 12px;">
+        <label class="label">AI Provider</label>
+        <select class="select" id="ai-provider-select">
+          <option value="">None (use keyword matching)</option>
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI (ChatGPT)</option>
+        </select>
+      </div>
+      <div id="ai-key-section" class="hidden">
+        <div class="input-group" style="margin-bottom: 12px;">
+          <label class="label">API Key <span class="saved-indicator" id="key-saved">Saved</span></label>
+          <div class="key-input-wrapper">
+            <input type="password" class="input" id="ai-key-input" placeholder="sk-... or sk-ant-...">
+            <button type="button" class="key-toggle" id="key-toggle-btn" title="Show/hide key">👁</button>
+          </div>
+        </div>
+        <button class="btn" id="save-ai-key-btn" style="margin-bottom: 0; font-size: 14px; padding: 12px 20px;">Save API Key</button>
+      </div>
+    </div>
+
+    <!-- PDF Upload -->
+    <div class="settings-section">
+      <h3>Ministry Book PDF</h3>
+      <p class="settings-desc">Upload your parish ministry book so the AI can give better, context-aware suggestions to volunteers.</p>
+      <div class="file-upload-area" id="pdf-upload-area">
+        <input type="file" accept=".pdf" id="pdf-file-input" style="display: none;">
+        <div class="file-upload-icon" id="pdf-upload-icon">📄</div>
+        <div class="file-upload-text" id="pdf-upload-text">
+          <strong>Click to upload</strong> a PDF file
+        </div>
+        <div class="file-name hidden" id="pdf-file-name"></div>
+        <div class="file-status hidden" id="pdf-file-status"></div>
+      </div>
+      <div id="pdf-actions" class="hidden" style="margin-top: 10px; display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn-danger" id="remove-pdf-btn">Remove PDF</button>
+      </div>
+    </div>
+
+    <h2 class="section-title" style="margin-top: 8px;">Ministries Overview</h2>
     <p class="signup-count" id="manage-count"></p>
     <div id="manage-ministries-list"></div>
   </div>
@@ -1708,7 +1868,42 @@ document.getElementById('ai-suggest-btn').addEventListener('click', async functi
 });
 
 async function getAISuggestions(text) {
-  // If an AI API URL is configured, try it first
+  var provider = localStorage.getItem('ministry-fair-ai-provider') || '';
+  var apiKey = localStorage.getItem('ministry-fair-ai-key') || '';
+  var pdfText = localStorage.getItem('ministry-fair-pdf-text') || '';
+
+  // If an AI provider and key are configured, call the real API
+  if (provider && apiKey) {
+    try {
+      var ministryList = MINISTRIES.map(function(m) {
+        return '- ID: ' + m.id + ' | Name: ' + m.name + ' | Description: ' + m.description;
+      }).join('\n');
+
+      var pdfContext = '';
+      if (pdfText) {
+        // Include up to ~8K chars of PDF context to stay within token limits
+        var truncated = pdfText.length > 8000 ? pdfText.substring(0, 8000) + '...' : pdfText;
+        pdfContext = '\n\nAdditional context from the parish ministry book:\n' + truncated;
+      }
+
+      var systemPrompt = 'You are a helpful parish ministry matcher. Given a list of available ministries and a volunteer\'s description of their interests, return ONLY a JSON array of ministry IDs that best match, ordered by relevance. Return between 1 and 5 IDs. Respond with ONLY the JSON array, no other text.';
+
+      var userPrompt = 'Available ministries:\n' + ministryList + pdfContext + '\n\nVolunteer says: "' + text + '"\n\nReturn a JSON array of the best matching ministry IDs.';
+
+      var suggestedIds = await callAIProvider(provider, apiKey, systemPrompt, userPrompt);
+
+      if (suggestedIds && suggestedIds.length > 0) {
+        var results = suggestedIds
+          .map(function(id) { return MINISTRIES.find(function(m) { return m.id === id; }); })
+          .filter(Boolean);
+        if (results.length > 0) return results;
+      }
+    } catch (err) {
+      console.error('AI API error, falling back to local matching:', err);
+    }
+  }
+
+  // Legacy: custom API URL fallback
   if (CONFIG.aiApiUrl) {
     try {
       var response = await fetch(CONFIG.aiApiUrl, {
@@ -1728,12 +1923,76 @@ async function getAISuggestions(text) {
           .filter(Boolean);
       }
     } catch (err) {
-      console.error('AI API error, falling back to local matching:', err);
+      console.error('Custom AI API error, falling back to local matching:', err);
     }
   }
 
   // Local keyword matching fallback
   return getLocalSuggestions(text);
+}
+
+async function callAIProvider(provider, apiKey, systemPrompt, userPrompt) {
+  var responseText = '';
+
+  if (provider === 'anthropic') {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 256,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!resp.ok) {
+      var errBody = await resp.text();
+      throw new Error('Anthropic API error ' + resp.status + ': ' + errBody);
+    }
+
+    var data = await resp.json();
+    responseText = data.content[0].text;
+
+  } else if (provider === 'openai') {
+    var resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 256,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!resp.ok) {
+      var errBody = await resp.text();
+      throw new Error('OpenAI API error ' + resp.status + ': ' + errBody);
+    }
+
+    var data = await resp.json();
+    responseText = data.choices[0].message.content;
+  }
+
+  // Parse the JSON array from the response
+  responseText = responseText.trim();
+  // Handle markdown code blocks if the model wraps it
+  if (responseText.startsWith('```')) {
+    responseText = responseText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+  }
+
+  return JSON.parse(responseText);
 }
 
 function getLocalSuggestions(text) {
@@ -2305,12 +2564,17 @@ function showManageMinistries() {
   updateAllProfileBadges();
   showView('manage');
 
+  // Initialize AI settings UI
+  initAISettingsUI();
+
+  // Initialize PDF upload UI
+  initPDFUploadUI();
+
   var countEl = document.getElementById('manage-count');
   countEl.textContent = MINISTRIES.length + ' ministr' + (MINISTRIES.length !== 1 ? 'ies' : 'y') + ' configured';
 
   var list = document.getElementById('manage-ministries-list');
 
-  // Count signups per ministry from local interests
   list.innerHTML = MINISTRIES.map(function(m) {
     var orgInfo = m.organizerName ? m.organizerName : 'No organizer set';
     return '<div class="ministry-manage-card">' +
@@ -2327,6 +2591,187 @@ function showManageMinistries() {
     list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No ministries loaded. Check your API URL configuration.</p></div>';
   }
 }
+
+// ============================================
+// AI SETTINGS (Admin)
+// ============================================
+function initAISettingsUI() {
+  var providerSelect = document.getElementById('ai-provider-select');
+  var keySection = document.getElementById('ai-key-section');
+  var keyInput = document.getElementById('ai-key-input');
+
+  // Load saved values
+  var savedProvider = localStorage.getItem('ministry-fair-ai-provider') || '';
+  var savedKey = localStorage.getItem('ministry-fair-ai-key') || '';
+
+  providerSelect.value = savedProvider;
+  keyInput.value = savedKey;
+
+  if (savedProvider) {
+    keySection.classList.remove('hidden');
+  } else {
+    keySection.classList.add('hidden');
+  }
+
+  // Show/hide key section based on provider
+  providerSelect.onchange = function() {
+    localStorage.setItem('ministry-fair-ai-provider', providerSelect.value);
+    if (providerSelect.value) {
+      keySection.classList.remove('hidden');
+    } else {
+      keySection.classList.add('hidden');
+    }
+  };
+}
+
+// Save AI key button
+document.getElementById('save-ai-key-btn').addEventListener('click', function() {
+  var key = document.getElementById('ai-key-input').value.trim();
+  if (key) {
+    localStorage.setItem('ministry-fair-ai-key', key);
+    var indicator = document.getElementById('key-saved');
+    indicator.classList.add('show');
+    setTimeout(function() { indicator.classList.remove('show'); }, 2000);
+  }
+});
+
+// Toggle key visibility
+document.getElementById('key-toggle-btn').addEventListener('click', function() {
+  var input = document.getElementById('ai-key-input');
+  if (input.type === 'password') {
+    input.type = 'text';
+    this.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    this.textContent = '👁';
+  }
+});
+
+// ============================================
+// PDF UPLOAD (Admin)
+// ============================================
+function initPDFUploadUI() {
+  var savedPdfName = localStorage.getItem('ministry-fair-pdf-name');
+  var savedPdfText = localStorage.getItem('ministry-fair-pdf-text');
+
+  var uploadArea = document.getElementById('pdf-upload-area');
+  var fileNameEl = document.getElementById('pdf-file-name');
+  var fileStatusEl = document.getElementById('pdf-file-status');
+  var uploadIcon = document.getElementById('pdf-upload-icon');
+  var uploadText = document.getElementById('pdf-upload-text');
+  var actionsEl = document.getElementById('pdf-actions');
+
+  if (savedPdfName && savedPdfText) {
+    var charCount = savedPdfText.length;
+    uploadArea.classList.add('has-file');
+    uploadIcon.textContent = '✅';
+    uploadText.innerHTML = '<strong>PDF loaded</strong>';
+    fileNameEl.textContent = savedPdfName;
+    fileNameEl.classList.remove('hidden');
+    fileStatusEl.textContent = Math.round(charCount / 1000) + 'K characters extracted';
+    fileStatusEl.classList.remove('hidden');
+    actionsEl.classList.remove('hidden');
+    actionsEl.style.display = 'flex';
+  } else {
+    uploadArea.classList.remove('has-file');
+    uploadIcon.textContent = '📄';
+    uploadText.innerHTML = '<strong>Click to upload</strong> a PDF file';
+    fileNameEl.classList.add('hidden');
+    fileStatusEl.classList.add('hidden');
+    actionsEl.classList.add('hidden');
+  }
+}
+
+// PDF upload click handler
+document.getElementById('pdf-upload-area').addEventListener('click', function() {
+  document.getElementById('pdf-file-input').click();
+});
+
+// PDF file selected
+document.getElementById('pdf-file-input').addEventListener('change', async function(e) {
+  var file = e.target.files[0];
+  if (!file || file.type !== 'application/pdf') {
+    alert('Please select a PDF file.');
+    return;
+  }
+
+  var uploadArea = document.getElementById('pdf-upload-area');
+  var uploadIcon = document.getElementById('pdf-upload-icon');
+  var uploadText = document.getElementById('pdf-upload-text');
+  var fileNameEl = document.getElementById('pdf-file-name');
+  var fileStatusEl = document.getElementById('pdf-file-status');
+  var actionsEl = document.getElementById('pdf-actions');
+
+  // Show processing state
+  uploadIcon.textContent = '⏳';
+  uploadText.innerHTML = '<strong>Processing PDF...</strong>';
+  fileNameEl.textContent = file.name;
+  fileNameEl.classList.remove('hidden');
+  fileStatusEl.textContent = 'Extracting text...';
+  fileStatusEl.classList.remove('hidden');
+
+  try {
+    var text = await extractPDFText(file);
+
+    if (!text || text.trim().length < 10) {
+      throw new Error('No readable text found in PDF');
+    }
+
+    // Truncate to ~100K chars to stay within localStorage limits
+    if (text.length > 100000) {
+      text = text.substring(0, 100000);
+    }
+
+    localStorage.setItem('ministry-fair-pdf-name', file.name);
+    localStorage.setItem('ministry-fair-pdf-text', text);
+
+    uploadArea.classList.add('has-file');
+    uploadIcon.textContent = '✅';
+    uploadText.innerHTML = '<strong>PDF loaded</strong>';
+    fileStatusEl.textContent = Math.round(text.length / 1000) + 'K characters extracted';
+    actionsEl.classList.remove('hidden');
+    actionsEl.style.display = 'flex';
+
+  } catch (err) {
+    console.error('PDF extraction error:', err);
+    uploadArea.classList.remove('has-file');
+    uploadIcon.textContent = '❌';
+    uploadText.innerHTML = '<strong>Error reading PDF</strong>';
+    fileStatusEl.textContent = err.message;
+    actionsEl.classList.add('hidden');
+  }
+
+  // Reset file input so same file can be re-selected
+  e.target.value = '';
+});
+
+async function extractPDFText(file) {
+  var arrayBuffer = await file.arrayBuffer();
+
+  // Set PDF.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  var textParts = [];
+
+  for (var i = 1; i <= pdf.numPages; i++) {
+    var page = await pdf.getPage(i);
+    var content = await page.getTextContent();
+    var pageText = content.items.map(function(item) { return item.str; }).join(' ');
+    textParts.push(pageText);
+  }
+
+  return textParts.join('\n\n');
+}
+
+// Remove PDF button
+document.getElementById('remove-pdf-btn').addEventListener('click', function() {
+  if (confirm('Remove the uploaded PDF? The AI will fall back to keyword matching.')) {
+    localStorage.removeItem('ministry-fair-pdf-name');
+    localStorage.removeItem('ministry-fair-pdf-text');
+    initPDFUploadUI();
+  }
+});
 
 document.getElementById('manage-back-btn').addEventListener('click', function() {
   showChoiceScreen();
