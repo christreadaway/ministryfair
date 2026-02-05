@@ -161,9 +161,22 @@ Auto-populated list of visitors who want to join the parish
 
 ---
 
+## Security
+
+**This app does NOT require Google Cloud API keys.** It only uses Google Apps Script, where the deployment URL is meant to be public.
+
+If you received a security alert about an exposed API key:
+1. Check `SECURITY.md` for a detailed guide
+2. Verify that `index.html` only contains placeholder text, not actual keys
+3. If you accidentally committed a real API key, regenerate it immediately in Google Cloud Console
+
+The Google Apps Script URL (which goes in `apiUrl`) is safe to include in your code - it's designed to be publicly accessible and protected by Google's access controls.
+
+---
+
 ## FAQ
 
-**Q: Does this cost anything?**  
+**Q: Does this cost anything?**
 A: No. GitHub Pages, Netlify, and Google Sheets are all free.
 
 **Q: Do parishioners need to install an app?**  
