@@ -93,6 +93,12 @@ function doGet(e) {
         questions: []
       };
       
+      // Tags are in column K (index 10) - comma-separated
+      const tagsData = row[10];
+      if (tagsData) {
+        ministry.tags = tagsData.toString().split(',').map(s => s.trim()).filter(s => s);
+      }
+
       // Questions are in columns H, I, J (index 7, 8, 9)
       for (let q = 0; q < 3; q++) {
         const questionData = row[7 + q];
@@ -107,7 +113,7 @@ function doGet(e) {
           ministry.questions.push(question);
         }
       }
-      
+
       ministries.push(ministry);
     }
     
@@ -152,7 +158,7 @@ function getNewParishionersHeaders() {
 }
 
 function getMinistriesHeaders() {
-  return ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3'];
+  return ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3', 'Tags'];
 }
 
 // Run this to add Action column to existing App Signups sheet
@@ -263,12 +269,13 @@ function testSetup() {
     ministriesSheet.setFrozenRows(1);
     
     // Example ministries - replace with your own!
+    // Tags column (K) uses comma-separated values: lay-leadership, liturgy, socializing, bible-study, service
     const ministries = [
-      ['music', 'Music Ministry', 'Supports parish liturgies through choirs, cantors, and instrumentalists.', '🎵', 'Jane Smith', 'jane@parish.org', '5125551234', 'select|Voice part (if known)|Not sure,Soprano,Alto,Tenor,Bass', 'text|Do you play an instrument? Which one(s)?', ''],
-      ['hospitality', 'Hospitality Ministers', 'Welcomes parishioners and assists during Masses and parish events.', '🚪', 'John Doe', 'john@parish.org', '5125555678', 'checkbox|Which Mass times work for you?|Saturday 5pm,Sunday 9am,Sunday 11am', '', ''],
-      ['youth', 'Youth Ministry', 'Faith formation and fellowship for middle and high school students.', '🌟', '', '', '', '', '', ''],
-      ['svdp', 'St. Vincent de Paul Society', 'Assists individuals and families in need through direct support and resources.', '💚', '', '', '', '', '', ''],
-      ['bible-study', 'Bible Study', 'Offers structured Scripture study with group discussion.', '📖', '', '', '', '', '', ''],
+      ['music', 'Music Ministry', 'Supports parish liturgies through choirs, cantors, and instrumentalists.', '🎵', 'Jane Smith', 'jane@parish.org', '5125551234', 'select|Voice part (if known)|Not sure,Soprano,Alto,Tenor,Bass', 'text|Do you play an instrument? Which one(s)?', '', 'liturgy'],
+      ['hospitality', 'Hospitality Ministers', 'Welcomes parishioners and assists during Masses and parish events.', '🚪', 'John Doe', 'john@parish.org', '5125555678', 'checkbox|Which Mass times work for you?|Saturday 5pm,Sunday 9am,Sunday 11am', '', '', 'liturgy, socializing, lay-leadership'],
+      ['youth', 'Youth Ministry', 'Faith formation and fellowship for middle and high school students.', '🌟', '', '', '', '', '', '', 'service, socializing, lay-leadership'],
+      ['svdp', 'St. Vincent de Paul Society', 'Assists individuals and families in need through direct support and resources.', '💚', '', '', '', '', '', '', 'service'],
+      ['bible-study', 'Bible Study', 'Offers structured Scripture study with group discussion.', '📖', '', '', '', '', '', '', 'bible-study'],
     ];
     
     ministries.forEach(row => ministriesSheet.appendRow(row));
@@ -281,6 +288,7 @@ function testSetup() {
     ministriesSheet.setColumnWidth(8, 250);
     ministriesSheet.setColumnWidth(9, 250);
     ministriesSheet.setColumnWidth(10, 250);
+    ministriesSheet.setColumnWidth(11, 200);
   }
   
   Logger.log('Setup complete! All tabs created. Edit the Ministries tab to add your own ministries.');
