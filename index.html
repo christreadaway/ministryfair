@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -499,6 +503,62 @@
       color: #6B1D29;
       text-decoration: underline;
     }
+
+    /* Google Sign-In button */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: white;
+      color: #333;
+      border: 2px solid #e8e4de;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    .btn-google:hover {
+      background: #f8f8f8;
+      border-color: #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .btn-google:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+    .btn-google img {
+      width: 20px;
+      height: 20px;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      color: #999;
+      font-size: 14px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e8e4de;
+    }
+    .divider::before { margin-right: 16px; }
+    .divider::after { margin-left: 16px; }
+
+    /* Profile photo (Google avatar) */
+    .profile-photo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
@@ -527,6 +587,11 @@
       <p class="welcome-text">
         Welcome! Let's get you signed up so you can explore our ministries and express interest in serving.
       </p>
+      <button type="button" class="btn-google" id="google-signin-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Sign in with Google
+      </button>
+      <div class="divider">or fill in manually</div>
       <form class="form" id="register-form">
         <div class="input-row">
           <div class="input-group">
@@ -566,6 +631,7 @@
   <div class="content">
     <div class="profile-badge">
       <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
@@ -646,6 +712,7 @@
     <button class="back-link" id="suggestions-back-btn">&#8249; Back</button>
     <div class="profile-badge">
       <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
@@ -673,6 +740,7 @@
     <button class="back-link" id="ministries-back-btn">&#8249; Back</button>
     <div class="profile-badge">
       <div class="profile-icon js-profile-initials"></div>
+      <img class="profile-photo hidden js-profile-photo" alt="Profile">
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
@@ -744,6 +812,9 @@
   </div>
 </div>
 
+<!-- Firebase Configuration -->
+<script src="firebase-config.js"></script>
+
 <script>
 // ============================================
 // CONFIGURATION - Edit these for your parish
@@ -792,7 +863,7 @@ const FALLBACK_MINISTRIES = [
 
 // State
 let MINISTRIES = [];
-let profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+let profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false, photoURL: null };
 let interests = [];
 let currentMinistry = null;
 let showAll = false;
@@ -865,7 +936,22 @@ function updateAllProfileBadges() {
   var fullName = profile.firstName + ' ' + profile.lastName;
   var phone = formatPhoneNumber(profile.phone);
 
-  document.querySelectorAll('.js-profile-initials').forEach(function(el) { el.textContent = initials; });
+  document.querySelectorAll('.js-profile-initials').forEach(function(el) {
+    if (profile.photoURL) {
+      el.classList.add('hidden');
+    } else {
+      el.textContent = initials;
+      el.classList.remove('hidden');
+    }
+  });
+  document.querySelectorAll('.js-profile-photo').forEach(function(el) {
+    if (profile.photoURL) {
+      el.src = profile.photoURL;
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
   document.querySelectorAll('.js-profile-name').forEach(function(el) { el.textContent = fullName; });
   document.querySelectorAll('.js-profile-email').forEach(function(el) { el.textContent = profile.email; });
   document.querySelectorAll('.js-profile-phone').forEach(function(el) { el.textContent = phone; });
@@ -953,6 +1039,57 @@ if (phoneInput) {
     input.value = formatted;
   });
 }
+
+// Google Sign-In handler
+document.getElementById('google-signin-btn').addEventListener('click', async function() {
+  var btn = this;
+  var originalText = btn.innerHTML;
+
+  try {
+    btn.disabled = true;
+    btn.innerHTML = '<span>Signing in...</span>';
+
+    var result = await FirebaseAuth.signInWithGoogle();
+
+    if (result.success) {
+      var user = result.user;
+      var nameParts = (user.displayName || '').split(' ');
+      var firstName = nameParts[0] || '';
+      var lastName = nameParts.slice(1).join(' ') || '';
+
+      profile = {
+        firstName: firstName,
+        lastName: lastName,
+        email: user.email || '',
+        phone: '',
+        wantsToJoinParish: false,
+        photoURL: user.photoURL || null
+      };
+
+      localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
+
+      if (ministryParam) {
+        currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
+        if (currentMinistry) {
+          returnToView = 'choose';
+          showMinistryDetail(currentMinistry);
+          return;
+        }
+      }
+      showChoiceScreen();
+    } else {
+      if (result.code !== 'auth/popup-closed-by-user') {
+        alert('Sign in failed. Please try again or use the form below.');
+      }
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+});
 
 // Register form - now goes to choice screen
 document.getElementById('register-form').addEventListener('submit', function(e) {
@@ -1596,11 +1733,18 @@ document.getElementById('explore-btn').addEventListener('click', function() {
 
 // Logout buttons (multiple across views)
 document.querySelectorAll('.js-logout-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
+  btn.addEventListener('click', async function() {
     if (confirm('Are you sure you want to log out? Your interest selections on this device will be cleared.')) {
+      // Sign out of Firebase if signed in
+      try {
+        await FirebaseAuth.signOut();
+      } catch (e) {
+        console.log('Firebase sign out:', e);
+      }
+
       localStorage.removeItem('ministry-fair-profile');
       localStorage.removeItem('ministry-fair-interests');
-      profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+      profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false, photoURL: null };
       interests = [];
       currentMinistry = null;
       showAll = false;
