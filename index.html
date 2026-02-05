@@ -559,6 +559,112 @@
       border-radius: 50%;
       object-fit: cover;
     }
+
+    /* Role badge and switcher */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 2px;
+    }
+    .role-badge:hover {
+      opacity: 0.8;
+    }
+    .role-badge::after {
+      content: '▾';
+      font-size: 9px;
+      margin-left: 2px;
+    }
+    .role-badge.role-volunteer {
+      background: #e8f5ed;
+      color: #2d7a4a;
+    }
+    .role-badge.role-ministry-leader {
+      background: #e8ecf5;
+      color: #3d4a8b;
+    }
+    .role-badge.role-admin {
+      background: #f5e8ec;
+      color: #8b3d4a;
+    }
+    .role-picker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .role-picker.hidden { display: none; }
+    .role-picker-backdrop {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .role-picker-content {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 320px;
+      width: calc(100% - 40px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    .role-picker-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .role-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 2px solid #e8e4de;
+      margin-bottom: 10px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .role-option:last-child { margin-bottom: 0; }
+    .role-option:hover {
+      border-color: #ccc;
+    }
+    .role-option.active {
+      border-color: #8B2635;
+      background: linear-gradient(135deg, #fdf2f4 0%, #fce8eb 100%);
+    }
+    .role-option-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .role-option-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .role-option-info p {
+      font-size: 12px;
+      color: #666;
+      margin: 2px 0 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -622,6 +728,35 @@
   </div>
 </div>
 
+<!-- ROLE PICKER MODAL -->
+<div id="role-picker" class="role-picker hidden">
+  <div class="role-picker-backdrop"></div>
+  <div class="role-picker-content">
+    <h3 class="role-picker-title">Switch Role</h3>
+    <div class="role-option" data-role="volunteer">
+      <span class="role-option-icon">🙋</span>
+      <div class="role-option-info">
+        <h4>Volunteer</h4>
+        <p>Explore and sign up for ministries</p>
+      </div>
+    </div>
+    <div class="role-option" data-role="ministry-leader">
+      <span class="role-option-icon">📋</span>
+      <div class="role-option-info">
+        <h4>Ministry Leader</h4>
+        <p>Manage your ministry and view signups</p>
+      </div>
+    </div>
+    <div class="role-option" data-role="admin">
+      <span class="role-option-icon">⚙️</span>
+      <div class="role-option-info">
+        <h4>Administrator</h4>
+        <p>Manage all ministries and settings</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- CHOOSE VIEW -->
 <div id="view-choose" class="hidden">
   <header class="header">
@@ -635,38 +770,13 @@
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
-        <div class="profile-phone js-profile-phone"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
       </div>
       <button class="logout-link js-logout-btn">Log out</button>
     </div>
     <h2 class="section-title">How would you like to explore?</h2>
 
-    <div class="choice-card" id="choice-preferences">
-      <div class="choice-icon">🧭</div>
-      <div class="choice-info">
-        <h3>Help Me Find My Fit</h3>
-        <p>Tell us what interests you and we'll suggest ministries</p>
-      </div>
-      <div class="choice-arrow">&#8250;</div>
-    </div>
-
-    <div class="choice-card" id="choice-browse">
-      <div class="choice-icon">📋</div>
-      <div class="choice-info">
-        <h3>Browse All Ministries</h3>
-        <p>See the complete list of ministries</p>
-      </div>
-      <div class="choice-arrow">&#8250;</div>
-    </div>
-
-    <div class="choice-card" id="choice-ai">
-      <div class="choice-icon">💬</div>
-      <div class="choice-info">
-        <h3>Tell Us In Your Own Words</h3>
-        <p>Describe how you'd like to get involved and get personalized suggestions</p>
-      </div>
-      <div class="choice-arrow">&#8250;</div>
-    </div>
+    <div id="choice-options"></div>
   </div>
 </div>
 
@@ -716,7 +826,7 @@
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
-        <div class="profile-phone js-profile-phone"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
       </div>
       <button class="logout-link js-logout-btn">Log out</button>
     </div>
@@ -744,7 +854,7 @@
       <div style="flex: 1;">
         <div class="profile-name js-profile-name"></div>
         <div class="profile-email js-profile-email"></div>
-        <div class="profile-phone js-profile-phone"></div>
+        <span class="role-badge js-role-badge role-volunteer">Volunteer</span>
       </div>
       <button class="logout-link js-logout-btn">Log out</button>
     </div>
@@ -861,9 +971,17 @@ const FALLBACK_MINISTRIES = [
   { id: 'bible-study', name: 'Bible Study', description: 'Offers structured Scripture study with group discussion.', icon: '📖', questions: [], tags: ['bible-study'] }
 ];
 
+// Role definitions
+const ROLES = {
+  'volunteer': { label: 'Volunteer', icon: '🙋', cssClass: 'role-volunteer' },
+  'ministry-leader': { label: 'Ministry Leader', icon: '📋', cssClass: 'role-ministry-leader' },
+  'admin': { label: 'Administrator', icon: '⚙️', cssClass: 'role-admin' }
+};
+
 // State
 let MINISTRIES = [];
 let profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false, photoURL: null };
+let currentRole = 'volunteer';
 let interests = [];
 let currentMinistry = null;
 let showAll = false;
@@ -908,8 +1026,10 @@ const ministryParam = urlParams.get('m');
 // Load saved data
 const savedProfile = localStorage.getItem('ministry-fair-profile');
 const savedInterests = localStorage.getItem('ministry-fair-interests');
+const savedRole = localStorage.getItem('ministry-fair-role');
 if (savedProfile) profile = JSON.parse(savedProfile);
 if (savedInterests) interests = JSON.parse(savedInterests);
+if (savedRole) currentRole = savedRole;
 
 // Views
 const views = {
@@ -955,7 +1075,62 @@ function updateAllProfileBadges() {
   document.querySelectorAll('.js-profile-name').forEach(function(el) { el.textContent = fullName; });
   document.querySelectorAll('.js-profile-email').forEach(function(el) { el.textContent = profile.email; });
   document.querySelectorAll('.js-profile-phone').forEach(function(el) { el.textContent = phone; });
+  updateRoleBadges();
 }
+
+// Update role badges across views
+function updateRoleBadges() {
+  var role = ROLES[currentRole] || ROLES['volunteer'];
+  document.querySelectorAll('.js-role-badge').forEach(function(el) {
+    el.className = 'role-badge js-role-badge ' + role.cssClass;
+    el.textContent = role.label;
+  });
+}
+
+// Role picker logic
+function openRolePicker() {
+  var picker = document.getElementById('role-picker');
+  picker.classList.remove('hidden');
+  // Highlight current role
+  picker.querySelectorAll('.role-option').forEach(function(opt) {
+    if (opt.dataset.role === currentRole) {
+      opt.classList.add('active');
+    } else {
+      opt.classList.remove('active');
+    }
+  });
+}
+
+function closeRolePicker() {
+  document.getElementById('role-picker').classList.add('hidden');
+}
+
+function switchRole(newRole) {
+  currentRole = newRole;
+  localStorage.setItem('ministry-fair-role', currentRole);
+  updateRoleBadges();
+  closeRolePicker();
+  // Re-render choice screen to show role-specific options
+  if (!views.choose.classList.contains('hidden')) {
+    renderChoiceOptions();
+  }
+}
+
+// Role picker event handlers
+document.getElementById('role-picker').querySelector('.role-picker-backdrop').addEventListener('click', closeRolePicker);
+document.querySelectorAll('#role-picker .role-option').forEach(function(opt) {
+  opt.addEventListener('click', function() {
+    switchRole(opt.dataset.role);
+  });
+});
+
+// Role badge click handlers (open picker)
+document.querySelectorAll('.js-role-badge').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openRolePicker();
+  });
+});
 
 // Fetch ministries from Google Sheet
 async function loadMinistries() {
@@ -1119,21 +1294,69 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
 // ============================================
 function showChoiceScreen() {
   updateAllProfileBadges();
+  renderChoiceOptions();
   showView('choose');
 }
 
-document.getElementById('choice-preferences').addEventListener('click', function() {
-  showPreferences();
-});
+function renderChoiceOptions() {
+  var container = document.getElementById('choice-options');
 
-document.getElementById('choice-browse').addEventListener('click', function() {
-  returnToView = 'ministries';
-  showMinistriesList();
-});
+  // Base options available to all roles
+  var options = [
+    { id: 'preferences', icon: '🧭', title: 'Help Me Find My Fit', desc: 'Tell us what interests you and we\'ll suggest ministries', roles: ['volunteer', 'ministry-leader', 'admin'] },
+    { id: 'browse', icon: '📋', title: 'Browse All Ministries', desc: 'See the complete list of ministries', roles: ['volunteer', 'ministry-leader', 'admin'] },
+    { id: 'ai', icon: '💬', title: 'Tell Us In Your Own Words', desc: 'Describe how you\'d like to get involved and get personalized suggestions', roles: ['volunteer', 'ministry-leader', 'admin'] },
+    { id: 'my-ministry', icon: '👥', title: 'My Ministry Signups', desc: 'View who has signed up for your ministry', roles: ['ministry-leader', 'admin'] },
+    { id: 'manage-ministries', icon: '⚙️', title: 'Manage Ministries', desc: 'Add, edit, or remove ministries', roles: ['admin'] },
+    { id: 'view-all-signups', icon: '📊', title: 'All Signups', desc: 'View all signup activity across ministries', roles: ['admin'] }
+  ];
 
-document.getElementById('choice-ai').addEventListener('click', function() {
-  showAIInput();
-});
+  var filtered = options.filter(function(opt) {
+    return opt.roles.indexOf(currentRole) !== -1;
+  });
+
+  container.innerHTML = filtered.map(function(opt) {
+    return '<div class="choice-card" data-choice="' + opt.id + '">' +
+      '<div class="choice-icon">' + opt.icon + '</div>' +
+      '<div class="choice-info">' +
+        '<h3>' + opt.title + '</h3>' +
+        '<p>' + opt.desc + '</p>' +
+      '</div>' +
+      '<div class="choice-arrow">&#8250;</div>' +
+    '</div>';
+  }).join('');
+
+  // Attach click handlers
+  container.querySelectorAll('.choice-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      handleChoiceClick(card.dataset.choice);
+    });
+  });
+}
+
+function handleChoiceClick(choiceId) {
+  switch (choiceId) {
+    case 'preferences':
+      showPreferences();
+      break;
+    case 'browse':
+      returnToView = 'ministries';
+      showMinistriesList();
+      break;
+    case 'ai':
+      showAIInput();
+      break;
+    case 'my-ministry':
+      alert('Coming soon! Ministry leader signup view is under development.');
+      break;
+    case 'manage-ministries':
+      alert('Coming soon! Ministry management is under development.');
+      break;
+    case 'view-all-signups':
+      alert('Coming soon! Admin signup dashboard is under development.');
+      break;
+  }
+}
 
 // ============================================
 // PREFERENCES VIEW
@@ -1744,7 +1967,9 @@ document.querySelectorAll('.js-logout-btn').forEach(function(btn) {
 
       localStorage.removeItem('ministry-fair-profile');
       localStorage.removeItem('ministry-fair-interests');
+      localStorage.removeItem('ministry-fair-role');
       profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false, photoURL: null };
+      currentRole = 'volunteer';
       interests = [];
       currentMinistry = null;
       showAll = false;
