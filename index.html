@@ -417,20 +417,7 @@
         Welcome! Let's get you signed up so you can explore our ministries and express interest in serving.
       </p>
       <div class="google-signin-section">
-        <div id="g_id_onload"
-          data-client_id="1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com"
-          data-callback="handleGoogleSignIn"
-          data-auto_prompt="false">
-        </div>
-        <div id="g_id_signin"
-          data-type="standard"
-          data-size="large"
-          data-theme="outline"
-          data-text="sign_in_with"
-          data-shape="rectangular"
-          data-logo_alignment="left"
-          data-width="300">
-        </div>
+        <div id="g_id_signin"></div>
       </div>
       <div class="divider">or fill in manually</div>
       <form class="form" id="register-form">
@@ -625,6 +612,32 @@ function showView(viewName) {
   Object.values(views).forEach(v => v.classList.add('hidden'));
   views[viewName].classList.remove('hidden');
   window.scrollTo(0, 0);
+  if (viewName === 'register') {
+    renderGoogleButton();
+  }
+}
+
+function renderGoogleButton() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    // GIS library hasn't loaded yet, retry shortly
+    setTimeout(renderGoogleButton, 200);
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+    callback: handleGoogleSignIn
+  });
+  const container = document.getElementById('g_id_signin');
+  container.innerHTML = '';
+  google.accounts.id.renderButton(container, {
+    type: 'standard',
+    size: 'large',
+    theme: 'outline',
+    text: 'sign_in_with',
+    shape: 'rectangular',
+    logo_alignment: 'left',
+    width: 300
+  });
 }
 
 // Fetch ministries from Google Sheet
