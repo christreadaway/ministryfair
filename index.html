@@ -388,6 +388,232 @@
     .modal-buttons button {
       flex: 1;
     }
+
+    /* Admin styles */
+    .admin-header {
+      background: linear-gradient(135deg, #1a365d 0%, #2a4a7f 100%);
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(26, 54, 93, 0.3);
+    }
+    .admin-header h1 { font-size: 28px; font-weight: 600; letter-spacing: 0.5px; }
+    .admin-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
+    .admin-content {
+      padding: 24px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .admin-login-card {
+      max-width: 420px;
+      margin: 40px auto;
+    }
+    .admin-login-card .welcome-text { text-align: center; }
+    .admin-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .admin-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 14px;
+      color: #555;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e8e4de;
+      overflow-x: auto;
+    }
+    .admin-tab {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: #666;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-bottom: -2px;
+    }
+    .admin-tab:hover { color: #1a365d; }
+    .admin-tab.active {
+      color: #1a365d;
+      border-bottom-color: #1a365d;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: 600;
+      color: #1a365d;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .admin-table-wrap {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 13px;
+    }
+    .admin-table th {
+      background: #f7f5f2;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #e8e4de;
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0ebe3;
+      color: #444;
+    }
+    .admin-table tr:hover td { background: #faf8f5; }
+    .action-signup {
+      color: #2f855a;
+      font-weight: 600;
+    }
+    .action-removed {
+      color: #c53030;
+      font-weight: 600;
+    }
+    .admin-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .admin-toolbar .input {
+      max-width: 300px;
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+    .btn-admin {
+      background: linear-gradient(135deg, #1a365d 0%, #2a4a7f 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+      white-space: nowrap;
+    }
+    .btn-admin:disabled { opacity: 0.6; cursor: wait; }
+    .btn-admin-sm {
+      background: #1a365d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .btn-admin-danger {
+      background: #c53030;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+    .admin-form {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .admin-form h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+    }
+    .admin-form .form { gap: 14px; }
+    .admin-ministry-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-ministry-card .ministry-info { flex: 1; }
+    .admin-ministry-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .admin-empty {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 15px;
+    }
+    .admin-link {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.04);
+      color: #999;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-family: 'Inter', -apple-system, sans-serif;
+      z-index: 10;
+    }
+    .admin-link:hover { background: rgba(0,0,0,0.08); color: #666; }
+    .refresh-note {
+      font-size: 12px;
+      color: #888;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -530,6 +756,178 @@
   </div>
 </div>
 
+<!-- ADMIN SIGN-IN VIEW -->
+<div id="view-admin-login" class="hidden">
+  <header class="admin-header">
+    <h1 class="app-title"></h1>
+    <p>Admin Sign In</p>
+  </header>
+  <div class="admin-content">
+    <div class="card admin-login-card">
+      <p class="welcome-text">
+        Sign in with your Google account to access the admin dashboard. Your email must be listed in the Admins sheet.
+      </p>
+      <div class="google-signin-section">
+        <div id="g_id_admin_signin"></div>
+      </div>
+      <div id="admin-login-error" class="hidden" style="margin-top: 16px; text-align: center; color: #c53030; font-size: 14px; font-family: 'Inter', sans-serif;"></div>
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="?" style="color: #1a365d; font-size: 14px; font-family: 'Inter', sans-serif;">Back to Ministry Fair</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD VIEW -->
+<div id="view-admin-dashboard" class="hidden">
+  <header class="admin-header">
+    <h1 class="app-title"></h1>
+    <p>Admin Dashboard</p>
+  </header>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <div class="admin-user-info">
+        <div class="profile-icon" id="admin-initials" style="width: 36px; height: 36px; font-size: 14px; background: #1a365d;"></div>
+        <span id="admin-name"></span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span class="refresh-note" id="admin-last-refresh"></span>
+        <button class="btn-admin" id="admin-refresh-btn" style="padding: 8px 14px; font-size: 13px;">Refresh Data</button>
+        <a href="?" style="color: #1a365d; font-size: 13px; font-family: 'Inter', sans-serif; text-decoration: underline;">Exit Admin</a>
+        <button class="logout-link" id="admin-logout-btn" style="color: #1a365d;">Log out</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="admin-stats"></div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="signups">Signups</button>
+      <button class="admin-tab" data-tab="parishioners">New Parishioners</button>
+      <button class="admin-tab" data-tab="ministries">Ministries</button>
+    </div>
+
+    <!-- Signups Panel -->
+    <div class="admin-panel active" id="panel-signups">
+      <div class="admin-toolbar">
+        <input type="text" class="input" id="admin-signups-search" placeholder="Search signups...">
+        <button class="btn-admin" id="admin-export-signups" style="padding: 8px 14px; font-size: 13px;">Export CSV</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="admin-signups-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Time</th><th>Name</th><th>Email</th><th>Phone</th><th>Ministry</th><th>Action</th><th>New?</th>
+            </tr>
+          </thead>
+          <tbody id="admin-signups-body"></tbody>
+        </table>
+      </div>
+      <div class="admin-empty hidden" id="admin-signups-empty">No signups yet.</div>
+    </div>
+
+    <!-- New Parishioners Panel -->
+    <div class="admin-panel" id="panel-parishioners">
+      <div class="admin-toolbar">
+        <input type="text" class="input" id="admin-parish-search" placeholder="Search new parishioners...">
+        <button class="btn-admin" id="admin-export-parish" style="padding: 8px 14px; font-size: 13px;">Export CSV</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="admin-parish-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Time</th><th>First</th><th>Last</th><th>Email</th><th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="admin-parish-body"></tbody>
+        </table>
+      </div>
+      <div class="admin-empty hidden" id="admin-parish-empty">No new parishioners yet.</div>
+    </div>
+
+    <!-- Ministries Panel -->
+    <div class="admin-panel" id="panel-ministries">
+      <div class="admin-toolbar">
+        <button class="btn-admin" id="admin-add-ministry-btn">+ Add Ministry</button>
+      </div>
+      <div id="admin-ministry-form-wrap" class="hidden">
+        <div class="admin-form">
+          <h3 id="admin-ministry-form-title">Add Ministry</h3>
+          <form class="form" id="admin-ministry-form">
+            <div class="input-row">
+              <div class="input-group">
+                <label class="label">ID (lowercase, no spaces)</label>
+                <input type="text" class="input" id="admin-m-id" required placeholder="e.g. music-ministry" pattern="[a-z0-9\-]+">
+              </div>
+              <div class="input-group">
+                <label class="label">Icon (emoji)</label>
+                <input type="text" class="input" id="admin-m-icon" placeholder="e.g. 🎵" style="max-width: 80px;">
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="label">Name</label>
+              <input type="text" class="input" id="admin-m-name" required placeholder="Ministry name">
+            </div>
+            <div class="input-group">
+              <label class="label">Description</label>
+              <textarea class="input" id="admin-m-desc" rows="2" placeholder="Brief description of the ministry" style="resize: vertical;"></textarea>
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label class="label">Organizer Name</label>
+                <input type="text" class="input" id="admin-m-org-name" placeholder="Jane Smith">
+              </div>
+              <div class="input-group">
+                <label class="label">Organizer Email</label>
+                <input type="email" class="input" id="admin-m-org-email" placeholder="jane@parish.org">
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="label">Organizer Phone</label>
+              <input type="tel" class="input" id="admin-m-org-phone" placeholder="(555) 555-1234" maxlength="14">
+            </div>
+            <div class="input-group">
+              <label class="label">Question 1 (optional, format: type|label|options)</label>
+              <input type="text" class="input" id="admin-m-q1" placeholder="e.g. select|Voice part|Soprano,Alto,Tenor,Bass">
+            </div>
+            <div class="input-group">
+              <label class="label">Question 2 (optional)</label>
+              <input type="text" class="input" id="admin-m-q2" placeholder="e.g. text|Do you play an instrument?">
+            </div>
+            <div class="input-group">
+              <label class="label">Question 3 (optional)</label>
+              <input type="text" class="input" id="admin-m-q3" placeholder="e.g. checkbox|Available times|Morning,Afternoon,Evening">
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <button type="submit" class="btn-admin" id="admin-m-submit">Save Ministry</button>
+              <button type="button" class="btn-secondary" id="admin-m-cancel" style="padding: 10px 20px; font-size: 14px;">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="admin-ministry-list"></div>
+      <div class="admin-empty hidden" id="admin-ministry-empty">No ministries configured yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin delete confirmation modal -->
+<div id="admin-delete-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <h3 class="modal-title">Delete Ministry?</h3>
+    <p class="modal-text">Are you sure you want to delete <strong id="admin-delete-name"></strong>? This cannot be undone.</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="admin-delete-cancel">Cancel</button>
+      <button class="btn-remove" id="admin-delete-confirm">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subtle admin link on parishioner views -->
+<a href="?admin" class="admin-link" id="admin-entry-link">Admin</a>
+
 <script>
 // ============================================
 // CONFIGURATION - Edit these for your parish
@@ -589,9 +987,10 @@ function formatPhoneNumber(value) {
   return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
 }
 
-// Check URL for ministry param
+// Check URL params
 const urlParams = new URLSearchParams(window.location.search);
 const ministryParam = urlParams.get('m');
+const isAdminMode = urlParams.has('admin');
 
 // Load saved data
 const savedProfile = localStorage.getItem('ministry-fair-profile');
@@ -605,7 +1004,9 @@ const views = {
   register: document.getElementById('view-register'),
   ministries: document.getElementById('view-ministries'),
   detail: document.getElementById('view-detail'),
-  confirmed: document.getElementById('view-confirmed')
+  confirmed: document.getElementById('view-confirmed'),
+  adminLogin: document.getElementById('view-admin-login'),
+  adminDashboard: document.getElementById('view-admin-dashboard')
 };
 
 function showView(viewName) {
@@ -614,6 +1015,14 @@ function showView(viewName) {
   window.scrollTo(0, 0);
   if (viewName === 'register') {
     renderGoogleButton();
+  }
+  if (viewName === 'adminLogin') {
+    renderAdminGoogleButton();
+  }
+  // Hide admin link on admin views
+  const adminLink = document.getElementById('admin-entry-link');
+  if (adminLink) {
+    adminLink.style.display = (viewName === 'adminLogin' || viewName === 'adminDashboard') ? 'none' : '';
   }
 }
 
@@ -667,6 +1076,18 @@ async function loadMinistries() {
 }
 
 function initializeApp() {
+  // Admin mode
+  if (isAdminMode) {
+    const savedAdmin = localStorage.getItem('ministry-fair-admin');
+    if (savedAdmin) {
+      adminSession = JSON.parse(savedAdmin);
+      showAdminDashboard();
+    } else {
+      showView('adminLogin');
+    }
+    return;
+  }
+
   if (savedProfile) {
     if (ministryParam) {
       currentMinistry = MINISTRIES.find(m => m.id === ministryParam);
@@ -1103,6 +1524,454 @@ document.getElementById('logout-btn').addEventListener('click', () => {
     showView('register');
   }
 });
+
+// ============================================
+// ADMIN FUNCTIONALITY
+// ============================================
+let adminSession = null;
+let adminSignups = [];
+let adminNewParishioners = [];
+let adminDeleteTarget = null;
+let adminEditTarget = null;
+
+function renderAdminGoogleButton() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    setTimeout(renderAdminGoogleButton, 200);
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+    callback: handleAdminGoogleSignIn
+  });
+  const container = document.getElementById('g_id_admin_signin');
+  container.innerHTML = '';
+  google.accounts.id.renderButton(container, {
+    type: 'standard',
+    size: 'large',
+    theme: 'outline',
+    text: 'sign_in_with',
+    shape: 'rectangular',
+    logo_alignment: 'left',
+    width: 300
+  });
+}
+
+async function handleAdminGoogleSignIn(response) {
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  const email = payload.email;
+  const name = payload.name || payload.given_name || email;
+
+  const errorDiv = document.getElementById('admin-login-error');
+  errorDiv.classList.add('hidden');
+
+  try {
+    const res = await fetch(API_URL + '?action=verifyAdmin&email=' + encodeURIComponent(email));
+    const data = await res.json();
+
+    if (data.isAdmin) {
+      adminSession = { email: email, name: name };
+      localStorage.setItem('ministry-fair-admin', JSON.stringify(adminSession));
+      showAdminDashboard();
+    } else {
+      errorDiv.textContent = 'Access denied. "' + email + '" is not listed as an admin. Add this email to the Admins tab in Google Sheets.';
+      errorDiv.classList.remove('hidden');
+    }
+  } catch (err) {
+    errorDiv.textContent = 'Could not verify admin status. Check your API URL and try again.';
+    errorDiv.classList.remove('hidden');
+  }
+}
+
+async function showAdminDashboard() {
+  showView('adminDashboard');
+
+  // Set admin info
+  const initials = adminSession.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('admin-initials').textContent = initials;
+  document.getElementById('admin-name').textContent = adminSession.name;
+
+  await loadAdminData();
+}
+
+async function loadAdminData() {
+  const refreshBtn = document.getElementById('admin-refresh-btn');
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = 'Loading...';
+
+  try {
+    const [signupsRes, parishRes] = await Promise.all([
+      fetch(API_URL + '?action=getSignups&email=' + encodeURIComponent(adminSession.email)),
+      fetch(API_URL + '?action=getNewParishioners&email=' + encodeURIComponent(adminSession.email))
+    ]);
+
+    const signupsData = await signupsRes.json();
+    const parishData = await parishRes.json();
+
+    if (signupsData.error) throw new Error(signupsData.error);
+    if (parishData.error) throw new Error(parishData.error);
+
+    adminSignups = signupsData.signups || [];
+    adminNewParishioners = parishData.newParishioners || [];
+
+    renderAdminStats();
+    renderAdminSignups();
+    renderAdminParishioners();
+    renderAdminMinistries();
+
+    document.getElementById('admin-last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error('Admin data load error:', err);
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = 'Refresh Data';
+  }
+}
+
+function renderAdminStats() {
+  const activeSignups = adminSignups.filter(s => s.action === 'Signup');
+  const uniqueEmails = new Set(activeSignups.map(s => s.email));
+  const uniqueMinistries = new Set(activeSignups.map(s => s.ministry));
+
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-number">${activeSignups.length}</div>
+      <div class="stat-label">Total Signups</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${uniqueEmails.size}</div>
+      <div class="stat-label">Unique People</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${adminNewParishioners.length}</div>
+      <div class="stat-label">New Parishioners</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${MINISTRIES.length}</div>
+      <div class="stat-label">Ministries</div>
+    </div>
+  `;
+}
+
+function renderAdminSignups() {
+  const search = (document.getElementById('admin-signups-search').value || '').toLowerCase();
+  const filtered = adminSignups.filter(s => {
+    if (!search) return true;
+    return (s.firstName + ' ' + s.lastName + ' ' + s.email + ' ' + s.ministry).toLowerCase().includes(search);
+  });
+
+  const tbody = document.getElementById('admin-signups-body');
+  const empty = document.getElementById('admin-signups-empty');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  // Show newest first
+  const sorted = [...filtered].reverse();
+  tbody.innerHTML = sorted.map(s => `
+    <tr>
+      <td>${escapeHtml(String(s.date))}</td>
+      <td>${escapeHtml(String(s.time))}</td>
+      <td>${escapeHtml(s.firstName + ' ' + s.lastName)}</td>
+      <td>${escapeHtml(s.email)}</td>
+      <td>${escapeHtml(s.phone)}</td>
+      <td>${escapeHtml(s.ministry)}</td>
+      <td class="${s.action === 'Removed' ? 'action-removed' : 'action-signup'}">${escapeHtml(s.action)}</td>
+      <td>${s.newParishioner === 'Yes' ? 'Yes' : ''}</td>
+    </tr>
+  `).join('');
+}
+
+function renderAdminParishioners() {
+  const search = (document.getElementById('admin-parish-search').value || '').toLowerCase();
+  const filtered = adminNewParishioners.filter(p => {
+    if (!search) return true;
+    return (p.firstName + ' ' + p.lastName + ' ' + p.email).toLowerCase().includes(search);
+  });
+
+  const tbody = document.getElementById('admin-parish-body');
+  const empty = document.getElementById('admin-parish-empty');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  const sorted = [...filtered].reverse();
+  tbody.innerHTML = sorted.map(p => `
+    <tr>
+      <td>${escapeHtml(String(p.date))}</td>
+      <td>${escapeHtml(String(p.time))}</td>
+      <td>${escapeHtml(p.firstName)}</td>
+      <td>${escapeHtml(p.lastName)}</td>
+      <td>${escapeHtml(p.email)}</td>
+      <td>${escapeHtml(p.phone)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderAdminMinistries() {
+  const list = document.getElementById('admin-ministry-list');
+  const empty = document.getElementById('admin-ministry-empty');
+
+  if (MINISTRIES.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  list.innerHTML = MINISTRIES.map(m => {
+    const signupCount = adminSignups.filter(s => s.ministry === m.name && s.action === 'Signup').length;
+    return `
+      <div class="admin-ministry-card">
+        <div class="ministry-icon">${m.icon}</div>
+        <div class="ministry-info">
+          <h3 class="ministry-name">${escapeHtml(m.name)}</h3>
+          <p class="ministry-desc">${escapeHtml(m.description)}</p>
+          <p style="font-size: 12px; color: #888; margin-top: 4px; font-family: 'Inter', sans-serif;">
+            ${signupCount} signup${signupCount !== 1 ? 's' : ''}
+            ${m.organizerName ? ' &middot; ' + escapeHtml(m.organizerName) : ''}
+          </p>
+        </div>
+        <div class="admin-ministry-actions">
+          <button class="btn-admin-sm" onclick="editMinistry('${escapeHtml(m.id)}')">Edit</button>
+          <button class="btn-admin-danger" onclick="confirmDeleteMinistry('${escapeHtml(m.id)}', '${escapeHtml(m.name)}')">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Admin tabs
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Admin search handlers
+document.getElementById('admin-signups-search').addEventListener('input', renderAdminSignups);
+document.getElementById('admin-parish-search').addEventListener('input', renderAdminParishioners);
+
+// Admin refresh
+document.getElementById('admin-refresh-btn').addEventListener('click', loadAdminData);
+
+// Admin logout
+document.getElementById('admin-logout-btn').addEventListener('click', () => {
+  localStorage.removeItem('ministry-fair-admin');
+  adminSession = null;
+  showView('adminLogin');
+});
+
+// CSV export
+function exportCsv(headers, rows, filename) {
+  const csvContent = [headers.join(',')]
+    .concat(rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')))
+    .join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+document.getElementById('admin-export-signups').addEventListener('click', () => {
+  const headers = ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'New Parishioner', 'Ministry', 'Action'];
+  const rows = adminSignups.map(s => [s.date, s.time, s.firstName, s.lastName, s.email, s.phone, s.newParishioner, s.ministry, s.action]);
+  exportCsv(headers, rows, 'ministry-fair-signups.csv');
+});
+
+document.getElementById('admin-export-parish').addEventListener('click', () => {
+  const headers = ['Date', 'Time', 'First', 'Last', 'Email', 'Phone'];
+  const rows = adminNewParishioners.map(p => [p.date, p.time, p.firstName, p.lastName, p.email, p.phone]);
+  exportCsv(headers, rows, 'new-parishioners.csv');
+});
+
+// Ministry CRUD
+document.getElementById('admin-add-ministry-btn').addEventListener('click', () => {
+  adminEditTarget = null;
+  document.getElementById('admin-ministry-form-title').textContent = 'Add Ministry';
+  document.getElementById('admin-m-id').value = '';
+  document.getElementById('admin-m-id').readOnly = false;
+  document.getElementById('admin-m-icon').value = '';
+  document.getElementById('admin-m-name').value = '';
+  document.getElementById('admin-m-desc').value = '';
+  document.getElementById('admin-m-org-name').value = '';
+  document.getElementById('admin-m-org-email').value = '';
+  document.getElementById('admin-m-org-phone').value = '';
+  document.getElementById('admin-m-q1').value = '';
+  document.getElementById('admin-m-q2').value = '';
+  document.getElementById('admin-m-q3').value = '';
+  document.getElementById('admin-m-submit').textContent = 'Add Ministry';
+  document.getElementById('admin-ministry-form-wrap').classList.remove('hidden');
+});
+
+document.getElementById('admin-m-cancel').addEventListener('click', () => {
+  document.getElementById('admin-ministry-form-wrap').classList.add('hidden');
+  adminEditTarget = null;
+});
+
+function editMinistry(id) {
+  const m = MINISTRIES.find(min => min.id === id);
+  if (!m) return;
+
+  adminEditTarget = m;
+  document.getElementById('admin-ministry-form-title').textContent = 'Edit Ministry';
+  document.getElementById('admin-m-id').value = m.id;
+  document.getElementById('admin-m-id').readOnly = true;
+  document.getElementById('admin-m-icon').value = m.icon || '';
+  document.getElementById('admin-m-name').value = m.name || '';
+  document.getElementById('admin-m-desc').value = m.description || '';
+  document.getElementById('admin-m-org-name').value = m.organizerName || '';
+  document.getElementById('admin-m-org-email').value = m.organizerEmail || '';
+  document.getElementById('admin-m-org-phone').value = m.organizerPhone || '';
+
+  // Reconstruct question strings
+  const questions = m.questions || [];
+  document.getElementById('admin-m-q1').value = questions[0] ? questions[0].type + '|' + questions[0].label + (questions[0].options.length ? '|' + questions[0].options.join(',') : '') : '';
+  document.getElementById('admin-m-q2').value = questions[1] ? questions[1].type + '|' + questions[1].label + (questions[1].options.length ? '|' + questions[1].options.join(',') : '') : '';
+  document.getElementById('admin-m-q3').value = questions[2] ? questions[2].type + '|' + questions[2].label + (questions[2].options.length ? '|' + questions[2].options.join(',') : '') : '';
+
+  document.getElementById('admin-m-submit').textContent = 'Update Ministry';
+  document.getElementById('admin-ministry-form-wrap').classList.remove('hidden');
+  document.getElementById('admin-ministry-form-wrap').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.getElementById('admin-ministry-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById('admin-m-submit');
+  submitBtn.disabled = true;
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Saving...';
+
+  const payload = {
+    adminEmail: adminSession.email,
+    adminAction: adminEditTarget ? 'updateMinistry' : 'addMinistry',
+    id: document.getElementById('admin-m-id').value.trim(),
+    name: document.getElementById('admin-m-name').value.trim(),
+    description: document.getElementById('admin-m-desc').value.trim(),
+    icon: document.getElementById('admin-m-icon').value.trim() || '📋',
+    organizerName: document.getElementById('admin-m-org-name').value.trim(),
+    organizerEmail: document.getElementById('admin-m-org-email').value.trim(),
+    organizerPhone: document.getElementById('admin-m-org-phone').value.trim(),
+    question1: document.getElementById('admin-m-q1').value.trim(),
+    question2: document.getElementById('admin-m-q2').value.trim(),
+    question3: document.getElementById('admin-m-q3').value.trim()
+  };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (result.success) {
+      document.getElementById('admin-ministry-form-wrap').classList.add('hidden');
+      adminEditTarget = null;
+      // Reload ministries from API
+      await reloadMinistries();
+      renderAdminMinistries();
+      renderAdminStats();
+    } else {
+      alert('Error: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Failed to save ministry. Check your connection and try again.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+});
+
+async function reloadMinistries() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    if (data.ministries) {
+      MINISTRIES = data.ministries;
+    }
+  } catch (err) {
+    console.error('Error reloading ministries:', err);
+  }
+}
+
+function confirmDeleteMinistry(id, name) {
+  adminDeleteTarget = id;
+  document.getElementById('admin-delete-name').textContent = name;
+  document.getElementById('admin-delete-modal').classList.remove('hidden');
+}
+
+document.getElementById('admin-delete-cancel').addEventListener('click', () => {
+  document.getElementById('admin-delete-modal').classList.add('hidden');
+  adminDeleteTarget = null;
+});
+
+document.querySelector('#admin-delete-modal .modal-backdrop').addEventListener('click', () => {
+  document.getElementById('admin-delete-modal').classList.add('hidden');
+  adminDeleteTarget = null;
+});
+
+document.getElementById('admin-delete-confirm').addEventListener('click', async () => {
+  if (!adminDeleteTarget) return;
+
+  const confirmBtn = document.getElementById('admin-delete-confirm');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Deleting...';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminEmail: adminSession.email,
+        adminAction: 'deleteMinistry',
+        id: adminDeleteTarget
+      })
+    });
+    const result = await res.json();
+    if (result.success) {
+      await reloadMinistries();
+      renderAdminMinistries();
+      renderAdminStats();
+    } else {
+      alert('Error: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Failed to delete ministry.');
+  } finally {
+    document.getElementById('admin-delete-modal').classList.add('hidden');
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Yes, Delete';
+    adminDeleteTarget = null;
+  }
+});
+
+// Phone formatting on admin form
+const adminPhoneInput = document.getElementById('admin-m-org-phone');
+if (adminPhoneInput) {
+  adminPhoneInput.addEventListener('input', function(e) {
+    e.target.value = formatPhoneNumber(e.target.value);
+  });
+}
 </script>
 
 </body>

@@ -1,7 +1,7 @@
 # Product Spec: Parish Ministry Fair App
 
-**Version:** 3.0  
-**Last Updated:** January 2026
+**Version:** 4.0
+**Last Updated:** February 2026
 
 ---
 
@@ -188,6 +188,7 @@ This app digitizes the signup process, allowing parishioners to register once an
 |-----|---------|
 | `ministry-fair-profile` | JSON: firstName, lastName, email, phone, wantsToJoinParish |
 | `ministry-fair-interests` | JSON array: ministryId, ministryName, answers, timestamp |
+| `ministry-fair-admin` | JSON: email, name (admin session) |
 
 ### Google Sheets
 
@@ -199,6 +200,9 @@ This app digitizes the signup process, allowing parishioners to register once an
 
 **New Parishioners Tab (written by app):**
 - Date, Time, First, Last, Email, Phone
+
+**Admins Tab (manual configuration):**
+- Email, Name, Added Date
 
 ---
 
@@ -212,26 +216,61 @@ This app digitizes the signup process, allowing parishioners to register once an
 | localStorage | Client-side persistence | Yes |
 
 ### External Services
-- No authentication required
+- Google Sign-In for admin authentication (verified against Admins sheet)
 - No payment processing
 - No email sending (manual follow-up by ministry leaders)
 
 ---
 
-## Out of Scope (v3)
+## Admin Dashboard (v4)
+
+### Admin Sign-In
+- Accessed via `?admin` URL parameter or the subtle "Admin" link at the bottom-right of the app
+- Admins authenticate via Google Sign-In
+- Admin email must be listed in the **Admins** tab in Google Sheets (Email, Name, Added Date)
+- Non-admin emails see an access-denied message with instructions
+- Admin session persisted in localStorage (`ministry-fair-admin`)
+
+### Admin Dashboard Features
+| Feature | Description |
+|---------|-------------|
+| Summary stats | Total signups, unique people, new parishioners, ministry count |
+| Signups tab | Searchable table of all signups/removals, newest first, with CSV export |
+| New Parishioners tab | Searchable table of new parishioner leads, with CSV export |
+| Ministries tab | Full CRUD: add, edit, and delete ministries from the dashboard |
+| Data refresh | Manual refresh button to pull latest data from Google Sheets |
+| Admin logout | Clears admin session; separate from parishioner logout |
+
+### Admin API Endpoints (Google Apps Script)
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `?action=verifyAdmin&email=` | GET | None (returns boolean) | Checks if email is in Admins sheet |
+| `?action=getSignups&email=` | GET | Admin email | Returns all signup rows |
+| `?action=getNewParishioners&email=` | GET | Admin email | Returns all new parishioner rows |
+| POST `adminAction=addMinistry` | POST | Admin email | Adds a new ministry row |
+| POST `adminAction=updateMinistry` | POST | Admin email | Updates an existing ministry by ID |
+| POST `adminAction=deleteMinistry` | POST | Admin email | Deletes a ministry row by ID |
+
+### Google Sheets: Admins Tab
+| Column | Description |
+|--------|-------------|
+| Email | Google account email (used for access control) |
+| Name | Display name (informational) |
+| Added Date | When the admin was added (informational) |
+
+---
+
+## Out of Scope (v4)
 
 The following are explicitly NOT included in this version:
 
-- User accounts / authentication
 - Email notifications to ministry leaders
 - SMS notifications
-- Admin dashboard
-- Analytics / reporting
 - Multi-language support
 - Offline mode (requires internet for initial load + signups)
 - Photo upload
 - Calendar integration
-- Ministry leader login to view signups
+- Ministry leader login to view their own signups (admins can view all)
 
 ---
 
@@ -274,6 +313,7 @@ The following are explicitly NOT included in this version:
 | 1.0 | Jan 2026 | Initial release: registration, browsing, signup |
 | 2.0 | Jan 2026 | Added search, organizer info, phone display |
 | 3.0 | Jan 2026 | Added logout, remove interest, audit trail, phone formatting, organizer search, configurable branding |
+| 4.0 | Feb 2026 | Added admin sign-in via Google, admin dashboard with signups/parishioners/ministry management, CSV export, Admins sheet |
 
 ---
 
@@ -302,8 +342,8 @@ The following are explicitly NOT included in this version:
 ┌─────────────────────────────────────────────────────────┐
 │                  Google Apps Script                      │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │  doGet()  - Returns ministry list as JSON       │   │
-│  │  doPost() - Writes signup/removal to sheet      │   │
+│  │  doGet()  - Returns ministries, signups, admin   │   │
+│  │  doPost() - Writes signups + admin CRUD         │   │
 │  └─────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
                            │
@@ -311,9 +351,14 @@ The following are explicitly NOT included in this version:
 ┌─────────────────────────────────────────────────────────┐
 │                    Google Sheets                         │
 │  ┌──────────────┐ ┌──────────────┐ ┌────────────────┐  │
-│  │  Ministries  │ │  App Signups │ │New Parishioners│  │
-│  │    (config)  │ │    (data)    │ │     (data)     │  │
+│  ┌──────────────┐ ┌──────────────┐ ┌────────────────┐  │
+│  │    Admins     │ │  App Signups │ │New Parishioners│  │
+│  │  (access ctl) │ │    (data)    │ │     (data)     │  │
 │  └──────────────┘ └──────────────┘ └────────────────┘  │
+│  ┌──────────────┐                                      │
+│  │  Ministries  │                                      │
+│  │    (config)  │                                      │
+│  └──────────────┘                                      │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -333,6 +378,9 @@ The following are explicitly NOT included in this version:
 - [ ] Test registration flow
 - [ ] Test ministry signup
 - [ ] Test interest removal
+- [ ] Add admin emails to Admins tab
+- [ ] Test admin sign-in (?admin)
+- [ ] Test admin dashboard (signups, parishioners, ministry CRUD)
 - [ ] Add ministries to sheet
 - [ ] Generate QR codes
 - [ ] Print QR codes for tables
