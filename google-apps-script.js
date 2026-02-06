@@ -72,8 +72,11 @@ function doPost(e) {
 }
 
 function handleAdminPost(ss, data) {
-  // Verify admin before any admin action
-  if (!isAdmin(ss, data.adminEmail)) {
+  const isAdminUser = isAdmin(ss, data.adminEmail);
+
+  // Admin-only actions
+  const adminOnlyActions = ['addMinistry', 'updateMinistry', 'deleteMinistry', 'addAdmin', 'removeAdmin'];
+  if (adminOnlyActions.includes(data.adminAction) && !isAdminUser) {
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, error: 'Unauthorized' }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -86,6 +89,10 @@ function handleAdminPost(ss, data) {
       return updateMinistry(ss, data);
     case 'deleteMinistry':
       return deleteMinistry(ss, data);
+    case 'addAdmin':
+      return addAdminUser(ss, data);
+    case 'removeAdmin':
+      return removeAdminUser(ss, data);
     default:
       return ContentService
         .createTextOutput(JSON.stringify({ success: false, error: 'Unknown admin action' }))
@@ -187,6 +194,58 @@ function deleteMinistry(ss, data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function addAdminUser(ss, data) {
+  const sheet = getOrCreateSheet(ss, ADMINS_SHEET_NAME, getAdminsHeaders());
+  const email = (data.email || '').toLowerCase().trim();
+  if (!email) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: 'Email is required' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Check if already exists
+  const existing = sheet.getDataRange().getValues();
+  for (let i = 1; i < existing.length; i++) {
+    if (existing[i][0] && existing[i][0].toString().toLowerCase().trim() === email) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: 'Admin already exists' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  const now = new Date();
+  const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
+  sheet.appendRow([email, data.name || '', date]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function removeAdminUser(ss, data) {
+  const sheet = ss.getSheetByName(ADMINS_SHEET_NAME);
+  if (!sheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: 'Admins sheet not found' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const email = (data.email || '').toLowerCase().trim();
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] && rows[i][0].toString().toLowerCase().trim() === email) {
+      sheet.deleteRow(i + 1);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: false, error: 'Admin not found' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function isAdmin(ss, email) {
   if (!email) return false;
   const sheet = ss.getSheetByName(ADMINS_SHEET_NAME);
@@ -211,10 +270,16 @@ function doGet(e) {
     switch (action) {
       case 'verifyAdmin':
         return handleVerifyAdmin(ss, e.parameter.email);
+      case 'verifyUser':
+        return handleVerifyUser(ss, e.parameter.email);
       case 'getSignups':
         return handleGetSignups(ss, e.parameter.email);
+      case 'getLeaderSignups':
+        return handleGetLeaderSignups(ss, e.parameter.email);
       case 'getNewParishioners':
         return handleGetNewParishioners(ss, e.parameter.email);
+      case 'getAdmins':
+        return handleGetAdmins(ss, e.parameter.email);
       case 'getMinistries':
       default:
         return handleGetMinistries(ss);
@@ -230,6 +295,121 @@ function handleVerifyAdmin(ss, email) {
   const admin = isAdmin(ss, email);
   return ContentService
     .createTextOutput(JSON.stringify({ isAdmin: admin }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleVerifyUser(ss, email) {
+  const admin = isAdmin(ss, email);
+  const leaderMinistries = getLeaderMinistries(ss, email);
+  const role = admin ? 'admin' : (leaderMinistries.length > 0 ? 'leader' : 'none');
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      role: role,
+      isAdmin: admin,
+      isLeader: leaderMinistries.length > 0,
+      ministries: leaderMinistries
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getLeaderMinistries(ss, email) {
+  if (!email) return [];
+  const normalizedEmail = email.toLowerCase().trim();
+  const sheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const ministries = [];
+  for (let i = 1; i < data.length; i++) {
+    const orgEmail = (data[i][5] || '').toString().toLowerCase().trim();
+    if (orgEmail && orgEmail === normalizedEmail) {
+      ministries.push({
+        id: data[i][0],
+        name: data[i][1]
+      });
+    }
+  }
+  return ministries;
+}
+
+function handleGetLeaderSignups(ss, email) {
+  if (!email) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'Unauthorized' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Verify this email is actually a leader
+  const leaderMinistries = getLeaderMinistries(ss, email);
+  if (leaderMinistries.length === 0 && !isAdmin(ss, email)) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'Unauthorized' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const sheet = ss.getSheetByName(SIGNUPS_SHEET_NAME);
+  if (!sheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ signups: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const ministryNames = leaderMinistries.map(m => m.name);
+  const data = sheet.getDataRange().getValues();
+  const signups = [];
+  for (let i = 1; i < data.length; i++) {
+    if (ministryNames.includes(data[i][7])) {
+      signups.push({
+        date: data[i][0],
+        time: data[i][1],
+        firstName: data[i][2],
+        lastName: data[i][3],
+        email: data[i][4],
+        phone: data[i][5],
+        newParishioner: data[i][6],
+        ministry: data[i][7],
+        action: data[i][8],
+        q1: data[i][9],
+        q2: data[i][10],
+        q3: data[i][11]
+      });
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ signups: signups }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleGetAdmins(ss, email) {
+  if (!isAdmin(ss, email)) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: 'Unauthorized' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const sheet = ss.getSheetByName(ADMINS_SHEET_NAME);
+  if (!sheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ admins: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const admins = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      admins.push({
+        email: data[i][0],
+        name: data[i][1] || '',
+        addedDate: data[i][2] || ''
+      });
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ admins: admins }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 

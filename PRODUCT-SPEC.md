@@ -1,6 +1,6 @@
 # Product Spec: Parish Ministry Fair App
 
-**Version:** 4.0
+**Version:** 4.1
 **Last Updated:** February 2026
 
 ---
@@ -222,14 +222,23 @@ This app digitizes the signup process, allowing parishioners to register once an
 
 ---
 
-## Admin Dashboard (v4)
+## Staff Sign-In & Dashboards (v4)
 
-### Admin Sign-In
+### User Roles
+| Role | Identification | Access |
+|------|---------------|--------|
+| **Admin** | Email in Admins sheet | Full dashboard: all signups, all parishioners, ministry CRUD, user management |
+| **Ministry Leader** | Email matches Organizer Email on any ministry | Leader dashboard: signups for their ministry/ministries only, CSV export |
+| **Parishioner** | No sign-in required | Browse ministries, register, express interest |
+
+### Sign-In Flow
 - Accessed via `?admin` URL parameter or the subtle "Admin" link at the bottom-right of the app
-- Admins authenticate via Google Sign-In
-- Admin email must be listed in the **Admins** tab in Google Sheets (Email, Name, Added Date)
-- Non-admin emails see an access-denied message with instructions
-- Admin session persisted in localStorage (`ministry-fair-admin`)
+- All staff (admins and leaders) sign in via Google Sign-In on the same page
+- The `verifyUser` endpoint checks: is this email an admin? A ministry organizer? Neither?
+- Admins are routed to the **Admin Dashboard** (blue header)
+- Ministry leaders are routed to the **Leader Dashboard** (green header)
+- Unrecognized emails see an access-denied message
+- Session persisted in localStorage (`ministry-fair-admin`) with role info
 
 ### Admin Dashboard Features
 | Feature | Description |
@@ -238,18 +247,32 @@ This app digitizes the signup process, allowing parishioners to register once an
 | Signups tab | Searchable table of all signups/removals, newest first, with CSV export |
 | New Parishioners tab | Searchable table of new parishioner leads, with CSV export |
 | Ministries tab | Full CRUD: add, edit, and delete ministries from the dashboard |
+| Manage Users tab | Add/remove admins; view ministry leaders (linked to organizer emails) |
 | Data refresh | Manual refresh button to pull latest data from Google Sheets |
 | Admin logout | Clears admin session; separate from parishioner logout |
+
+### Ministry Leader Dashboard Features
+| Feature | Description |
+|---------|-------------|
+| Leader stats | Total signups and unique people for their ministry/ministries |
+| Ministry signups | Table per ministry showing interested parishioners with contact info and qualifying answers |
+| CSV export | Per-ministry CSV export including qualifying question answers |
+| Data refresh | Manual refresh button |
 
 ### Admin API Endpoints (Google Apps Script)
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `?action=verifyAdmin&email=` | GET | None (returns boolean) | Checks if email is in Admins sheet |
+| `?action=verifyUser&email=` | GET | None | Returns role (admin/leader/none) + leader ministries |
+| `?action=verifyAdmin&email=` | GET | None (returns boolean) | Legacy: checks if email is in Admins sheet |
 | `?action=getSignups&email=` | GET | Admin email | Returns all signup rows |
+| `?action=getLeaderSignups&email=` | GET | Leader email | Returns signups filtered to leader's ministries |
 | `?action=getNewParishioners&email=` | GET | Admin email | Returns all new parishioner rows |
+| `?action=getAdmins&email=` | GET | Admin email | Returns list of all admins |
 | POST `adminAction=addMinistry` | POST | Admin email | Adds a new ministry row |
 | POST `adminAction=updateMinistry` | POST | Admin email | Updates an existing ministry by ID |
 | POST `adminAction=deleteMinistry` | POST | Admin email | Deletes a ministry row by ID |
+| POST `adminAction=addAdmin` | POST | Admin email | Adds a new admin to Admins sheet |
+| POST `adminAction=removeAdmin` | POST | Admin email | Removes an admin from Admins sheet |
 
 ### Google Sheets: Admins Tab
 | Column | Description |
@@ -257,6 +280,12 @@ This app digitizes the signup process, allowing parishioners to register once an
 | Email | Google account email (used for access control) |
 | Name | Display name (informational) |
 | Added Date | When the admin was added (informational) |
+
+### Ministry Leader Identification
+- Leaders are identified by the **Organizer Email** field on each ministry in the Ministries sheet
+- A leader can be organizer of multiple ministries and will see all of them
+- To add/change a leader, edit the ministry's Organizer Email (via admin dashboard or Google Sheets)
+- No separate "Leaders" sheet is needed
 
 ---
 
@@ -270,7 +299,6 @@ The following are explicitly NOT included in this version:
 - Offline mode (requires internet for initial load + signups)
 - Photo upload
 - Calendar integration
-- Ministry leader login to view their own signups (admins can view all)
 
 ---
 
@@ -313,7 +341,8 @@ The following are explicitly NOT included in this version:
 | 1.0 | Jan 2026 | Initial release: registration, browsing, signup |
 | 2.0 | Jan 2026 | Added search, organizer info, phone display |
 | 3.0 | Jan 2026 | Added logout, remove interest, audit trail, phone formatting, organizer search, configurable branding |
-| 4.0 | Feb 2026 | Added admin sign-in via Google, admin dashboard with signups/parishioners/ministry management, CSV export, Admins sheet |
+| 4.0 | Feb 2026 | Added admin sign-in, admin dashboard, CSV export, Admins sheet |
+| 4.1 | Feb 2026 | Added ministry leader dashboard, role-based sign-in (admin vs leader), admin user management (add/remove admins), per-ministry leader signups with qualifying answers |
 
 ---
 

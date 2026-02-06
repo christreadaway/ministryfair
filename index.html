@@ -614,6 +614,68 @@
       color: #888;
       font-family: 'Inter', -apple-system, sans-serif;
     }
+    /* Leader styles */
+    .leader-header {
+      background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(45, 106, 79, 0.3);
+    }
+    .leader-header h1 { font-size: 28px; font-weight: 600; letter-spacing: 0.5px; }
+    .leader-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
+    .leader-ministry-badge {
+      background: linear-gradient(135deg, #d8f3dc 0%, #b7e4c7 100%);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .leader-ministry-badge .ministry-icon { background: white; }
+    .leader-ministry-badge .ministry-name { font-size: 17px; }
+    .btn-leader {
+      background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Inter', -apple-system, sans-serif;
+      white-space: nowrap;
+    }
+    .btn-leader:disabled { opacity: 0.6; cursor: wait; }
+    .leader-stat-number { color: #2d6a4f; }
+    /* Admin user management */
+    .admin-user-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    .admin-user-row .admin-user-email {
+      flex: 1;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 14px;
+      color: #333;
+    }
+    .admin-user-row .admin-user-name {
+      font-size: 12px;
+      color: #888;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .admin-user-row .admin-user-date {
+      font-size: 11px;
+      color: #aaa;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -760,12 +822,12 @@
 <div id="view-admin-login" class="hidden">
   <header class="admin-header">
     <h1 class="app-title"></h1>
-    <p>Admin Sign In</p>
+    <p>Staff Sign In</p>
   </header>
   <div class="admin-content">
     <div class="card admin-login-card">
       <p class="welcome-text">
-        Sign in with your Google account to access the admin dashboard. Your email must be listed in the Admins sheet.
+        Sign in with your Google account to access your dashboard. Admins and ministry leaders can sign in here.
       </p>
       <div class="google-signin-section">
         <div id="g_id_admin_signin"></div>
@@ -806,6 +868,7 @@
       <button class="admin-tab active" data-tab="signups">Signups</button>
       <button class="admin-tab" data-tab="parishioners">New Parishioners</button>
       <button class="admin-tab" data-tab="ministries">Ministries</button>
+      <button class="admin-tab" data-tab="users">Manage Users</button>
     </div>
 
     <!-- Signups Panel -->
@@ -909,6 +972,37 @@
       <div id="admin-ministry-list"></div>
       <div class="admin-empty hidden" id="admin-ministry-empty">No ministries configured yet.</div>
     </div>
+
+    <!-- Manage Users Panel -->
+    <div class="admin-panel" id="panel-users">
+      <div class="admin-form" style="margin-bottom: 20px;">
+        <h3>Add Admin</h3>
+        <form class="form" id="admin-add-user-form" style="flex-direction: row; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+          <div class="input-group" style="flex: 1; min-width: 200px;">
+            <label class="label">Email</label>
+            <input type="email" class="input" id="admin-new-user-email" required placeholder="admin@example.com" style="padding: 10px 14px; font-size: 14px;">
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 150px;">
+            <label class="label">Name (optional)</label>
+            <input type="text" class="input" id="admin-new-user-name" placeholder="Jane Smith" style="padding: 10px 14px; font-size: 14px;">
+          </div>
+          <button type="submit" class="btn-admin" id="admin-add-user-btn" style="padding: 10px 20px; height: fit-content;">Add Admin</button>
+        </form>
+      </div>
+
+      <h3 class="section-title" style="font-size: 18px;">Current Admins</h3>
+      <div id="admin-users-list"></div>
+      <div class="admin-empty hidden" id="admin-users-empty">No admins configured. Add one above.</div>
+
+      <div style="margin-top: 28px;">
+        <h3 class="section-title" style="font-size: 18px;">Ministry Leaders</h3>
+        <p style="font-size: 13px; color: #888; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
+          Ministry leaders are identified by their Organizer Email on each ministry. Edit a ministry to change its leader.
+        </p>
+        <div id="admin-leaders-list"></div>
+        <div class="admin-empty hidden" id="admin-leaders-empty">No ministry leaders configured. Add organizer emails to ministries.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -922,6 +1016,34 @@
       <button class="btn-secondary" id="admin-delete-cancel">Cancel</button>
       <button class="btn-remove" id="admin-delete-confirm">Yes, Delete</button>
     </div>
+  </div>
+</div>
+
+<!-- MINISTRY LEADER DASHBOARD VIEW -->
+<div id="view-leader-dashboard" class="hidden">
+  <header class="leader-header">
+    <h1 class="app-title"></h1>
+    <p>Ministry Leader Dashboard</p>
+  </header>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <div class="admin-user-info">
+        <div class="profile-icon" id="leader-initials" style="width: 36px; height: 36px; font-size: 14px; background: #2d6a4f;"></div>
+        <span id="leader-name"></span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span class="refresh-note" id="leader-last-refresh"></span>
+        <button class="btn-leader" id="leader-refresh-btn" style="padding: 8px 14px; font-size: 13px;">Refresh</button>
+        <a href="?" style="color: #2d6a4f; font-size: 13px; font-family: 'Inter', sans-serif; text-decoration: underline;">Exit</a>
+        <button class="logout-link" id="leader-logout-btn" style="color: #2d6a4f;">Log out</button>
+      </div>
+    </div>
+
+    <!-- Leader Stats -->
+    <div class="stats-grid" id="leader-stats"></div>
+
+    <!-- Leader Ministry Tabs (one per ministry they lead) -->
+    <div id="leader-ministries-container"></div>
   </div>
 </div>
 
@@ -1006,7 +1128,8 @@ const views = {
   detail: document.getElementById('view-detail'),
   confirmed: document.getElementById('view-confirmed'),
   adminLogin: document.getElementById('view-admin-login'),
-  adminDashboard: document.getElementById('view-admin-dashboard')
+  adminDashboard: document.getElementById('view-admin-dashboard'),
+  leaderDashboard: document.getElementById('view-leader-dashboard')
 };
 
 function showView(viewName) {
@@ -1022,7 +1145,7 @@ function showView(viewName) {
   // Hide admin link on admin views
   const adminLink = document.getElementById('admin-entry-link');
   if (adminLink) {
-    adminLink.style.display = (viewName === 'adminLogin' || viewName === 'adminDashboard') ? 'none' : '';
+    adminLink.style.display = (viewName === 'adminLogin' || viewName === 'adminDashboard' || viewName === 'leaderDashboard') ? 'none' : '';
   }
 }
 
@@ -1076,12 +1199,16 @@ async function loadMinistries() {
 }
 
 function initializeApp() {
-  // Admin mode
+  // Admin/leader mode
   if (isAdminMode) {
     const savedAdmin = localStorage.getItem('ministry-fair-admin');
     if (savedAdmin) {
       adminSession = JSON.parse(savedAdmin);
-      showAdminDashboard();
+      if (adminSession.role === 'leader') {
+        showLeaderDashboard();
+      } else {
+        showAdminDashboard();
+      }
     } else {
       showView('adminLogin');
     }
@@ -1565,19 +1692,23 @@ async function handleAdminGoogleSignIn(response) {
   errorDiv.classList.add('hidden');
 
   try {
-    const res = await fetch(API_URL + '?action=verifyAdmin&email=' + encodeURIComponent(email));
+    const res = await fetch(API_URL + '?action=verifyUser&email=' + encodeURIComponent(email));
     const data = await res.json();
 
-    if (data.isAdmin) {
-      adminSession = { email: email, name: name };
+    if (data.role === 'admin') {
+      adminSession = { email: email, name: name, role: 'admin' };
       localStorage.setItem('ministry-fair-admin', JSON.stringify(adminSession));
       showAdminDashboard();
+    } else if (data.role === 'leader') {
+      adminSession = { email: email, name: name, role: 'leader', ministries: data.ministries };
+      localStorage.setItem('ministry-fair-admin', JSON.stringify(adminSession));
+      showLeaderDashboard();
     } else {
-      errorDiv.textContent = 'Access denied. "' + email + '" is not listed as an admin. Add this email to the Admins tab in Google Sheets.';
+      errorDiv.textContent = 'Access denied. "' + email + '" is not an admin or ministry leader. Contact your parish administrator.';
       errorDiv.classList.remove('hidden');
     }
   } catch (err) {
-    errorDiv.textContent = 'Could not verify admin status. Check your API URL and try again.';
+    errorDiv.textContent = 'Could not verify access. Check your API URL and try again.';
     errorDiv.classList.remove('hidden');
   }
 }
@@ -1972,6 +2103,280 @@ if (adminPhoneInput) {
     e.target.value = formatPhoneNumber(e.target.value);
   });
 }
+
+// ============================================
+// MANAGE USERS (Admin Permissions)
+// ============================================
+let adminUsersList = [];
+
+async function loadAdminUsers() {
+  try {
+    const res = await fetch(API_URL + '?action=getAdmins&email=' + encodeURIComponent(adminSession.email));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    adminUsersList = data.admins || [];
+    renderAdminUsers();
+    renderAdminLeaders();
+  } catch (err) {
+    console.error('Error loading admins:', err);
+  }
+}
+
+function renderAdminUsers() {
+  const list = document.getElementById('admin-users-list');
+  const empty = document.getElementById('admin-users-empty');
+
+  if (adminUsersList.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  list.innerHTML = adminUsersList.map(a => `
+    <div class="admin-user-row">
+      <div class="profile-icon" style="width: 32px; height: 32px; font-size: 12px; background: #1a365d; flex-shrink: 0;">
+        ${escapeHtml((a.name || a.email || '?')[0].toUpperCase())}
+      </div>
+      <div style="flex: 1;">
+        <div class="admin-user-email">${escapeHtml(a.email)}</div>
+        ${a.name ? '<div class="admin-user-name">' + escapeHtml(a.name) + '</div>' : ''}
+      </div>
+      <div class="admin-user-date">${escapeHtml(String(a.addedDate))}</div>
+      ${adminUsersList.length > 1 ? '<button class="btn-admin-danger" onclick="removeAdmin(\'' + escapeHtml(a.email) + '\')">Remove</button>' : '<span style="font-size: 11px; color: #aaa; font-family: Inter, sans-serif;">Last admin</span>'}
+    </div>
+  `).join('');
+}
+
+function renderAdminLeaders() {
+  const list = document.getElementById('admin-leaders-list');
+  const empty = document.getElementById('admin-leaders-empty');
+
+  const leaders = MINISTRIES.filter(m => m.organizerEmail).map(m => ({
+    email: m.organizerEmail,
+    name: m.organizerName,
+    ministry: m.name,
+    icon: m.icon
+  }));
+
+  if (leaders.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  list.innerHTML = leaders.map(l => `
+    <div class="admin-user-row">
+      <div class="ministry-icon" style="width: 36px; height: 36px; font-size: 18px; border-radius: 8px;">${l.icon}</div>
+      <div style="flex: 1;">
+        <div class="admin-user-email">${escapeHtml(l.name || l.email)}</div>
+        <div class="admin-user-name">${escapeHtml(l.email)} &middot; ${escapeHtml(l.ministry)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('admin-add-user-btn');
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+
+  const email = document.getElementById('admin-new-user-email').value.trim();
+  const name = document.getElementById('admin-new-user-name').value.trim();
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminEmail: adminSession.email,
+        adminAction: 'addAdmin',
+        email: email,
+        name: name
+      })
+    });
+    const result = await res.json();
+    if (result.success) {
+      document.getElementById('admin-new-user-email').value = '';
+      document.getElementById('admin-new-user-name').value = '';
+      await loadAdminUsers();
+    } else {
+      alert('Error: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Failed to add admin.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add Admin';
+  }
+});
+
+async function removeAdmin(email) {
+  if (!confirm('Remove "' + email + '" as an admin?')) return;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminEmail: adminSession.email,
+        adminAction: 'removeAdmin',
+        email: email
+      })
+    });
+    const result = await res.json();
+    if (result.success) {
+      await loadAdminUsers();
+    } else {
+      alert('Error: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Failed to remove admin.');
+  }
+}
+
+// Load admin users when users tab is shown
+const origLoadAdminData = loadAdminData;
+loadAdminData = async function() {
+  await origLoadAdminData();
+  await loadAdminUsers();
+};
+
+// ============================================
+// MINISTRY LEADER DASHBOARD
+// ============================================
+let leaderSignups = [];
+
+async function showLeaderDashboard() {
+  showView('leaderDashboard');
+
+  const initials = adminSession.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('leader-initials').textContent = initials;
+  document.getElementById('leader-name').textContent = adminSession.name;
+
+  await loadLeaderData();
+}
+
+async function loadLeaderData() {
+  const refreshBtn = document.getElementById('leader-refresh-btn');
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = 'Loading...';
+
+  try {
+    const res = await fetch(API_URL + '?action=getLeaderSignups&email=' + encodeURIComponent(adminSession.email));
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+    leaderSignups = data.signups || [];
+
+    renderLeaderStats();
+    renderLeaderMinistries();
+
+    document.getElementById('leader-last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error('Leader data load error:', err);
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = 'Refresh';
+  }
+}
+
+function renderLeaderStats() {
+  const activeSignups = leaderSignups.filter(s => s.action === 'Signup');
+  const uniqueEmails = new Set(activeSignups.map(s => s.email));
+  const ministryNames = (adminSession.ministries || []).map(m => m.name);
+
+  document.getElementById('leader-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-number leader-stat-number">${activeSignups.length}</div>
+      <div class="stat-label">Total Signups</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number leader-stat-number">${uniqueEmails.size}</div>
+      <div class="stat-label">Unique People</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number leader-stat-number">${ministryNames.length}</div>
+      <div class="stat-label">Your Ministr${ministryNames.length !== 1 ? 'ies' : 'y'}</div>
+    </div>
+  `;
+}
+
+function renderLeaderMinistries() {
+  const container = document.getElementById('leader-ministries-container');
+  const ministryNames = (adminSession.ministries || []);
+
+  container.innerHTML = ministryNames.map(m => {
+    const ministry = MINISTRIES.find(min => min.id === m.id);
+    const mSignups = leaderSignups.filter(s => s.ministry === m.name);
+    const activeSignups = mSignups.filter(s => s.action === 'Signup');
+
+    return `
+      <div class="leader-ministry-badge">
+        <div class="ministry-icon">${ministry ? ministry.icon : '📋'}</div>
+        <div class="ministry-info">
+          <h3 class="ministry-name">${escapeHtml(m.name)}</h3>
+          <p class="ministry-desc" style="font-size: 13px;">${activeSignups.length} signup${activeSignups.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn-leader" style="padding: 6px 14px; font-size: 12px;" onclick="exportLeaderCsv('${escapeHtml(m.name)}')">Export CSV</button>
+      </div>
+      <div class="admin-table-wrap" style="margin-bottom: 24px;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Time</th><th>Name</th><th>Email</th><th>Phone</th><th>Action</th>${ministry && ministry.questions && ministry.questions.length > 0 ? ministry.questions.map(q => '<th>' + escapeHtml(q.label) + '</th>').join('') : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${[...mSignups].reverse().map(s => `
+              <tr>
+                <td>${escapeHtml(String(s.date))}</td>
+                <td>${escapeHtml(String(s.time))}</td>
+                <td>${escapeHtml(s.firstName + ' ' + s.lastName)}</td>
+                <td>${escapeHtml(s.email)}</td>
+                <td>${escapeHtml(s.phone)}</td>
+                <td class="${s.action === 'Removed' ? 'action-removed' : 'action-signup'}">${escapeHtml(s.action)}</td>
+                ${ministry && ministry.questions && ministry.questions.length > 0 ? '<td>' + escapeHtml(s.q1 || '') + '</td>' + (ministry.questions.length > 1 ? '<td>' + escapeHtml(s.q2 || '') + '</td>' : '') + (ministry.questions.length > 2 ? '<td>' + escapeHtml(s.q3 || '') + '</td>' : '') : ''}
+              </tr>
+            `).join('') || '<tr><td colspan="6" style="text-align:center; color: #999; padding: 20px;">No signups yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }).join('');
+}
+
+function exportLeaderCsv(ministryName) {
+  const ministry = MINISTRIES.find(m => m.name === ministryName);
+  const mSignups = leaderSignups.filter(s => s.ministry === ministryName);
+  const headers = ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'Action'];
+  if (ministry && ministry.questions) {
+    ministry.questions.forEach(q => headers.push(q.label));
+  }
+  const rows = mSignups.map(s => {
+    const row = [s.date, s.time, s.firstName, s.lastName, s.email, s.phone, s.action];
+    if (ministry && ministry.questions) {
+      row.push(s.q1 || '');
+      if (ministry.questions.length > 1) row.push(s.q2 || '');
+      if (ministry.questions.length > 2) row.push(s.q3 || '');
+    }
+    return row;
+  });
+  const safeName = ministryName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  exportCsv(headers, rows, safeName + '-signups.csv');
+}
+
+// Leader refresh
+document.getElementById('leader-refresh-btn').addEventListener('click', loadLeaderData);
+
+// Leader logout
+document.getElementById('leader-logout-btn').addEventListener('click', () => {
+  localStorage.removeItem('ministry-fair-admin');
+  adminSession = null;
+  showView('adminLogin');
+});
 </script>
 
 </body>
