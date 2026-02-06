@@ -576,15 +576,29 @@ function handleGoogleSignIn(response) {
   document.getElementById('phone').focus();
 }
 
+// HTML escaping to prevent XSS from API data
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Phone number formatting
 function formatPhoneNumber(value) {
   if (!value) return '';
   // Strip all non-digits
-  const digits = value.replace(/\D/g, '').slice(0, 10);
-  
+  let digits = value.replace(/\D/g, '');
+  // Strip leading country code "1" if present (11 digits starting with 1)
+  if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+  digits = digits.slice(0, 10);
+
   // Format as (xxx) xxx-xxxx
   if (digits.length === 0) return '';
-  if (digits.length <= 3) return '(' + digits;
+  if (digits.length <= 3) return '(' + digits + ')';
   if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
   return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
 }
@@ -593,11 +607,21 @@ function formatPhoneNumber(value) {
 const urlParams = new URLSearchParams(window.location.search);
 const ministryParam = urlParams.get('m');
 
-// Load saved data
+// Load saved data (with error handling for corrupted storage)
 const savedProfile = localStorage.getItem('ministry-fair-profile');
 const savedInterests = localStorage.getItem('ministry-fair-interests');
-if (savedProfile) profile = JSON.parse(savedProfile);
-if (savedInterests) interests = JSON.parse(savedInterests);
+try {
+  if (savedProfile) profile = JSON.parse(savedProfile);
+} catch (e) {
+  console.error('Corrupted profile in localStorage, resetting:', e);
+  localStorage.removeItem('ministry-fair-profile');
+}
+try {
+  if (savedInterests) interests = JSON.parse(savedInterests);
+} catch (e) {
+  console.error('Corrupted interests in localStorage, resetting:', e);
+  localStorage.removeItem('ministry-fair-interests');
+}
 
 // Views
 const views = {
@@ -753,7 +777,7 @@ function showMinistriesList() {
   showView('ministries');
   
   // Update profile display
-  document.getElementById('profile-initials').textContent = profile.firstName[0] + profile.lastName[0];
+  document.getElementById('profile-initials').textContent = (profile.firstName[0] || '') + (profile.lastName[0] || '');
   document.getElementById('profile-name').textContent = profile.firstName + ' ' + profile.lastName;
   document.getElementById('profile-email').textContent = profile.email;
   document.getElementById('profile-phone').textContent = formatPhoneNumber(profile.phone);
@@ -802,16 +826,16 @@ function renderMinistryList() {
   const displayed = (showAll || searchTerm) ? sorted : sorted.slice(0, 5);
   
   if (displayed.length === 0) {
-    list.innerHTML = '<div class="no-results">No ministries found matching "' + searchTerm + '"</div>';
+    list.innerHTML = '<div class="no-results">No ministries found matching "' + escapeHtml(searchTerm) + '"</div>';
   } else {
     list.innerHTML = displayed.map(m => {
       const interested = interests.some(i => i.ministryId === m.id);
       return `
-        <div class="ministry-card ${interested ? 'interested' : ''}" data-id="${m.id}">
-          <div class="ministry-icon">${m.icon}</div>
+        <div class="ministry-card ${interested ? 'interested' : ''}" data-id="${escapeHtml(m.id)}">
+          <div class="ministry-icon">${escapeHtml(m.icon)}</div>
           <div class="ministry-info">
-            <h3 class="ministry-name">${m.name}</h3>
-            <p class="ministry-desc">${m.description}</p>
+            <h3 class="ministry-name">${escapeHtml(m.name)}</h3>
+            <p class="ministry-desc">${escapeHtml(m.description)}</p>
           </div>
           ${interested ? '<span class="badge">Interested</span>' : ''}
         </div>
@@ -857,22 +881,22 @@ function showMinistryDetail(ministry) {
       if (q.type === 'select') {
         return `
           <div class="input-group">
-            <label class="label">${q.label}</label>
-            <select class="select" data-qid="${q.id}">
+            <label class="label">${escapeHtml(q.label)}</label>
+            <select class="select" data-qid="${escapeHtml(q.id)}">
               <option value="">Select...</option>
-              ${q.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+              ${q.options.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}
             </select>
           </div>
         `;
       } else if (q.type === 'checkbox') {
         return `
           <div class="input-group">
-            <label class="label">${q.label}</label>
-            <div class="checkbox-options" data-qid="${q.id}" data-type="checkbox">
+            <label class="label">${escapeHtml(q.label)}</label>
+            <div class="checkbox-options" data-qid="${escapeHtml(q.id)}" data-type="checkbox">
               ${q.options.map((opt, idx) => `
                 <div class="checkbox-option">
-                  <input type="checkbox" id="q-${q.id}-${idx}" value="${opt}">
-                  <label for="q-${q.id}-${idx}">${opt}</label>
+                  <input type="checkbox" id="q-${escapeHtml(q.id)}-${idx}" value="${escapeHtml(opt)}">
+                  <label for="q-${escapeHtml(q.id)}-${idx}">${escapeHtml(opt)}</label>
                 </div>
               `).join('')}
             </div>
@@ -881,8 +905,8 @@ function showMinistryDetail(ministry) {
       } else {
         return `
           <div class="input-group">
-            <label class="label">${q.label}</label>
-            <input type="text" class="input" data-qid="${q.id}" placeholder="Your answer">
+            <label class="label">${escapeHtml(q.label)}</label>
+            <input type="text" class="input" data-qid="${escapeHtml(q.id)}" placeholder="Your answer">
           </div>
         `;
       }
@@ -942,11 +966,10 @@ document.getElementById('modal-confirm').addEventListener('click', () => {
   
   fetch(API_URL, {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   }).catch(err => console.error('API error:', err));
-  
+
   // Remove from interests array
   interests = interests.filter(i => i.ministryId !== currentMinistry.id);
   localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
@@ -1000,14 +1023,21 @@ document.getElementById('interest-btn').addEventListener('click', async function
       q3: questions[2] ? answers[questions[2].id] || '' : ''
     };
     
-    // Submit to API (don't await - no-cors returns opaque response anyway)
-    fetch(API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error('API error:', err));
-    
+    // Submit to API
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (result.success === false) {
+        console.warn('Server reported error:', result.error);
+      }
+    } catch (err) {
+      console.error('API error (interest saved locally):', err);
+    }
+
     // Update local state
     const newInterest = {
       ministryId: currentMinistry.id,
@@ -1019,9 +1049,10 @@ document.getElementById('interest-btn').addEventListener('click', async function
     interests = [...interests.filter(i => i.ministryId !== currentMinistry.id), newInterest];
     localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
     
-    // Show confirmation
+    // Re-enable button and show confirmation
+    btn.disabled = false;
     showConfirmation();
-    
+
   } catch (error) {
     console.error('Error submitting interest:', error);
     alert('Something went wrong. Please try again.');
@@ -1045,18 +1076,24 @@ function showConfirmation() {
   if (currentMinistry.organizerName) {
     let contactHtml = '';
     if (currentMinistry.organizerEmail) {
-      contactHtml += `<a href="mailto:${currentMinistry.organizerEmail}">${currentMinistry.organizerEmail}</a>`;
+      const safeEmail = escapeHtml(currentMinistry.organizerEmail);
+      // Only create mailto link for valid-looking emails (prevent javascript: injection)
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(currentMinistry.organizerEmail)) {
+        contactHtml += `<a href="mailto:${safeEmail}">${safeEmail}</a>`;
+      } else {
+        contactHtml += safeEmail;
+      }
     }
     if (currentMinistry.organizerPhone) {
       if (contactHtml) contactHtml += ' · ';
       const formattedPhone = formatPhoneNumber(currentMinistry.organizerPhone);
-      contactHtml += `<a href="tel:${currentMinistry.organizerPhone}">${formattedPhone}</a>`;
+      contactHtml += `<a href="tel:${escapeHtml(currentMinistry.organizerPhone)}">${escapeHtml(formattedPhone)}</a>`;
     }
-    
+
     organizerDiv.innerHTML = `
       <div class="organizer-box">
         <div class="organizer-title">Ministry Contact</div>
-        <div class="organizer-name">${currentMinistry.organizerName}</div>
+        <div class="organizer-name">${escapeHtml(currentMinistry.organizerName)}</div>
         ${contactHtml ? `<div class="organizer-contact">${contactHtml}</div>` : ''}
       </div>
     `;
@@ -1072,9 +1109,9 @@ function showConfirmation() {
         const m = MINISTRIES.find(min => min.id === i.ministryId);
         return `
           <div class="ministry-card" style="cursor: default;">
-            <div class="ministry-icon">${m ? m.icon : '📋'}</div>
+            <div class="ministry-icon">${escapeHtml(m ? m.icon : '📋')}</div>
             <div class="ministry-info">
-              <h3 class="ministry-name">${i.ministryName}</h3>
+              <h3 class="ministry-name">${escapeHtml(i.ministryName)}</h3>
             </div>
             <span class="badge">✓</span>
           </div>

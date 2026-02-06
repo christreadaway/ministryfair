@@ -6,9 +6,11 @@
 // Extract the function directly since it's a pure function
 function formatPhoneNumber(value) {
   if (!value) return '';
-  const digits = value.replace(/\D/g, '').slice(0, 10);
+  let digits = value.replace(/\D/g, '');
+  if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+  digits = digits.slice(0, 10);
   if (digits.length === 0) return '';
-  if (digits.length <= 3) return '(' + digits;
+  if (digits.length <= 3) return '(' + digits + ')';
   if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
   return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
 }
@@ -37,24 +39,21 @@ describe('formatPhoneNumber', () => {
 
   // Partial formatting
   test('formats 1 digit correctly', () => {
-    expect(formatPhoneNumber('5')).toBe('(5');
+    expect(formatPhoneNumber('5')).toBe('(5)');
   });
 
   test('formats 2 digits correctly', () => {
-    expect(formatPhoneNumber('55')).toBe('(55');
+    expect(formatPhoneNumber('55')).toBe('(55)');
   });
 
   test('formats 3 digits correctly', () => {
-    expect(formatPhoneNumber('555')).toBe('(555');
+    expect(formatPhoneNumber('555')).toBe('(555)');
   });
 
-  // BUG: 3 digits shows "(555" with no closing paren - inconsistent formatting
-  test('BUG: 3 digits has unclosed parenthesis', () => {
+  test('3 digits now has closed parenthesis (was bug, now fixed)', () => {
     const result = formatPhoneNumber('555');
-    // This is a bug - user sees "(555" which is an incomplete format
-    expect(result).toBe('(555');
-    // It should arguably be "(555)" or wait until 4+ digits
-    expect(result.includes(')')).toBe(false); // Confirms the bug
+    expect(result).toBe('(555)');
+    expect(result.includes(')')).toBe(true);
   });
 
   test('formats 4 digits correctly', () => {
@@ -91,15 +90,12 @@ describe('formatPhoneNumber', () => {
   });
 
   test('handles mixed non-digit characters', () => {
-    expect(formatPhoneNumber('+1 (555) 123-4567')).toBe('(155) 512-3456');
+    expect(formatPhoneNumber('+1 (555) 123-4567')).toBe('(555) 123-4567');
   });
 
-  // BUG: Country code prefix is not handled - "+1 (555) 123-4567" becomes "(155) 512-3456"
-  test('BUG: country code +1 prefix is not stripped, corrupts number', () => {
+  test('country code +1 prefix is now stripped correctly', () => {
     const result = formatPhoneNumber('+1 (555) 123-4567');
-    // The "1" from "+1" is treated as the first digit of area code
-    expect(result).not.toBe('(555) 123-4567'); // This is what the user expects
-    expect(result).toBe('(155) 512-3456'); // This is what they get - wrong!
+    expect(result).toBe('(555) 123-4567');
   });
 
   // Truncation to 10 digits
@@ -109,7 +105,7 @@ describe('formatPhoneNumber', () => {
 
   // Edge cases
   test('handles "0" as input', () => {
-    expect(formatPhoneNumber('0')).toBe('(0');
+    expect(formatPhoneNumber('0')).toBe('(0)');
   });
 
   test('handles all zeros', () => {

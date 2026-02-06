@@ -37,8 +37,9 @@ function doPost(e) {
     if (action === 'Signup' && data.wantsToJoinParish) {
       const newParishionersSheet = getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
       const existingData = newParishionersSheet.getDataRange().getValues();
-      const emailColumn = 4;
-      const alreadyExists = existingData.some(row => row[emailColumn] === data.email);
+      const headers = existingData[0] || [];
+      const emailColumn = headers.indexOf('Email');
+      const alreadyExists = emailColumn >= 0 && existingData.some(row => row[emailColumn] === data.email);
       
       if (!alreadyExists) {
         const newParishionerRow = [

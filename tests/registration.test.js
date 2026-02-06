@@ -125,7 +125,7 @@ describe('Profile Display', () => {
     expect(dom.window.document.getElementById('profile-phone').textContent).toBe('(555) 123-4567');
   });
 
-  test('BUG: empty firstName causes initials to show undefined', async () => {
+  test('empty firstName shows only last initial (was bug, now fixed)', async () => {
     const dom = createTestDom({
       localStorage: {
         'ministry-fair-profile': JSON.stringify({ ...DUMMY_PROFILE, firstName: '' }),
@@ -135,11 +135,10 @@ describe('Profile Display', () => {
     await waitForApp();
 
     const initials = dom.window.document.getElementById('profile-initials').textContent;
-    // BUG: profile.firstName[0] on empty string returns undefined
-    expect(initials).toBe('undefinedU');
+    expect(initials).toBe('U');
   });
 
-  test('BUG: empty lastName causes initials to show undefined', async () => {
+  test('empty lastName shows only first initial (was bug, now fixed)', async () => {
     const dom = createTestDom({
       localStorage: {
         'ministry-fair-profile': JSON.stringify({ ...DUMMY_PROFILE, lastName: '' }),
@@ -149,7 +148,7 @@ describe('Profile Display', () => {
     await waitForApp();
 
     const initials = dom.window.document.getElementById('profile-initials').textContent;
-    expect(initials).toBe('Tundefined');
+    expect(initials).toBe('T');
   });
 
   test('interest count shows singular for 1 interest', async () => {

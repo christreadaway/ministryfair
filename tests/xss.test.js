@@ -1,8 +1,7 @@
 /**
  * XSS and Security Tests
  *
- * The app uses innerHTML extensively with data from the API.
- * These tests verify that unsanitized data creates XSS vulnerabilities.
+ * Tests verify that HTML in API data is properly escaped via escapeHtml().
  */
 const { createTestDom, waitForApp } = require('./testSetup');
 const { DUMMY_PROFILE } = require('./helpers');
@@ -13,8 +12,8 @@ function makeMinistriesFetch(ministries) {
   });
 }
 
-describe('XSS Vulnerabilities', () => {
-  test('BUG: ministry name with HTML is rendered unsanitized in ministry list', async () => {
+describe('XSS Prevention', () => {
+  test('ministry name with HTML is properly escaped in ministry list', async () => {
     const xssMinistries = [{
       id: 'xss-test',
       name: '<img src=x onerror="window._xssTriggered=true">',
@@ -36,11 +35,12 @@ describe('XSS Vulnerabilities', () => {
     await waitForApp();
 
     const listHtml = dom.window.document.getElementById('ministry-list').innerHTML;
-    // JSDOM normalizes attributes with quotes; XSS still present as injected <img> tag
-    expect(listHtml).toContain('<img src="x"');
+    // HTML should be escaped, not rendered as an element
+    expect(listHtml).not.toContain('<img');
+    expect(listHtml).toContain('&lt;img');
   });
 
-  test('BUG: ministry description with HTML tags is rendered unsanitized', async () => {
+  test('ministry description with HTML tags is properly escaped', async () => {
     const xssMinistries = [{
       id: 'xss-desc',
       name: 'Safe Name',
@@ -62,10 +62,11 @@ describe('XSS Vulnerabilities', () => {
     await waitForApp();
 
     const listHtml = dom.window.document.getElementById('ministry-list').innerHTML;
-    expect(listHtml).toContain('<b>Bold</b>');
+    expect(listHtml).not.toContain('<b>Bold</b>');
+    expect(listHtml).toContain('&lt;b&gt;Bold&lt;/b&gt;');
   });
 
-  test('BUG: search term with HTML is rendered unsanitized in no-results message', async () => {
+  test('search term with HTML is properly escaped in no-results message', async () => {
     const dom = createTestDom({
       localStorage: {
         'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
@@ -83,11 +84,11 @@ describe('XSS Vulnerabilities', () => {
     searchInput.dispatchEvent(new dom.window.Event('input'));
 
     const listHtml = dom.window.document.getElementById('ministry-list').innerHTML;
-    // JSDOM normalizes attribute quotes; XSS payload present as parsed <img> element
-    expect(listHtml).toContain('<img src="x"');
+    expect(listHtml).not.toContain('<img');
+    expect(listHtml).toContain('&lt;img');
   });
 
-  test('BUG: organizer name with HTML is rendered unsanitized in confirmation', async () => {
+  test('organizer name with HTML is properly escaped in confirmation', async () => {
     const xssMinistries = [{
       id: 'xss-org',
       name: 'Test Ministry',
@@ -113,13 +114,14 @@ describe('XSS Vulnerabilities', () => {
     w._app.showMinistryDetail(w._app.currentMinistry);
 
     dom.window.document.getElementById('interest-btn').click();
-    await waitForApp(50);
+    await waitForApp(100);
 
     const organizerHtml = dom.window.document.getElementById('organizer-info').innerHTML;
-    expect(organizerHtml).toContain('<img src="x"');
+    expect(organizerHtml).not.toContain('<img');
+    expect(organizerHtml).toContain('&lt;img');
   });
 
-  test('BUG: organizer email with javascript: protocol creates unsafe mailto link', async () => {
+  test('organizer email with javascript: protocol is not wrapped in mailto link', async () => {
     const xssMinistries = [{
       id: 'xss-email',
       name: 'Test Ministry',
@@ -145,13 +147,17 @@ describe('XSS Vulnerabilities', () => {
     w._app.showMinistryDetail(w._app.currentMinistry);
 
     dom.window.document.getElementById('interest-btn').click();
-    await waitForApp(50);
+    await waitForApp(100);
 
     const organizerHtml = dom.window.document.getElementById('organizer-info').innerHTML;
+    // javascript: protocol should NOT be in a mailto: link
+    expect(organizerHtml).not.toContain('href="mailto:javascript:');
+    // The text should be escaped and shown as plain text
     expect(organizerHtml).toContain('javascript:alert(1)');
+    expect(organizerHtml).not.toContain('<a');
   });
 
-  test('BUG: ministry icon field with HTML is rendered unsanitized', async () => {
+  test('ministry icon field with HTML is properly escaped', async () => {
     const xssMinistries = [{
       id: 'xss-icon',
       name: 'Test Ministry',
@@ -173,10 +179,11 @@ describe('XSS Vulnerabilities', () => {
     await waitForApp();
 
     const listHtml = dom.window.document.getElementById('ministry-list').innerHTML;
-    expect(listHtml).toContain('<img src="x"');
+    expect(listHtml).not.toContain('<img');
+    expect(listHtml).toContain('&lt;img');
   });
 
-  test('BUG: question label with HTML is rendered unsanitized in detail view', async () => {
+  test('question label with HTML is properly escaped in detail view', async () => {
     const xssMinistries = [{
       id: 'xss-qlabel',
       name: 'Test Ministry',
@@ -202,12 +209,13 @@ describe('XSS Vulnerabilities', () => {
     w._app.showMinistryDetail(w._app.currentMinistry);
 
     const questionsHtml = dom.window.document.getElementById('detail-questions').innerHTML;
-    expect(questionsHtml).toContain('<img src="x"');
+    expect(questionsHtml).not.toContain('<img');
+    expect(questionsHtml).toContain('&lt;img');
   });
 });
 
-describe('Security: no-cors mode', () => {
-  test('BUG: no-cors POST means app cannot verify signup success - data loss risk', async () => {
+describe('Security: POST verification', () => {
+  test('interest is still saved locally when POST fails (graceful degradation)', async () => {
     const ministries = [{
       id: 'test', name: 'Test', description: 'Test', icon: '📋',
       organizerName: '', organizerEmail: '', organizerPhone: '', questions: [],
@@ -236,11 +244,10 @@ describe('Security: no-cors mode', () => {
     w._app.showMinistryDetail(w._app.currentMinistry);
 
     dom.window.document.getElementById('interest-btn').click();
-    await waitForApp(50);
+    await waitForApp(100);
 
     // Interest saved locally despite network failure
     const savedInterests = JSON.parse(dom.window.localStorage.getItem('ministry-fair-interests'));
     expect(savedInterests.length).toBe(1);
-    // User sees success even though server never received it
   });
 });

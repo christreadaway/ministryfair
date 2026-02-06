@@ -442,15 +442,10 @@ describe('doGet - Ministry Data Retrieval', () => {
 });
 
 describe('New Parishioner De-duplication', () => {
-  test('BUG: email column index is hardcoded to 4, brittle if headers change', () => {
-    // In doPost line 40: const emailColumn = 4;
-    // This assumes the "Email" is always at index 4 in the New Parishioners sheet
-    // The getNewParishionersHeaders returns: ['Date', 'Time', 'First', 'Last', 'Email', 'Phone']
-    // Index 4 is correct, but if anyone adds a column, this would break silently
-
+  test('email column is now looked up dynamically by header name', () => {
     const headers = getNewParishionersHeaders();
-    expect(headers[4]).toBe('Email'); // Currently correct
-    // But this is fragile - should use headers.indexOf('Email')
+    expect(headers.indexOf('Email')).toBe(4);
+    // The code now uses headers.indexOf('Email') instead of hardcoded 4
   });
 });
 

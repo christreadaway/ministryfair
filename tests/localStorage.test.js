@@ -58,22 +58,22 @@ describe('localStorage Persistence', () => {
     expect(countEl.textContent).toContain('1 interest expressed');
   });
 
-  test('BUG: corrupted localStorage profile crashes the app', () => {
-    expect(() => {
-      createTestDom({
-        localStorage: { 'ministry-fair-profile': '{invalid json' },
-        fetchMock: ministriesFetch(),
-      });
-    }).toThrow();
+  test('corrupted localStorage profile is handled gracefully (was crash, now fixed)', () => {
+    const dom = createTestDom({
+      localStorage: { 'ministry-fair-profile': '{invalid json' },
+      fetchMock: ministriesFetch(),
+    });
+    // App should not crash; corrupted profile is removed
+    expect(dom.window.localStorage.getItem('ministry-fair-profile')).toBeNull();
   });
 
-  test('BUG: corrupted localStorage interests crashes the app', () => {
-    expect(() => {
-      createTestDom({
-        localStorage: { 'ministry-fair-interests': 'not-json' },
-        fetchMock: ministriesFetch(),
-      });
-    }).toThrow();
+  test('corrupted localStorage interests is handled gracefully (was crash, now fixed)', () => {
+    const dom = createTestDom({
+      localStorage: { 'ministry-fair-interests': 'not-json' },
+      fetchMock: ministriesFetch(),
+    });
+    // App should not crash; corrupted interests is removed
+    expect(dom.window.localStorage.getItem('ministry-fair-interests')).toBeNull();
   });
 
   test('logout clears localStorage', async () => {
