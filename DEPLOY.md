@@ -1,20 +1,85 @@
 # Deploying to ministry.st-theresa.org
 
-This guide covers deploying the Ministry Fair app to `http://ministry.st-theresa.org`. Choose whichever hosting option best fits your setup.
+St. Theresa's main website is hosted on **eCatholic**, a managed CMS platform. eCatholic does not support uploading custom HTML files or creating subdomains with custom apps, so the Ministry Fair app needs to be hosted separately.
+
+The recommended approach: **host the app for free on Netlify, then point the `ministry` subdomain there.** Your main parish website at `st-theresa.org` stays on eCatholic — nothing changes.
 
 ---
 
-## Prerequisites (all options)
+## Prerequisites
 
-1. **DNS access** for `st-theresa.org` (usually managed through your domain registrar or hosting provider — GoDaddy, Namecheap, Cloudflare, etc.)
-2. **Google Apps Script backend** already deployed (see [README.md](README.md) steps 1–2)
-3. **CONFIG updated** in `index.html` — set `apiUrl` to your Google Apps Script deployment URL
+1. **Google Apps Script backend** already deployed (see [README.md](README.md) steps 1–2)
+2. **CONFIG updated** in `index.html` — set `apiUrl` to your Google Apps Script deployment URL
 
 ---
 
-## Option A: GitHub Pages (free)
+## Recommended: Netlify + subdomain (free)
 
-Best if you're already using GitHub for this repo.
+### Step 1 — Deploy to Netlify
+
+1. Go to [app.netlify.com](https://app.netlify.com) and create a free account
+2. Click **"Add new site" → "Deploy manually"**
+3. Drag and drop your project folder (the one containing `index.html`)
+4. Your site is live immediately at a random URL like `random-name.netlify.app`
+5. Test it — make sure ministries load and registration works
+
+### Step 2 — Add custom domain in Netlify
+
+1. In Netlify, go to **Site settings → Domain management → Add custom domain**
+2. Enter `ministry.st-theresa.org`
+3. Netlify will confirm and show you what DNS record is needed
+
+### Step 3 — Add the DNS record
+
+You need to add one DNS record so that `ministry.st-theresa.org` points to Netlify. **This does not affect the main `st-theresa.org` site at all.**
+
+**If eCatholic manages your DNS (most likely):**
+
+Contact eCatholic support and ask them to add this record:
+
+> "Please add a CNAME record for the subdomain `ministry` pointing to `YOUR-SITE-NAME.netlify.app`"
+>
+> — Type: **CNAME**
+> — Name/Host: **ministry**
+> — Value/Target: **YOUR-SITE-NAME.netlify.app** *(replace with your actual Netlify URL)*
+
+Replace `YOUR-SITE-NAME` with the name Netlify assigned your site (visible in your Netlify dashboard).
+
+**If you manage DNS yourself** (GoDaddy, Namecheap, Cloudflare, etc.):
+
+Log in to your DNS provider and add:
+
+| Type  | Name/Host  | Value/Target                   |
+|-------|------------|--------------------------------|
+| CNAME | `ministry` | `YOUR-SITE-NAME.netlify.app`   |
+
+### Step 4 — Wait for DNS + HTTPS
+
+- DNS propagation takes anywhere from a few minutes to 48 hours (usually under 30 minutes)
+- Once DNS is active, Netlify automatically provisions a free HTTPS certificate
+- Check status at **Site settings → Domain management → HTTPS**
+
+### Step 5 — Verify
+
+Visit `http://ministry.st-theresa.org` (and `https://ministry.st-theresa.org` once HTTPS is ready).
+
+---
+
+## How to find out if eCatholic manages your DNS
+
+If you're not sure who manages DNS for `st-theresa.org`:
+
+1. Ask whoever set up the parish website — they may remember
+2. Check your domain registrar (GoDaddy, Namecheap, etc.) — log in and look at nameserver settings
+3. Ask eCatholic support — they can tell you if your nameservers point to them
+
+If your nameservers are pointed to eCatholic, then eCatholic controls DNS and you'll need to contact them to add the subdomain record. If nameservers point somewhere else (like your registrar), you can add the record yourself.
+
+---
+
+## Alternative: GitHub Pages (also free)
+
+If you'd prefer GitHub Pages over Netlify:
 
 ### 1. Push to GitHub
 
@@ -25,161 +90,44 @@ git push -u github main
 
 ### 2. Enable GitHub Pages
 
-1. Go to your repo on GitHub → **Settings** → **Pages**
-2. Under "Source", select **Deploy from a branch**
-3. Choose **main** branch, **/ (root)** folder
-4. Click **Save**
+1. Go to your repo → **Settings** → **Pages**
+2. Source: **Deploy from a branch** → **main** → **/ (root)**
+3. Click **Save**
 
-### 3. Configure custom domain in GitHub
+### 3. Set custom domain
 
-1. Still in **Settings → Pages**, enter `ministry.st-theresa.org` in the **Custom domain** field
+1. In **Settings → Pages**, enter `ministry.st-theresa.org` in the **Custom domain** field
 2. Click **Save**
-3. GitHub will create a `CNAME` file in your repo
 
 ### 4. Add DNS record
 
-Log into your DNS provider for `st-theresa.org` and add:
+Same process as above — contact eCatholic (or your DNS provider) to add:
 
-| Type  | Host/Name   | Value                        |
-|-------|-------------|------------------------------|
-| CNAME | `ministry`  | `YOUR_USERNAME.github.io`    |
-
-DNS propagation can take a few minutes to 48 hours (usually under 30 minutes).
-
-### 5. Verify
-
-Visit `http://ministry.st-theresa.org`. Once it's working, you can optionally check "Enforce HTTPS" in GitHub Pages settings to serve at `https://ministry.st-theresa.org`.
-
----
-
-## Option B: Netlify (free)
-
-Best for a quick setup with automatic HTTPS.
-
-### 1. Deploy the site
-
-**Via drag-and-drop:**
-1. Go to [app.netlify.com](https://app.netlify.com)
-2. Create a new site — drag your project folder (containing `index.html`) into the deploy area
-3. Your site is live at a random `*.netlify.app` URL
-
-**Via GitHub integration:**
-1. Connect your GitHub repo to Netlify
-2. Build command: *(leave blank — no build needed)*
-3. Publish directory: `.` (root)
-
-### 2. Add custom domain in Netlify
-
-1. Go to **Site settings → Domain management → Add custom domain**
-2. Enter `ministry.st-theresa.org`
-3. Netlify will show you the required DNS record
-
-### 3. Add DNS record
-
-Log into your DNS provider for `st-theresa.org` and add:
-
-| Type  | Host/Name   | Value                                  |
-|-------|-------------|----------------------------------------|
-| CNAME | `ministry`  | `YOUR_SITE_NAME.netlify.app`           |
-
-Or, if Netlify tells you to use their load balancer IP:
-
-| Type | Host/Name  | Value             |
-|------|------------|-------------------|
-| A    | `ministry` | `75.2.60.5`       |
-
-### 4. Enable HTTPS
-
-Netlify provisions a free Let's Encrypt certificate automatically once DNS propagates. Check **Domain management → HTTPS** to verify.
-
----
-
-## Option C: Existing parish web host (cPanel, shared hosting, etc.)
-
-Best if `st-theresa.org` already runs on a traditional web host.
-
-### 1. Create the subdomain in your hosting panel
-
-**cPanel:**
-1. Log in to cPanel
-2. Go to **Domains** (or **Subdomains** on older cPanel)
-3. Create subdomain: `ministry`
-4. Document root will default to something like `/home/youraccount/ministry.st-theresa.org` or `/public_html/ministry`
-
-**Plesk:**
-1. Go to **Websites & Domains → Add Subdomain**
-2. Enter `ministry`
-3. Set the document root
-
-**Other panels:** Look for "Subdomains" or "Domains" in your hosting control panel.
-
-### 2. Upload the file
-
-Upload `index.html` to the subdomain's document root using:
-
-- **File Manager** in cPanel/Plesk, or
-- **FTP/SFTP** (use credentials from your host):
-  ```bash
-  sftp user@st-theresa.org
-  cd /path/to/ministry-subdomain-root
-  put index.html
-  ```
-
-### 3. DNS (may be automatic)
-
-If your hosting and DNS are with the same provider, the subdomain DNS is usually configured automatically. If not, add:
-
-| Type  | Host/Name   | Value                          |
-|-------|-------------|--------------------------------|
-| A     | `ministry`  | Your web server's IP address   |
-
-Find your server IP in your hosting panel or by running `dig st-theresa.org A`.
-
-### 4. Verify
-
-Visit `http://ministry.st-theresa.org`. If your host supports Let's Encrypt or AutoSSL, enable HTTPS through the hosting panel.
-
----
-
-## Option D: Cloudflare Pages (free)
-
-Best if you already use Cloudflare for DNS.
-
-### 1. Deploy
-
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Pages**
-2. Connect your GitHub repo, or do a **Direct Upload** (upload your project folder)
-3. Build command: *(leave blank)*
-4. Build output directory: `.` (root)
-
-### 2. Add custom domain
-
-1. In your Pages project, go to **Custom domains** → **Set up a custom domain**
-2. Enter `ministry.st-theresa.org`
-3. If `st-theresa.org` is already on Cloudflare, the DNS record is added automatically
-4. If not, add a CNAME record pointing `ministry` to `YOUR_PROJECT.pages.dev`
+| Type  | Name/Host  | Value                       |
+|-------|------------|-----------------------------|
+| CNAME | `ministry` | `YOUR_USERNAME.github.io`   |
 
 ---
 
 ## Post-deployment checklist
 
-- [ ] **Set your `apiUrl`** — Edit the CONFIG in `index.html` and set `apiUrl` to your Google Apps Script deployment URL
-- [ ] **Test registration** — Open the site on a phone, register with name/email/phone
-- [ ] **Test ministry signup** — Browse ministries and tap "I'm Interested" on one
-- [ ] **Check Google Sheet** — Verify the signup appeared in the "App Signups" tab
-- [ ] **Test deep links** — Try `http://ministry.st-theresa.org?m=music` (replace `music` with a real ministry ID)
-- [ ] **Generate QR codes** — Create QR codes pointing to `http://ministry.st-theresa.org` for the main page and `http://ministry.st-theresa.org?m=MINISTRY_ID` for individual ministry tables
-- [ ] **Enable HTTPS** — If your hosting option supports it, serve from `https://ministry.st-theresa.org`
+- [ ] Set `apiUrl` in CONFIG to your Google Apps Script deployment URL
+- [ ] Test registration on a phone — name, email, phone
+- [ ] Test ministry signup — tap "I'm Interested" on a ministry
+- [ ] Check Google Sheet — verify signup appeared in "App Signups" tab
+- [ ] Test deep links — `http://ministry.st-theresa.org?m=music` (use a real ministry ID)
+- [ ] Generate QR codes for `http://ministry.st-theresa.org` (main) and `http://ministry.st-theresa.org?m=MINISTRY_ID` (per-ministry)
+- [ ] Verify HTTPS is working at `https://ministry.st-theresa.org`
 
 ---
 
 ## Updating the app
 
-Since the app is a single file, updating is straightforward:
+Since the app is a single file, updates are simple:
 
 1. Edit `index.html` locally
-2. Re-upload / push to your hosting provider
-3. Changes are live immediately (or after a short CDN cache, typically under a minute)
+2. In Netlify: **Deploys → Drag and drop** your updated folder (or push to GitHub if connected)
+3. Changes are live immediately
 
 For the Google Sheets backend, if you update `google-apps-script.js`:
 1. Paste new code into Apps Script editor
