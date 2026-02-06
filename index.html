@@ -1060,6 +1060,7 @@ const CONFIG = {
   appTitle: 'Ministry Fair',
   tagline: 'Find your place to serve',
   apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
+  googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
   primaryColor: '#8B2635',      // Burgundy - change to match your parish
   primaryColorDark: '#6B1D29'   // Darker shade for gradients
   // ================================================
@@ -1156,7 +1157,7 @@ function renderGoogleButton() {
     return;
   }
   google.accounts.id.initialize({
-    client_id: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+    client_id: CONFIG.googleClientId,
     callback: handleGoogleSignIn
   });
   const container = document.getElementById('g_id_signin');
@@ -1667,7 +1668,7 @@ function renderAdminGoogleButton() {
     return;
   }
   google.accounts.id.initialize({
-    client_id: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+    client_id: CONFIG.googleClientId,
     callback: handleAdminGoogleSignIn
   });
   const container = document.getElementById('g_id_admin_signin');

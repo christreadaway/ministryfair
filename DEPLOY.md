@@ -9,7 +9,11 @@ The recommended approach: **host the app for free on Netlify, then point the `mi
 ## Prerequisites
 
 1. **Google Apps Script backend** already deployed (see [README.md](README.md) steps 1–2)
-2. **CONFIG updated** in `index.html` — set `apiUrl` to your Google Apps Script deployment URL
+2. **CONFIG updated** in `index.html`:
+   - `apiUrl` — your Google Apps Script deployment URL
+   - `googleClientId` — your Google OAuth Client ID (see [Setting up Google Sign-In](README.md#setting-up-google-sign-in))
+3. **Admins tab** populated — at least one admin email in the Admins sheet
+4. **Google Cloud Console** — your production domain added to Authorized JavaScript Origins (see below)
 
 ---
 
@@ -109,15 +113,47 @@ Same process as above — contact eCatholic (or your DNS provider) to add:
 
 ---
 
+## Google Sign-In: Add Your Domain
+
+After deploying, you need to authorize your production domain for Google Sign-In:
+
+1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Click your OAuth Client ID
+3. Under **Authorized JavaScript origins**, add:
+   - `https://ministry.st-theresa.org` (your production URL)
+   - `https://YOUR-SITE-NAME.netlify.app` (your Netlify URL, for testing)
+4. Click **Save**
+
+Without this step, the Google Sign-In button will not work on your deployed site.
+
+---
+
 ## Post-deployment checklist
 
+### Parishioner flow
 - [ ] Set `apiUrl` in CONFIG to your Google Apps Script deployment URL
+- [ ] Set `googleClientId` in CONFIG to your Google OAuth Client ID
 - [ ] Test registration on a phone — name, email, phone
 - [ ] Test ministry signup — tap "I'm Interested" on a ministry
 - [ ] Check Google Sheet — verify signup appeared in "App Signups" tab
-- [ ] Test deep links — `http://ministry.st-theresa.org?m=music` (use a real ministry ID)
-- [ ] Generate QR codes for `http://ministry.st-theresa.org` (main) and `http://ministry.st-theresa.org?m=MINISTRY_ID` (per-ministry)
+- [ ] Test deep links — `https://ministry.st-theresa.org?m=music` (use a real ministry ID)
+- [ ] Generate QR codes for `https://ministry.st-theresa.org` (main) and `https://ministry.st-theresa.org?m=MINISTRY_ID` (per-ministry)
 - [ ] Verify HTTPS is working at `https://ministry.st-theresa.org`
+
+### Admin flow
+- [ ] Add at least one admin email to the **Admins** tab in Google Sheets
+- [ ] Add your production domain to **Authorized JavaScript origins** in Google Cloud Console
+- [ ] Visit `https://ministry.st-theresa.org?admin` and sign in with Google
+- [ ] Verify admin dashboard loads (blue header) with Signups, New Parishioners, Ministries, and Manage Users tabs
+- [ ] Test adding a ministry from the Ministries tab
+- [ ] Test adding another admin from the Manage Users tab
+- [ ] Test CSV export from the Signups tab
+
+### Ministry leader flow
+- [ ] Set an **Organizer Email** (column F) on a ministry in the Ministries tab
+- [ ] Sign in at `?admin` with that organizer's Google account
+- [ ] Verify leader dashboard loads (green header) with signups for their ministry
+- [ ] Test per-ministry CSV export
 
 ---
 
