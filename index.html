@@ -1301,7 +1301,7 @@ function showMinistriesList() {
   showView('ministries');
   
   // Update profile display
-  document.getElementById('profile-initials').textContent = profile.firstName[0] + profile.lastName[0];
+  document.getElementById('profile-initials').textContent = (profile.firstName[0] || '') + (profile.lastName[0] || '');
   document.getElementById('profile-name').textContent = profile.firstName + ' ' + profile.lastName;
   document.getElementById('profile-email').textContent = profile.email;
   document.getElementById('profile-phone').textContent = formatPhoneNumber(profile.phone);
@@ -1471,7 +1471,7 @@ document.getElementById('modal-cancel').addEventListener('click', () => {
 });
 
 // Modal backdrop click to close
-document.querySelector('.modal-backdrop').addEventListener('click', () => {
+document.querySelector('#confirm-modal .modal-backdrop').addEventListener('click', () => {
   document.getElementById('confirm-modal').classList.add('hidden');
 });
 
@@ -1977,9 +1977,9 @@ function editMinistry(id) {
 
   // Reconstruct question strings
   const questions = m.questions || [];
-  document.getElementById('admin-m-q1').value = questions[0] ? questions[0].type + '|' + questions[0].label + (questions[0].options.length ? '|' + questions[0].options.join(',') : '') : '';
-  document.getElementById('admin-m-q2').value = questions[1] ? questions[1].type + '|' + questions[1].label + (questions[1].options.length ? '|' + questions[1].options.join(',') : '') : '';
-  document.getElementById('admin-m-q3').value = questions[2] ? questions[2].type + '|' + questions[2].label + (questions[2].options.length ? '|' + questions[2].options.join(',') : '') : '';
+  document.getElementById('admin-m-q1').value = questions[0] ? questions[0].type + '|' + questions[0].label + (questions[0].options && questions[0].options.length ? '|' + questions[0].options.join(',') : '') : '';
+  document.getElementById('admin-m-q2').value = questions[1] ? questions[1].type + '|' + questions[1].label + (questions[1].options && questions[1].options.length ? '|' + questions[1].options.join(',') : '') : '';
+  document.getElementById('admin-m-q3').value = questions[2] ? questions[2].type + '|' + questions[2].label + (questions[2].options && questions[2].options.length ? '|' + questions[2].options.join(',') : '') : '';
 
   document.getElementById('admin-m-submit').textContent = 'Update Ministry';
   document.getElementById('admin-ministry-form-wrap').classList.remove('hidden');
