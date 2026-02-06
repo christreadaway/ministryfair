@@ -990,26 +990,40 @@
     }
     .qr-toolbar .select { width: auto; flex: 1; min-width: 0; }
 
-    /* Print styles */
+    /* Print styles — 6 per sheet (2x3) with cut guides */
     @media print {
-      body { background: white; }
+      body { background: white; margin: 0; }
       .header, .profile-badge, .back-link, .qr-toolbar,
       .logout-link, .btn-secondary, #qr-back-btn { display: none !important; }
-      .content { max-width: 100%; padding: 0; }
+      .content { max-width: 100%; padding: 10mm; margin: 0; }
       .qr-grid {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
+        grid-auto-rows: calc((297mm - 20mm) / 3); /* A4 height / 3 rows */
+        gap: 0;
       }
       .qr-card {
         box-shadow: none;
-        border: 1px solid #ddd;
+        border: 1px dashed #bbb;
+        border-radius: 0;
         break-inside: avoid;
         page-break-inside: avoid;
-        padding: 16px;
+        padding: 12px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
-      .qr-print-header { display: block !important; }
-      .qr-url { font-size: 9px; }
+      .qr-card-icon { font-size: 28px; margin-bottom: 2px; }
+      .qr-card-name { font-size: 15px; margin-bottom: 8px; }
+      .qr-canvas canvas, .qr-canvas img { width: 150px !important; height: 150px !important; }
+      .qr-print-header { display: block !important; margin-bottom: 8mm; }
+      .qr-url { font-size: 8px; }
       .hidden-print { display: none !important; }
+    }
+    @page {
+      size: A4;
+      margin: 0;
     }
   </style>
 </head>
@@ -1353,10 +1367,13 @@
   <div class="content" style="max-width: 700px;">
     <button class="back-link" id="qr-back-btn">&#8249; Back to Settings</button>
     <div class="qr-toolbar hidden-print">
-      <select class="select" id="qr-filter-select">
-        <option value="">All ministries</option>
-      </select>
-      <button class="btn" id="qr-print-btn" style="width: auto; margin-top: 0; padding: 12px 20px; font-size: 14px;">Print QR Codes</button>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; width: 100%;">
+        <label style="font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; white-space: nowrap;">Select ministries:</label>
+        <button class="btn-secondary" id="qr-select-all" style="width: auto; padding: 6px 12px; font-size: 12px;">Select All</button>
+        <button class="btn-secondary" id="qr-deselect-all" style="width: auto; padding: 6px 12px; font-size: 12px;">Deselect All</button>
+      </div>
+      <div id="qr-checkbox-list" style="margin-bottom: 14px; width: 100%;"></div>
+      <button class="btn" id="qr-print-btn" style="width: 100%; font-size: 15px; padding: 14px 20px;">Print Selected QR Codes</button>
     </div>
     <div class="qr-print-header" style="display: none;">
       <h2 class="app-title"></h2>
@@ -1394,6 +1411,71 @@
     <div class="modal-buttons">
       <button class="btn-secondary" id="modal-cancel">Cancel</button>
       <button class="btn-remove" id="modal-confirm">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK SIGNUP VIEW (QR code flow) -->
+<div id="view-quick-signup" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p class="app-tagline"></p>
+  </header>
+  <div class="content">
+    <div class="card" style="text-align: center;">
+      <div id="quick-ministry-icon" style="font-size: 56px; margin-bottom: 8px;"></div>
+      <h2 class="section-title" style="margin-bottom: 8px;" id="quick-ministry-name"></h2>
+      <p class="welcome-text" style="margin-bottom: 20px;" id="quick-ministry-desc"></p>
+
+      <!-- Registration fields (shown only if not yet registered) -->
+      <div id="quick-register-fields" class="hidden">
+        <form class="form" id="quick-register-form" style="text-align: left; margin-bottom: 20px;">
+          <div class="input-row">
+            <div class="input-group">
+              <label class="label">First Name</label>
+              <input type="text" class="input" id="quick-firstName" required autocomplete="given-name" placeholder="John">
+            </div>
+            <div class="input-group">
+              <label class="label">Last Name</label>
+              <input type="text" class="input" id="quick-lastName" required autocomplete="family-name" placeholder="Smith">
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="label">Email</label>
+            <input type="email" class="input" id="quick-email" required autocomplete="email" placeholder="john@example.com">
+          </div>
+          <div class="input-group">
+            <label class="label">Cell Phone</label>
+            <input type="tel" class="input" id="quick-phone" required autocomplete="tel" placeholder="(555) 555-1234" maxlength="14">
+          </div>
+          <button type="submit" class="btn btn-green" style="font-size: 19px; padding: 18px 24px;">Sign Me Up!</button>
+        </form>
+      </div>
+
+      <!-- Confirm buttons (shown if already registered) -->
+      <div id="quick-confirm-buttons" class="hidden">
+        <p style="font-size: 15px; color: #666; margin-bottom: 20px; font-family: 'Inter', -apple-system, sans-serif;" id="quick-user-greeting"></p>
+        <div class="btn-group">
+          <button class="btn btn-green" id="quick-yes-btn" style="font-size: 19px; padding: 18px 24px;">Yes, Sign Me Up!</button>
+          <button class="btn-secondary" id="quick-no-btn">No Thanks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK SIGNUP RESULT VIEW -->
+<div id="view-quick-result" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p class="app-tagline"></p>
+  </header>
+  <div class="content">
+    <div class="card" style="text-align: center;">
+      <div id="quick-result-icon" style="font-size: 64px; margin-bottom: 16px;"></div>
+      <h2 class="section-title" style="margin-bottom: 12px;" id="quick-result-title"></h2>
+      <p class="welcome-text" id="quick-result-message"></p>
+      <button class="btn-secondary" id="quick-result-explore" style="margin-top: 24px;">Explore More Ministries</button>
     </div>
   </div>
 </div>
@@ -1543,6 +1625,8 @@ const views = {
   allSignups: document.getElementById('view-all-signups'),
   manage: document.getElementById('view-manage'),
   qrcodes: document.getElementById('view-qrcodes'),
+  quickSignup: document.getElementById('view-quick-signup'),
+  quickResult: document.getElementById('view-quick-result'),
   detail: document.getElementById('view-detail'),
   confirmed: document.getElementById('view-confirmed')
 };
@@ -1665,18 +1749,17 @@ async function loadMinistries() {
 }
 
 function initializeApp() {
-  if (savedProfile) {
-    if (ministryParam) {
-      currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
-      if (currentMinistry) {
-        returnToView = 'choose';
-        showMinistryDetail(currentMinistry);
-      } else {
-        showChoiceScreen();
-      }
-    } else {
-      showChoiceScreen();
+  if (ministryParam) {
+    // QR code scan flow — quick signup
+    currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
+    if (currentMinistry) {
+      showQuickSignup(currentMinistry, !!savedProfile);
+      return;
     }
+  }
+
+  if (savedProfile) {
+    showChoiceScreen();
   } else {
     showView('register');
   }
@@ -1749,8 +1832,7 @@ document.getElementById('google-signin-btn').addEventListener('click', async fun
       if (ministryParam) {
         currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
         if (currentMinistry) {
-          returnToView = 'choose';
-          showMinistryDetail(currentMinistry);
+          showQuickSignup(currentMinistry, true);
           return;
         }
       }
@@ -1784,8 +1866,7 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
   if (ministryParam) {
     currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
     if (currentMinistry) {
-      returnToView = 'choose';
-      showMinistryDetail(currentMinistry);
+      showQuickSignup(currentMinistry, true);
       return;
     }
   }
@@ -2557,6 +2638,127 @@ document.getElementById('explore-btn').addEventListener('click', function() {
 });
 
 // ============================================
+// QUICK SIGNUP (QR Code Scan Flow)
+// ============================================
+function showQuickSignup(ministry, isRegistered) {
+  currentMinistry = ministry;
+  showView('quickSignup');
+
+  document.getElementById('quick-ministry-icon').textContent = ministry.icon;
+  document.getElementById('quick-ministry-name').textContent = ministry.name;
+  document.getElementById('quick-ministry-desc').textContent = ministry.description;
+
+  var registerFields = document.getElementById('quick-register-fields');
+  var confirmButtons = document.getElementById('quick-confirm-buttons');
+
+  if (isRegistered) {
+    // Already registered — just show yes/no
+    registerFields.classList.add('hidden');
+    confirmButtons.classList.remove('hidden');
+    document.getElementById('quick-user-greeting').textContent =
+      'Hi ' + profile.firstName + '! Would you like to sign up for this ministry?';
+  } else {
+    // Need registration — show compact form
+    registerFields.classList.remove('hidden');
+    confirmButtons.classList.add('hidden');
+  }
+}
+
+function submitQuickSignup() {
+  var payload = {
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    email: profile.email,
+    phone: profile.phone,
+    wantsToJoinParish: profile.wantsToJoinParish || false,
+    ministry: currentMinistry.name,
+    action: 'Signup',
+    q1: '',
+    q2: '',
+    q3: ''
+  };
+
+  fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(function(err) { console.error('API error:', err); });
+
+  var newInterest = {
+    ministryId: currentMinistry.id,
+    ministryName: currentMinistry.name,
+    answers: {},
+    timestamp: new Date().toISOString()
+  };
+
+  interests = interests.filter(function(i) { return i.ministryId !== currentMinistry.id; }).concat([newInterest]);
+  localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
+
+  // Show success result
+  showQuickResult(true);
+}
+
+function showQuickResult(signedUp) {
+  showView('quickResult');
+
+  if (signedUp) {
+    document.getElementById('quick-result-icon').textContent = '✅';
+    document.getElementById('quick-result-title').textContent = "You're signed up!";
+    document.getElementById('quick-result-message').innerHTML =
+      'The <strong>' + currentMinistry.name + '</strong> ministry leader will reach out to you soon. Thanks for your interest!';
+  } else {
+    document.getElementById('quick-result-icon').textContent = '👋';
+    document.getElementById('quick-result-title').textContent = 'No problem!';
+    document.getElementById('quick-result-message').textContent =
+      'Feel free to visit other tables or explore more ministries.';
+  }
+}
+
+// Quick signup: "Yes" button (already registered)
+document.getElementById('quick-yes-btn').addEventListener('click', function() {
+  submitQuickSignup();
+});
+
+// Quick signup: "No Thanks" button
+document.getElementById('quick-no-btn').addEventListener('click', function() {
+  showQuickResult(false);
+});
+
+// Quick signup: Registration form submit (new user)
+document.getElementById('quick-register-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  profile = {
+    firstName: document.getElementById('quick-firstName').value,
+    lastName: document.getElementById('quick-lastName').value,
+    email: document.getElementById('quick-email').value,
+    phone: document.getElementById('quick-phone').value,
+    wantsToJoinParish: false
+  };
+  localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
+  submitQuickSignup();
+});
+
+// Phone formatting on quick signup form
+var quickPhoneInput = document.getElementById('quick-phone');
+if (quickPhoneInput) {
+  quickPhoneInput.addEventListener('input', function(e) {
+    e.target.value = formatPhoneNumber(e.target.value);
+  });
+}
+
+// Quick result: explore more
+document.getElementById('quick-result-explore').addEventListener('click', function() {
+  currentMinistry = null;
+  // Clear the ?m= param so they don't get stuck in quick signup loop
+  if (window.history.replaceState) {
+    var cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+  showChoiceScreen();
+});
+
+// ============================================
 // MY MINISTRY SIGNUPS VIEW (Ministry Leader)
 // ============================================
 async function showMySignups() {
@@ -2902,44 +3104,59 @@ document.getElementById('manage-back-btn').addEventListener('click', function() 
 // ============================================
 // QR CODE GENERATION (Admin)
 // ============================================
+var qrBaseUrl = '';
+var qrSelectedMinistries = new Set();
+
 document.getElementById('generate-qr-btn').addEventListener('click', function() {
   var baseUrl = document.getElementById('qr-base-url').value.trim();
   if (!baseUrl) {
     alert('Please enter the base URL where the app is hosted (e.g., https://yourparish.github.io/ministryfair/).');
     return;
   }
-  // Save the base URL for future use
   localStorage.setItem('ministry-fair-qr-base-url', baseUrl);
-  showQRCodes(baseUrl, '');
+  qrBaseUrl = baseUrl;
+  showQRCodes();
 });
 
-function showQRCodes(baseUrl, filterMinistryId) {
+function showQRCodes() {
   showView('qrcodes');
 
-  // Ensure base URL ends with proper separator
+  // Initialize all ministries as selected
+  qrSelectedMinistries = new Set(MINISTRIES.map(function(m) { return m.id; }));
+
+  // Build checkbox list
+  var checkboxList = document.getElementById('qr-checkbox-list');
+  checkboxList.innerHTML = MINISTRIES.map(function(m) {
+    return '<div class="checkbox-option" style="display: inline-flex; margin: 0 6px 6px 0; padding: 8px 12px;">' +
+      '<input type="checkbox" checked id="qr-cb-' + m.id + '" data-ministry-id="' + m.id + '">' +
+      '<label for="qr-cb-' + m.id + '" style="font-size: 13px;">' + m.icon + ' ' + m.name + '</label>' +
+    '</div>';
+  }).join('');
+
+  // Checkbox change handlers
+  checkboxList.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      if (cb.checked) {
+        qrSelectedMinistries.add(cb.dataset.ministryId);
+      } else {
+        qrSelectedMinistries.delete(cb.dataset.ministryId);
+      }
+      renderQRGrid();
+    });
+  });
+
+  renderQRGrid();
+}
+
+function renderQRGrid() {
+  var baseUrl = qrBaseUrl;
   if (!baseUrl.endsWith('/') && !baseUrl.includes('?')) {
     baseUrl += '/';
   }
   var separator = baseUrl.includes('?') ? '&' : '?';
 
-  // Populate filter dropdown
-  var filterSelect = document.getElementById('qr-filter-select');
-  filterSelect.innerHTML = '<option value="">All ministries</option>' +
-    MINISTRIES.map(function(m) {
-      return '<option value="' + m.id + '"' + (filterMinistryId === m.id ? ' selected' : '') + '>' + m.icon + ' ' + m.name + '</option>';
-    }).join('');
+  var ministriesToShow = MINISTRIES.filter(function(m) { return qrSelectedMinistries.has(m.id); });
 
-  filterSelect.onchange = function() {
-    showQRCodes(baseUrl, filterSelect.value);
-  };
-
-  // Filter ministries if needed
-  var ministriesToShow = MINISTRIES;
-  if (filterMinistryId) {
-    ministriesToShow = MINISTRIES.filter(function(m) { return m.id === filterMinistryId; });
-  }
-
-  // Generate QR codes
   var grid = document.getElementById('qr-grid');
   grid.innerHTML = '';
 
@@ -2956,7 +3173,6 @@ function showQRCodes(baseUrl, filterMinistryId) {
 
     grid.appendChild(card);
 
-    // Generate QR code into the container
     new QRCode(document.getElementById('qr-' + m.id), {
       text: url,
       width: 180,
@@ -2968,15 +3184,31 @@ function showQRCodes(baseUrl, filterMinistryId) {
   });
 
   if (ministriesToShow.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No ministries to generate QR codes for.</p></div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">☑️</div><p>Select at least one ministry above</p></div>';
   }
 }
+
+document.getElementById('qr-select-all').addEventListener('click', function() {
+  qrSelectedMinistries = new Set(MINISTRIES.map(function(m) { return m.id; }));
+  document.querySelectorAll('#qr-checkbox-list input[type="checkbox"]').forEach(function(cb) { cb.checked = true; });
+  renderQRGrid();
+});
+
+document.getElementById('qr-deselect-all').addEventListener('click', function() {
+  qrSelectedMinistries.clear();
+  document.querySelectorAll('#qr-checkbox-list input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+  renderQRGrid();
+});
 
 document.getElementById('qr-back-btn').addEventListener('click', function() {
   showManageMinistries();
 });
 
 document.getElementById('qr-print-btn').addEventListener('click', function() {
+  if (qrSelectedMinistries.size === 0) {
+    alert('Select at least one ministry to print.');
+    return;
+  }
   window.print();
 });
 
