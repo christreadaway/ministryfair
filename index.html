@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -129,6 +130,28 @@
       margin-bottom: 4px;
       text-align: center;
       font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .google-signin-section {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .google-signin-section #g_id_signin {
+      display: flex;
+      justify-content: center;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 20px 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 13px;
+      color: #999;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid #e8e4de;
     }
     .profile-badge {
       background: linear-gradient(135deg, #f5f0e8 0%, #ebe4d8 100%);
@@ -393,6 +416,23 @@
       <p class="welcome-text">
         Welcome! Let's get you signed up so you can explore our ministries and express interest in serving.
       </p>
+      <div class="google-signin-section">
+        <div id="g_id_onload"
+          data-client_id="1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com"
+          data-callback="handleGoogleSignIn"
+          data-auto_prompt="false">
+        </div>
+        <div id="g_id_signin"
+          data-type="standard"
+          data-size="large"
+          data-theme="outline"
+          data-text="sign_in_with"
+          data-shape="rectangular"
+          data-logo_alignment="left"
+          data-width="300">
+        </div>
+      </div>
+      <div class="divider">or fill in manually</div>
       <form class="form" id="register-form">
         <div class="input-row">
           <div class="input-group">
@@ -534,6 +574,20 @@ let interests = [];
 let currentMinistry = null;
 let showAll = false;
 let searchTerm = '';
+
+// Google Sign-In callback
+function handleGoogleSignIn(response) {
+  // Decode the JWT token to get user info
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+
+  // Auto-fill the form fields
+  document.getElementById('firstName').value = payload.given_name || '';
+  document.getElementById('lastName').value = payload.family_name || '';
+  document.getElementById('email').value = payload.email || '';
+
+  // Focus on the phone field since that's the only thing Google doesn't provide
+  document.getElementById('phone').focus();
+}
 
 // Phone number formatting
 function formatPhoneNumber(value) {
