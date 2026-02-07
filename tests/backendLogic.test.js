@@ -64,6 +64,25 @@ global.Logger = {
   log: jest.fn(),
 };
 
+// Mock PropertiesService for API key storage
+const scriptProperties = {};
+global.PropertiesService = {
+  getScriptProperties: jest.fn(() => ({
+    getProperty: jest.fn((key) => scriptProperties[key] || null),
+    setProperty: jest.fn((key, value) => { scriptProperties[key] = value; }),
+  })),
+};
+
+// Mock UrlFetchApp for Claude API proxy
+global.UrlFetchApp = {
+  fetch: jest.fn(() => ({
+    getResponseCode: jest.fn(() => 200),
+    getContentText: jest.fn(() => JSON.stringify({
+      content: [{ text: '{"isReligiousOrg": true, "organizationName": "Test Church"}' }]
+    })),
+  })),
+};
+
 // Load the backend script
 const fs = require('fs');
 const path = require('path');
@@ -469,5 +488,181 @@ describe('Helper Functions', () => {
       'Organizer Name', 'Organizer Email', 'Organizer Phone',
       'Question 1', 'Question 2', 'Question 3',
     ]);
+  });
+});
+
+// ============================================
+// AI PROXY: store-api-key
+// ============================================
+describe('AI Proxy - Store API Key', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete scriptProperties['CLAUDE_API_KEY'];
+  });
+
+  test('stores valid API key in Script Properties', () => {
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'store-api-key', apiKey: 'sk-ant-test123' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(true);
+    // The mock stores to scriptProperties object
+    expect(scriptProperties['CLAUDE_API_KEY']).toBe('sk-ant-test123');
+  });
+
+  test('rejects API key that does not start with sk-', () => {
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'store-api-key', apiKey: 'bad-key' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toContain('Invalid');
+  });
+
+  test('rejects empty API key', () => {
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'store-api-key', apiKey: '' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+  });
+});
+
+// ============================================
+// AI PROXY: check-api-key
+// ============================================
+describe('AI Proxy - Check API Key', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('returns hasKey: true when key is stored', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-stored-key';
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'check-api-key' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.hasKey).toBe(true);
+  });
+
+  test('returns hasKey: false when no key is stored', () => {
+    delete scriptProperties['CLAUDE_API_KEY'];
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'check-api-key' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.hasKey).toBe(false);
+  });
+});
+
+// ============================================
+// AI PROXY: ai-lookup
+// ============================================
+describe('AI Proxy - Domain Lookup', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete scriptProperties['CLAUDE_API_KEY'];
+  });
+
+  test('returns error when no API key is stored', () => {
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-lookup', domain: 'sttheresa.org' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toContain('No API key');
+  });
+
+  test('returns error when no domain is provided', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-test';
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-lookup' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toContain('No domain');
+  });
+
+  test('calls Claude API and returns parsed result', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-test';
+    UrlFetchApp.fetch.mockReturnValue({
+      getResponseCode: jest.fn(() => 200),
+      getContentText: jest.fn(() => JSON.stringify({
+        content: [{ text: '{"isReligiousOrg": true, "organizationName": "St. Theresa Catholic Church"}' }]
+      })),
+    });
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-lookup', domain: 'sttheresa.org' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(true);
+    expect(parsed.result.organizationName).toBe('St. Theresa Catholic Church');
+    expect(UrlFetchApp.fetch).toHaveBeenCalled();
+  });
+});
+
+// ============================================
+// AI PROXY: ai-analyze
+// ============================================
+describe('AI Proxy - Spreadsheet Analysis', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete scriptProperties['CLAUDE_API_KEY'];
+  });
+
+  test('returns error when no API key is stored', () => {
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-analyze', sampleData: 'data', prompt: 'analyze' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+  });
+
+  test('returns error when no sample data provided', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-test';
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-analyze', prompt: 'analyze' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toContain('No sample data');
+  });
+
+  test('returns error when no prompt provided', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-test';
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-analyze', sampleData: 'data' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toContain('No prompt');
+  });
+
+  test('proxies to Claude and returns result', () => {
+    scriptProperties['CLAUDE_API_KEY'] = 'sk-ant-test';
+    UrlFetchApp.fetch.mockReturnValue({
+      getResponseCode: jest.fn(() => 200),
+      getContentText: jest.fn(() => JSON.stringify({
+        content: [{ text: '{"mapping": {"name": 0}, "confidence": "high"}' }]
+      })),
+    });
+    const event = {
+      postData: { contents: JSON.stringify({ action: 'ai-analyze', sampleData: 'HEADERS: ["Name"]', prompt: 'Analyze this' }) },
+    };
+    const result = doPost(event);
+    const parsed = JSON.parse(result);
+    expect(parsed.success).toBe(true);
+    expect(parsed.result.mapping.name).toBe(0);
   });
 });

@@ -6,15 +6,29 @@ const TIMEZONE = 'America/Chicago'; // Change to your timezone
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+    const action = data.action || 'Signup';
+
+    // ── AI Proxy actions ──────────────────────────
+    if (action === 'store-api-key') {
+      return handleStoreApiKey(data);
+    }
+    if (action === 'ai-lookup') {
+      return handleAiLookup(data);
+    }
+    if (action === 'ai-analyze') {
+      return handleAiAnalyze(data);
+    }
+    if (action === 'check-api-key') {
+      return handleCheckApiKey();
+    }
+
+    // ── Signup / Removal actions ──────────────────
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const signupsSheet = getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
     
     const now = new Date();
     const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
     const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
-    
-    // Determine action type (default to "Signup" for backward compatibility)
-    const action = data.action || 'Signup';
     
     const row = [
       date,
@@ -122,6 +136,143 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+// ============================================
+// AI PROXY - Claude API key stored securely
+// in Script Properties (encrypted at rest by Google)
+// ============================================
+
+/**
+ * Store the Claude API key as a Script Property.
+ * Called once during setup. The key never touches localStorage.
+ */
+function handleStoreApiKey(data) {
+  const key = data.apiKey || '';
+  if (!key || !key.startsWith('sk-')) {
+    return jsonResponse({ success: false, error: 'Invalid API key format' });
+  }
+  PropertiesService.getScriptProperties().setProperty('CLAUDE_API_KEY', key);
+  return jsonResponse({ success: true });
+}
+
+/**
+ * Check if a Claude API key is stored server-side.
+ */
+function handleCheckApiKey() {
+  const key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
+  return jsonResponse({ hasKey: !!key });
+}
+
+/**
+ * Proxy: domain lookup via Claude API.
+ * Client sends { action: 'ai-lookup', domain: 'example.org' }
+ * Server calls Claude and returns the result.
+ */
+function handleAiLookup(data) {
+  const key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
+  if (!key) {
+    return jsonResponse({ success: false, error: 'No API key configured on server' });
+  }
+
+  const domain = data.domain || '';
+  if (!domain) {
+    return jsonResponse({ success: false, error: 'No domain provided' });
+  }
+
+  const prompt = 'Analyze this email domain: "' + domain + '"\n\n' +
+    'Based on the domain name and any knowledge you have, determine:\n' +
+    '1. Is this likely a church, parish, temple, synagogue, mosque, or other religious organization?\n' +
+    '2. If yes, what is the probable full name of the organization?\n' +
+    '3. What denomination or religious tradition (if identifiable from the domain)?\n' +
+    '4. What city/state or region (if identifiable)?\n\n' +
+    'Return ONLY a JSON object with these fields:\n' +
+    '{\n' +
+    '  "isReligiousOrg": boolean,\n' +
+    '  "organizationName": string,\n' +
+    '  "denomination": string,\n' +
+    '  "location": string,\n' +
+    '  "confidence": "high" | "medium" | "low"\n' +
+    '}\n\n' +
+    'If you cannot determine, set isReligiousOrg to false. Return ONLY JSON, no explanation.';
+
+  return callClaude(key, prompt, 256);
+}
+
+/**
+ * Proxy: spreadsheet column mapping via Claude API.
+ * Client sends { action: 'ai-analyze', headers: [...], sampleData: '...' }
+ * Server calls Claude and returns the mapping result.
+ */
+function handleAiAnalyze(data) {
+  const key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
+  if (!key) {
+    return jsonResponse({ success: false, error: 'No API key configured on server' });
+  }
+
+  const sampleData = data.sampleData || '';
+  if (!sampleData) {
+    return jsonResponse({ success: false, error: 'No sample data provided' });
+  }
+
+  const prompt = data.prompt || '';
+  if (!prompt) {
+    return jsonResponse({ success: false, error: 'No prompt provided' });
+  }
+
+  return callClaude(key, prompt, 1024);
+}
+
+/**
+ * Call the Claude API server-side.
+ */
+function callClaude(apiKey, prompt, maxTokens) {
+  try {
+    const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      payload: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: maxTokens || 1024,
+        messages: [{ role: 'user', content: prompt }]
+      }),
+      muteHttpExceptions: true
+    });
+
+    const code = response.getResponseCode();
+    if (code !== 200) {
+      return jsonResponse({ success: false, error: 'Claude API returned ' + code });
+    }
+
+    const result = JSON.parse(response.getContentText());
+    const text = result.content[0].text;
+    // Try to extract JSON from the response
+    const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    try {
+      const parsed = JSON.parse(cleaned);
+      return jsonResponse({ success: true, result: parsed });
+    } catch(e) {
+      // Return raw text if not JSON
+      return jsonResponse({ success: true, result: cleaned });
+    }
+
+  } catch(err) {
+    return jsonResponse({ success: false, error: err.toString() });
+  }
+}
+
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
 function getOrCreateSheet(spreadsheet, sheetName, headers) {
   let sheet = spreadsheet.getSheetByName(sheetName);
@@ -242,6 +393,28 @@ function addOrganizerColumns() {
   ministriesSheet.autoResizeColumn(7);
   
   Logger.log('Organizer columns added successfully!');
+}
+
+// Run this to manually set the Claude API key from the GAS editor
+// (alternative to setting it via the app's setup wizard)
+// Usage: Run setClaudeApiKey() > enter key when prompted
+function setClaudeApiKey() {
+  const ui = SpreadsheetApp.getUi();
+  const result = ui.prompt(
+    'Set Claude API Key',
+    'Enter your Claude API key (starts with sk-ant-):',
+    ui.ButtonSet.OK_CANCEL
+  );
+
+  if (result.getSelectedButton() === ui.Button.OK) {
+    const key = result.getResponseText().trim();
+    if (key && key.startsWith('sk-')) {
+      PropertiesService.getScriptProperties().setProperty('CLAUDE_API_KEY', key);
+      ui.alert('API key saved securely in Script Properties.');
+    } else {
+      ui.alert('Invalid key format. Must start with "sk-".');
+    }
+  }
 }
 
 // Run this first to create all sheets with example data

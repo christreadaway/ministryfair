@@ -1,6 +1,6 @@
 # Bug Report - Ministry Fair Application (Round 2)
 
-Comprehensive test suite results: **160 tests passing** across 9 test suites covering frontend, backend, security, admin features, and edge cases.
+Comprehensive test suite results: **176 tests passing** across 9 test suites covering frontend, backend, security, admin features, AI proxy, and edge cases.
 
 This round covers bugs introduced by the new admin/wizard feature branches merged into the codebase.
 
@@ -72,28 +72,29 @@ The new feature branches completely removed the `escapeHtml()` function and all 
 
 ---
 
-## Remaining: Low-Severity / Design Issues (not fixed)
+## FIXED: Low-Severity & Design Issues
 
-### API-KEY-1: Claude API key stored in plaintext in localStorage
-**File:** `index.html` (line ~3219)
-**Description:** `appConfig.claudeApiKey` is saved to localStorage in plain text. Anyone with access to the browser can read it. Settings view partially masks it (shows last 4 chars).
-**Risk:** Medium - API key exposure could lead to unauthorized API usage.
-**Recommendation:** Consider server-side proxy for API calls or encrypt the key before storage.
+| ID | Issue | Status |
+|---|---|---|
+| API-KEY-1 | Claude API key in plaintext localStorage | **FIXED** - key removed from localStorage/appConfig; stored in sessionStorage during setup, then sent to GAS server-side Script Properties. GAS proxy routes all AI calls server-side after setup. |
+| DESIGN-1 | Settings items clickable but no edit handlers | **FIXED** - all settings items (org name, app title, API URL, sheet URL, Claude API key) now editable via prompt() dialogs |
+| DESIGN-2 | Admin email-only additions get ugly display names | **FIXED** - email local part split on dots/dashes/underscores, title-cased (e.g. "john.doe" -> "John Doe") |
+| DESIGN-3 | `#/start` hash shows wizard after setup complete | **FIXED** - hashchange handler checks `appConfig.setupComplete` before showing wizard |
 
-### DESIGN-1: Settings items appear clickable but have no edit handlers
-**File:** `index.html` (settings view)
-**Description:** Organization Name, App Title, Theme Color, API URL, etc. are styled as interactive items in settings but clicking them does nothing.
-**Risk:** Low - UX confusion only.
+### Architecture: Claude API Key Security (API-KEY-1 detail)
+**Before:** API key stored in `appConfig.claudeApiKey` in localStorage (plaintext, persisted, readable by DevTools/XSS).
 
-### DESIGN-2: Admin added via email gets ugly firstName
-**File:** `index.html` (line ~3154)
-**Description:** When adding an admin by email, `firstName` is derived from the email local part (e.g., "john.doe"). This creates ugly display names.
-**Recommendation:** Add a name field or prompt when adding admins.
+**After (3-tier approach):**
+1. **During setup wizard:** Key entered in password input, held temporarily in `sessionStorage` (cleared on tab close)
+2. **On setup completion:** Key sent to Google Apps Script backend, stored as a **Script Property** (encrypted at rest by Google, never visible in the spreadsheet)
+3. **After setup:** All AI calls (domain lookup, spreadsheet analysis) route through GAS server-side proxy. Browser never handles the key again.
 
-### DESIGN-3: Hash navigation edge case with #/start
-**File:** `index.html` (hashchange handler)
-**Description:** If user navigates to `#/start` after setup is complete, the wizard is still shown via the hashchange handler (line ~3894), even though boot() would skip it. The hashchange handler doesn't check `appConfig.setupComplete`.
-**Recommendation:** Add `setupComplete` guard to the hashchange handler for `#/start`.
+**GAS endpoints added:**
+- `store-api-key` - securely stores the key in Script Properties
+- `check-api-key` - checks if a server-side key exists (returns boolean, not the key)
+- `ai-lookup` - proxied domain detection via Claude
+- `ai-analyze` - proxied spreadsheet analysis via Claude
+- `setClaudeApiKey()` - manual GAS editor function as alternative setup method
 
 ---
 
@@ -102,15 +103,15 @@ The new feature branches completely removed the `escapeHtml()` function and all 
 | Test Suite | Tests | Status |
 |---|---|---|
 | formatPhoneNumber.test.js | 24 | PASS |
-| backendLogic.test.js | 22 | PASS |
+| backendLogic.test.js | 34 | PASS |
 | registration.test.js | 18 | PASS |
 | ministryRendering.test.js | 17 | PASS |
 | edgeCases.test.js | 24 | PASS |
 | localStorage.test.js | 10 | PASS |
 | xss.test.js | 8 | PASS |
 | deepLinking.test.js | 5 | PASS |
-| adminSetup.test.js | 31 | PASS |
-| **Total** | **160** | **ALL PASS** |
+| adminSetup.test.js | 35 | PASS |
+| **Total** | **176** | **ALL PASS** |
 
 ### New Areas Covered (Round 2)
 - Boot sequence routing (wizard vs register vs ministries based on setupComplete)
@@ -124,6 +125,9 @@ The new feature branches completely removed the `escapeHtml()` function and all 
 - escapeHtml utility function (all special chars, null/undefined)
 - isValidEmail utility (valid emails, javascript: protocol, null/empty)
 - XSS in admin wizard features (admin list rendering)
+- API key security (sessionStorage, not in localStorage, server-side storage)
+- Hash navigation guarding (#/start blocked after setup)
+- GAS proxy: store-api-key, check-api-key, ai-lookup, ai-analyze (12 tests)
 
 ### Previous Coverage (Round 1, still passing)
 - Phone number formatting (edge cases, boundary conditions)

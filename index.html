@@ -2338,10 +2338,31 @@ function checkRegistration(domain) {
   return false;
 }
 
-// Call Claude API to identify if a domain belongs to a church
+// Call Claude API to identify if a domain belongs to a church.
+// Routes through GAS proxy when available, falls back to direct browser call during setup.
 async function lookupChurchDomain(domain, apiKey) {
-  if (!apiKey) return null;
+  if (!domain) return null;
 
+  // Try GAS proxy first (key stored server-side)
+  if (appConfig.apiUrl) {
+    try {
+      var proxyResp = await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ai-lookup', domain: domain })
+      });
+      var proxyResult = await proxyResp.json();
+      if (proxyResult.success && proxyResult.result) {
+        return proxyResult.result;
+      }
+      // If server says no key, fall through to direct call
+    } catch(err) {
+      console.warn('GAS proxy lookup failed, trying direct:', err);
+    }
+  }
+
+  // Fall back to direct browser call (during setup, before GAS URL exists)
+  if (!apiKey) return null;
   var prompt = 'Analyze this email domain: "' + domain + '"\n\n' +
     'Based on the domain name and any knowledge you have, determine:\n' +
     '1. Is this likely a church, parish, temple, synagogue, mosque, or other religious organization?\n' +
@@ -2898,7 +2919,8 @@ function handleFile(file) {
   reader.readAsText(file);
 }
 
-// Call Claude API to analyze the spreadsheet
+// Call Claude API to analyze the spreadsheet.
+// Routes through GAS proxy when available, falls back to direct browser call during setup.
 async function analyzeWithAI(data) {
   var apiKey = document.getElementById('setup-api-key').value.trim();
   var progress = document.getElementById('analysis-progress');
@@ -2907,7 +2929,10 @@ async function analyzeWithAI(data) {
   progress.classList.remove('hidden');
   results.classList.add('hidden');
 
-  if (!apiKey) {
+  var hasDirectKey = !!apiKey;
+  var hasGasUrl = !!appConfig.apiUrl;
+
+  if (!hasDirectKey && !hasGasUrl) {
     progress.classList.add('hidden');
     results.classList.remove('hidden');
     document.getElementById('mapping-summary-box').innerHTML =
@@ -2945,32 +2970,57 @@ async function analyzeWithAI(data) {
     'IMPORTANT: Return ONLY the JSON object, no markdown formatting, no explanation outside the JSON.';
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
+    var mappingText = null;
 
-    if (!response.ok) {
-      var errBody = await response.text();
-      throw new Error('API error ' + response.status + ': ' + errBody);
+    // Try GAS proxy first (key stored server-side)
+    if (hasGasUrl) {
+      try {
+        var proxyResp = await fetch(appConfig.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'ai-analyze', sampleData: sampleText, prompt: prompt })
+        });
+        var proxyResult = await proxyResp.json();
+        if (proxyResult.success && proxyResult.result) {
+          aiMappingResult = typeof proxyResult.result === 'string' ? JSON.parse(proxyResult.result) : proxyResult.result;
+          mappingText = 'done';
+        }
+      } catch(proxyErr) {
+        console.warn('GAS proxy analysis failed, trying direct:', proxyErr);
+      }
     }
 
-    var result = await response.json();
-    var text = result.content[0].text;
+    // Fall back to direct browser call
+    if (!mappingText && hasDirectKey) {
+      var response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5-20250929',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
 
-    // Parse JSON from response (strip any accidental markdown fencing)
-    text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    aiMappingResult = JSON.parse(text);
+      if (!response.ok) {
+        var errBody = await response.text();
+        throw new Error('API error ' + response.status + ': ' + errBody);
+      }
+
+      var result = await response.json();
+      var text = result.content[0].text;
+      text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      aiMappingResult = JSON.parse(text);
+    }
+
+    if (!aiMappingResult) {
+      throw new Error('No AI analysis result received');
+    }
 
     progress.classList.add('hidden');
     results.classList.remove('hidden');
@@ -3274,7 +3324,8 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
-  setApiKey(document.getElementById('setup-api-key').value || '');
+  var enteredKey = document.getElementById('setup-api-key').value || '';
+  setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
   appConfig.detectedOrg = detectedOrg || null;
   appConfig.setupComplete = true;
@@ -3294,6 +3345,20 @@ document.getElementById('launch-btn').addEventListener('click', function() {
 
   // Save default notification settings
   saveNotificationSettings(notificationSettings);
+
+  // Send API key to GAS for secure server-side storage
+  if (enteredKey && appConfig.apiUrl) {
+    fetch(appConfig.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'store-api-key', apiKey: enteredKey })
+    }).then(function() {
+      // Key stored server-side; clear from session
+      setApiKey('');
+    }).catch(function(err) {
+      console.warn('Could not store API key server-side, keeping in session:', err);
+    });
+  }
 
   // Apply config and load the app
   applyConfig();
@@ -3318,8 +3383,32 @@ function showSettingsView() {
   // API/sheet status
   document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
   document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
-  var storedKey = getApiKey();
-  document.getElementById('settings-claude-key-status').textContent = storedKey ? 'Configured this session (sk-....' + storedKey.slice(-4) + ')' : 'Not set (enter each session)';
+  // Check server-side key status
+  var keyStatusEl = document.getElementById('settings-claude-key-status');
+  var sessionKey = getApiKey();
+  keyStatusEl.textContent = sessionKey ? 'Session key active' : 'Checking server...';
+  if (appConfig.apiUrl) {
+    fetch(appConfig.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check-api-key' })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.hasKey) {
+        keyStatusEl.textContent = 'Stored securely on server';
+        keyStatusEl.style.color = '#4a9c6d';
+      } else if (sessionKey) {
+        keyStatusEl.textContent = 'Session only (not on server)';
+        keyStatusEl.style.color = '#a04000';
+      } else {
+        keyStatusEl.textContent = 'Not configured';
+        keyStatusEl.style.color = '';
+      }
+    }).catch(function() {
+      keyStatusEl.textContent = sessionKey ? 'Session only (server unreachable)' : 'Not configured';
+    });
+  } else {
+    keyStatusEl.textContent = sessionKey ? 'Session only (no API URL)' : 'Not configured';
+  }
 
   // User info
   if (currentSession) {
@@ -3399,9 +3488,30 @@ document.getElementById('settings-sheet-item').addEventListener('click', functio
 
 document.getElementById('settings-claude-key-item').addEventListener('click', function() {
   var current = getApiKey();
-  var val = prompt('Claude API Key (stored in session only, not persisted):', current || '');
-  if (val !== null) {
-    setApiKey(val);
+  var val = prompt('Claude API Key:\n\nIf your API URL is configured, this key will be sent to your server for secure storage. Otherwise it is kept in this browser session only.', current || '');
+  if (val !== null && val.trim()) {
+    setApiKey(val.trim());
+    // Try to store on server
+    if (appConfig.apiUrl) {
+      fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'store-api-key', apiKey: val.trim() })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          setApiKey(''); // Clear from session since server has it
+          alert('API key stored securely on server.');
+        }
+        showSettingsView();
+      }).catch(function() {
+        alert('Could not reach server. Key stored in this session only.');
+        showSettingsView();
+      });
+    } else {
+      showSettingsView();
+    }
+  } else if (val !== null) {
+    setApiKey('');
     showSettingsView();
   }
 });
