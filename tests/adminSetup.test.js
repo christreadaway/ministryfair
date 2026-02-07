@@ -440,3 +440,79 @@ describe('XSS in Admin/Wizard Features', () => {
     expect(listHtml).toContain('&lt;img');
   });
 });
+
+// ============================================
+// API KEY SECURITY
+// ============================================
+describe('API Key Security', () => {
+  test('API key is NOT stored in localStorage (appConfig)', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    // Set an API key
+    dom.window._app.setApiKey('sk-ant-test-key-12345');
+    // Save app config
+    dom.window._app.saveAppConfig(dom.window._app.appConfig);
+
+    // Check that the key is NOT in localStorage
+    const savedConfig = JSON.parse(dom.window.localStorage.getItem('mf-app-config'));
+    expect(savedConfig.claudeApiKey).toBeUndefined();
+    expect(JSON.stringify(savedConfig)).not.toContain('sk-ant-test-key');
+  });
+
+  test('API key is stored in sessionStorage', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    dom.window._app.setApiKey('sk-ant-test-key-12345');
+    expect(dom.window.sessionStorage.getItem('mf-claude-key')).toBe('sk-ant-test-key-12345');
+    expect(dom.window._app.getApiKey()).toBe('sk-ant-test-key-12345');
+  });
+
+  test('setApiKey with empty string removes from sessionStorage', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    dom.window._app.setApiKey('sk-ant-test-key-12345');
+    expect(dom.window._app.getApiKey()).toBe('sk-ant-test-key-12345');
+    dom.window._app.setApiKey('');
+    expect(dom.window._app.getApiKey()).toBe('');
+    expect(dom.window.sessionStorage.getItem('mf-claude-key')).toBeNull();
+  });
+});
+
+// ============================================
+// HASH NAVIGATION
+// ============================================
+describe('Hash Navigation', () => {
+  test('#/start is blocked when setup is already complete', async () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+        'ministry-fair-interests': JSON.stringify([]),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    await waitForApp();
+    // App should be on ministries, not wizard
+    const ministriesView = dom.window.document.getElementById('view-ministries');
+    expect(ministriesView.classList.contains('hidden')).toBe(false);
+
+    // Simulate hash change to #/start
+    dom.window.location.hash = '#/start';
+    dom.window.dispatchEvent(new dom.window.Event('hashchange'));
+
+    // Should still NOT show wizard since setup is complete
+    const startView = dom.window.document.getElementById('view-start');
+    expect(startView.classList.contains('hidden')).toBe(true);
+  });
+});

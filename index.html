@@ -2052,7 +2052,6 @@ const DEFAULT_CONFIG = {
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-  claudeApiKey: '',
   setupComplete: false
 };
 
@@ -2115,7 +2114,22 @@ function loadAppConfig() {
 }
 
 function saveAppConfig(config) {
-  localStorage.setItem('mf-app-config', JSON.stringify(config));
+  // Strip the API key before persisting to localStorage
+  var toSave = Object.assign({}, config);
+  delete toSave.claudeApiKey;
+  localStorage.setItem('mf-app-config', JSON.stringify(toSave));
+}
+
+function getApiKey() {
+  return sessionStorage.getItem('mf-claude-key') || '';
+}
+
+function setApiKey(key) {
+  if (key) {
+    sessionStorage.setItem('mf-claude-key', key);
+  } else {
+    sessionStorage.removeItem('mf-claude-key');
+  }
 }
 
 function loadAdmins() {
@@ -2657,6 +2671,16 @@ function formatPhoneNumber(value) {
 // ============================================
 function showWizardStep(step) {
   wizardStep = step;
+
+  // Restore API key from sessionStorage into the input field
+  if (step === 1) {
+    var savedKey = getApiKey();
+    var keyInput = document.getElementById('setup-api-key');
+    if (savedKey && keyInput && !keyInput.value) {
+      keyInput.value = savedKey;
+    }
+  }
+
   // Update step dots
   document.querySelectorAll('.step-dot').forEach(function(dot) {
     var s = parseInt(dot.dataset.step);
@@ -3177,10 +3201,16 @@ document.getElementById('setup-add-admin-btn').addEventListener('click', functio
     return; // already exists
   }
 
+  // Derive a readable name from the email local part
+  var localPart = email.split('@')[0]
+    .replace(/[._-]+/g, ' ')
+    .replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+  var nameParts = localPart.split(' ');
+
   admins.push({
     email: email,
-    firstName: email.split('@')[0],
-    lastName: '',
+    firstName: nameParts[0] || '',
+    lastName: nameParts.slice(1).join(' ') || '',
     picture: '',
     role: 'admin'
   });
@@ -3244,7 +3274,7 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
-  appConfig.claudeApiKey = document.getElementById('setup-api-key').value || '';
+  setApiKey(document.getElementById('setup-api-key').value || '');
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
   appConfig.detectedOrg = detectedOrg || null;
   appConfig.setupComplete = true;
@@ -3288,7 +3318,8 @@ function showSettingsView() {
   // API/sheet status
   document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
   document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
-  document.getElementById('settings-claude-key-status').textContent = appConfig.claudeApiKey ? 'Configured (sk-....' + appConfig.claudeApiKey.slice(-4) + ')' : 'Not set';
+  var storedKey = getApiKey();
+  document.getElementById('settings-claude-key-status').textContent = storedKey ? 'Configured this session (sk-....' + storedKey.slice(-4) + ')' : 'Not set (enter each session)';
 
   // User info
   if (currentSession) {
@@ -3326,6 +3357,54 @@ function showSettingsView() {
     renderEmailTemplates();
   }
 }
+
+// Settings item click handlers (editable fields)
+document.getElementById('settings-org-name-item').addEventListener('click', function() {
+  var val = prompt('Organization Name:', appConfig.organizationName || '');
+  if (val !== null) {
+    appConfig.organizationName = val;
+    saveAppConfig(appConfig);
+    applyConfig();
+    showSettingsView();
+  }
+});
+
+document.getElementById('settings-app-title-item').addEventListener('click', function() {
+  var val = prompt('App Title:', appConfig.appTitle || '');
+  if (val !== null) {
+    appConfig.appTitle = val;
+    saveAppConfig(appConfig);
+    applyConfig();
+    showSettingsView();
+  }
+});
+
+document.getElementById('settings-api-item').addEventListener('click', function() {
+  var val = prompt('Google Apps Script API URL:', appConfig.apiUrl || '');
+  if (val !== null) {
+    appConfig.apiUrl = val;
+    saveAppConfig(appConfig);
+    showSettingsView();
+  }
+});
+
+document.getElementById('settings-sheet-item').addEventListener('click', function() {
+  var val = prompt('Google Sheet URL:', appConfig.spreadsheetUrl || '');
+  if (val !== null) {
+    appConfig.spreadsheetUrl = val;
+    saveAppConfig(appConfig);
+    showSettingsView();
+  }
+});
+
+document.getElementById('settings-claude-key-item').addEventListener('click', function() {
+  var current = getApiKey();
+  var val = prompt('Claude API Key (stored in session only, not persisted):', current || '');
+  if (val !== null) {
+    setApiKey(val);
+    showSettingsView();
+  }
+});
 
 function renderEmailTemplates() {
   var ns = loadNotificationSettings();
@@ -3934,7 +4013,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 // Hash change routing
 window.addEventListener('hashchange', function() {
   var hash = window.location.hash;
-  if (hash === '#/start') {
+  if (hash === '#/start' && !appConfig.setupComplete) {
     showView('start');
     showWizardStep(1);
   } else if (hash === '#/settings' && currentSession && getUserRole(currentSession.email) === 'admin') {

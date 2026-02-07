@@ -85,7 +85,6 @@ function createTestDom(options = {}) {
       primaryColor: '#8B2635',
       primaryColorDark: '#6B1D29',
       googleClientId: 'test-client-id',
-      claudeApiKey: '',
       setupComplete: true,
     }),
   };
@@ -149,6 +148,8 @@ function createTestDom(options = {}) {
         DEFAULT_NOTIFICATIONS: typeof DEFAULT_NOTIFICATIONS !== 'undefined' ? DEFAULT_NOTIFICATIONS : undefined,
         parseCSV: typeof parseCSV === 'function' ? parseCSV : undefined,
         parseTSV: typeof parseTSV === 'function' ? parseTSV : undefined,
+        getApiKey: typeof getApiKey === 'function' ? getApiKey : undefined,
+        setApiKey: typeof setApiKey === 'function' ? setApiKey : undefined,
       };
     `);
   }
