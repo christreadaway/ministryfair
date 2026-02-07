@@ -707,6 +707,41 @@
       line-height: 1.5;
       font-family: 'Inter', sans-serif;
     }
+    /* Source tabs (Sheet link vs File upload) */
+    .source-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #e8e4de;
+    }
+    .source-tab {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      background: white;
+      color: #666;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .source-tab.active {
+      background: #8B2635;
+      color: white;
+    }
+    .source-tab:not(.active):hover {
+      background: #f5f0e8;
+    }
+    .source-panel.hidden { display: none; }
+
+    body.dark .source-tabs { border-color: #3a3a3a; }
+    body.dark .source-tab { background: #1e1e1e; color: #808080; }
+    body.dark .source-tab.active { background: #8B2635; color: white; }
+    body.dark .source-tab:not(.active):hover { background: #2a2a2a; }
+
     /* File upload area */
     .upload-area {
       border: 2px dashed #d0d0d0;
@@ -1657,18 +1692,42 @@
     <!-- STEP 3: Upload & Analyze Spreadsheet -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
-        <h2 class="section-title">Upload Your Ministry List</h2>
+        <h2 class="section-title">Your Ministry List</h2>
         <p class="welcome-text">
-          Upload a spreadsheet with your ministries. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
+          Paste a Google Sheet link or upload a file. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
         </p>
 
-        <!-- Upload area -->
-        <div id="upload-area" class="upload-area">
-          <div class="upload-area-icon">&#128203;</div>
-          <div class="upload-area-text">Drop your file here, or click to browse</div>
-          <div class="upload-area-hint">CSV, Excel, or any spreadsheet format</div>
-          <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
+        <!-- Source tabs -->
+        <div class="source-tabs">
+          <button class="source-tab active" data-source="sheet">Google Sheet Link</button>
+          <button class="source-tab" data-source="file">Upload a File</button>
         </div>
+
+        <!-- Google Sheet link input -->
+        <div id="source-sheet" class="source-panel">
+          <div class="form" style="margin-top: 0;">
+            <div class="input-group">
+              <label class="label">Google Sheet URL</label>
+              <input type="url" class="input" id="sheet-link-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+              <p style="font-size: 12px; color: #888; margin-top: 4px; font-family: 'Inter', sans-serif;">
+                Make sure the sheet is shared as "Anyone with the link can view"
+              </p>
+            </div>
+            <button class="btn" id="fetch-sheet-btn" type="button">Read Sheet</button>
+          </div>
+          <div id="sheet-fetch-status"></div>
+        </div>
+
+        <!-- File upload area -->
+        <div id="source-file" class="source-panel hidden">
+          <div id="upload-area" class="upload-area">
+            <div class="upload-area-icon">&#128203;</div>
+            <div class="upload-area-text">Drop your file here, or click to browse</div>
+            <div class="upload-area-hint">CSV, TSV, or any text-based spreadsheet</div>
+            <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
+          </div>
+        </div>
+
         <div id="upload-filename" class="upload-filename hidden">
           <span>&#128196;</span>
           <span id="filename-text"></span>
@@ -2771,6 +2830,100 @@ function parseTSV(text) {
   });
 }
 
+// Source tab switching
+document.querySelectorAll('.source-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.source-tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    var source = tab.dataset.source;
+    document.getElementById('source-sheet').classList.toggle('hidden', source !== 'sheet');
+    document.getElementById('source-file').classList.toggle('hidden', source !== 'file');
+  });
+});
+
+// Google Sheet URL → CSV fetch
+function extractSheetId(url) {
+  // Handles: /spreadsheets/d/SHEET_ID/edit, /spreadsheets/d/SHEET_ID, etc.
+  var match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+function extractGid(url) {
+  var match = url.match(/[#&?]gid=(\d+)/);
+  return match ? match[1] : '0';
+}
+
+document.getElementById('fetch-sheet-btn').addEventListener('click', async function() {
+  var url = document.getElementById('sheet-link-input').value.trim();
+  var statusDiv = document.getElementById('sheet-fetch-status');
+  var btn = this;
+
+  if (!url) {
+    statusDiv.innerHTML = '<div class="connection-status error">Please paste a Google Sheet URL.</div>';
+    return;
+  }
+
+  var sheetId = extractSheetId(url);
+  if (!sheetId) {
+    statusDiv.innerHTML = '<div class="connection-status error">That doesn\'t look like a Google Sheets URL. It should contain /spreadsheets/d/...</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Reading...';
+  statusDiv.innerHTML = '<div class="connection-status testing"><span class="detection-spinner-sm"></span> Fetching spreadsheet...</div>';
+
+  var gid = extractGid(url);
+  var csvUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=csv&gid=' + gid;
+
+  try {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+    var response = await fetch(csvUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Sheet is not publicly shared. In Google Sheets, click Share and set to "Anyone with the link can view".');
+      }
+      throw new Error('Could not access sheet (HTTP ' + response.status + '). Make sure it\'s shared publicly.');
+    }
+
+    var text = await response.text();
+    if (!text || text.length < 10) {
+      throw new Error('Sheet appears to be empty.');
+    }
+
+    var parsed = parseCSV(text);
+    if (parsed.length < 2) {
+      throw new Error('Sheet needs at least a header row and one data row.');
+    }
+
+    uploadedFileData = {
+      headers: parsed[0],
+      rows: parsed.slice(1)
+    };
+
+    // Also save the sheet URL for the setup-sheet-url field
+    document.getElementById('setup-sheet-url').value = url;
+
+    // Show success and filename
+    statusDiv.innerHTML = '<div class="connection-status success">&#10003; Read ' + (parsed.length - 1) + ' rows and ' + parsed[0].length + ' columns from the sheet.</div>';
+    document.getElementById('upload-filename').classList.remove('hidden');
+    document.getElementById('filename-text').textContent = 'Google Sheet (' + (parsed.length - 1) + ' rows)';
+    document.getElementById('analysis-section').classList.remove('hidden');
+
+    // Run AI analysis
+    analyzeWithAI(uploadedFileData);
+
+  } catch(err) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; ' + err.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Read Sheet';
+  }
+});
+
 // File upload - drag & drop and click
 (function() {
   var area = document.getElementById('upload-area');
@@ -2803,6 +2956,8 @@ function parseTSV(text) {
     document.getElementById('upload-filename').classList.add('hidden');
     document.getElementById('analysis-section').classList.add('hidden');
     document.getElementById('mapping-results').classList.add('hidden');
+    document.getElementById('sheet-fetch-status').innerHTML = '';
+    document.getElementById('sheet-link-input').value = '';
   });
 })();
 
