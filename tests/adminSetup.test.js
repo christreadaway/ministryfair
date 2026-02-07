@@ -205,14 +205,14 @@ describe('App Config', () => {
 // DARK MODE
 // ============================================
 describe('Dark Mode', () => {
-  test('dark mode is default when no theme saved', () => {
+  test('light mode is default when no theme saved', () => {
     const dom = createTestDom({
       localStorage: {
         'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
       },
       fetchMock: ministriesFetch(),
     });
-    expect(dom.window.document.body.classList.contains('dark')).toBe(true);
+    expect(dom.window.document.body.classList.contains('dark')).toBe(false);
   });
 
   test('light mode is applied when saved as light', () => {
@@ -233,14 +233,14 @@ describe('Dark Mode', () => {
       },
       fetchMock: ministriesFetch(),
     });
-    // Starts as dark
+    // Starts as light
+    expect(dom.window.document.body.classList.contains('dark')).toBe(false);
+    // Click toggle to dark
+    dom.window.document.getElementById('theme-toggle').click();
     expect(dom.window.document.body.classList.contains('dark')).toBe(true);
-    // Click toggle
+    // Click again to light
     dom.window.document.getElementById('theme-toggle').click();
     expect(dom.window.document.body.classList.contains('dark')).toBe(false);
-    // Click again
-    dom.window.document.getElementById('theme-toggle').click();
-    expect(dom.window.document.body.classList.contains('dark')).toBe(true);
   });
 
   test('theme preference is saved to localStorage', () => {
@@ -250,10 +250,12 @@ describe('Dark Mode', () => {
       },
       fetchMock: ministriesFetch(),
     });
-    dom.window.document.getElementById('theme-toggle').click();
-    expect(dom.window.localStorage.getItem('mf-theme')).toBe('light');
+    // Starts as light, click to switch to dark
     dom.window.document.getElementById('theme-toggle').click();
     expect(dom.window.localStorage.getItem('mf-theme')).toBe('dark');
+    // Click again to switch back to light
+    dom.window.document.getElementById('theme-toggle').click();
+    expect(dom.window.localStorage.getItem('mf-theme')).toBe('light');
   });
 });
 

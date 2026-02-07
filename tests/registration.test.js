@@ -77,6 +77,7 @@ describe('Registration Flow', () => {
       email: 'alice@test.com',
       phone: '(512) 555-0000',
       wantsToJoinParish: false,
+      photoURL: '',
     });
   });
 });
