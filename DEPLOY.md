@@ -15,13 +15,49 @@ The recommended approach: **host the app for free on Netlify, then point the `mi
 
 ## Recommended: Netlify + subdomain (free)
 
-### Step 1 — Deploy to Netlify
+There are two ways to deploy to Netlify: **manual drag-and-drop** (simplest) or **Git-connected** (auto-deploys when you push changes). Choose whichever fits your workflow.
+
+### Option A: Manual drag-and-drop deployment
+
+Best if you don't use Git or just want the fastest one-time setup.
 
 1. Go to [app.netlify.com](https://app.netlify.com) and create a free account
 2. Click **"Add new site" → "Deploy manually"**
 3. Drag and drop your project folder (the one containing `index.html`)
 4. Your site is live immediately at a random URL like `random-name.netlify.app`
 5. Test it — make sure ministries load and registration works
+
+**To update after making changes:** drag and drop the folder again at **Deploys → Drag and drop**. Changes go live immediately.
+
+### Option B: Git-connected deployment (auto-deploy on push)
+
+Best if the repo is on GitHub and you want changes to deploy automatically.
+
+1. Push this repository to GitHub:
+   ```bash
+   git remote add github https://github.com/YOUR_USERNAME/ministryfair.git
+   git push -u github main
+   ```
+2. Go to [app.netlify.com](https://app.netlify.com) and create a free account
+3. Click **"Add new site" → "Import an existing project"**
+4. Select **GitHub** and authorize Netlify
+5. Choose the `ministryfair` repository
+6. Netlify will auto-detect the `netlify.toml` config — no build settings to change
+7. Click **Deploy site**
+
+The included `netlify.toml` configures:
+- **Publish directory** — serves files from the repo root
+- **Security headers** — X-Frame-Options, Content-Type-Options, Referrer-Policy
+- **SPA redirect** — all paths serve `index.html` (so deep links like `?m=music` work)
+- **Cache control** — ensures visitors always get the latest version
+
+**To update after making changes:** just push to `main`. Netlify rebuilds and deploys automatically within seconds.
+
+```bash
+git add index.html
+git commit -m "Update ministry list"
+git push github main
+```
 
 ### Step 2 — Add custom domain in Netlify
 
@@ -61,7 +97,7 @@ Log in to your DNS provider and add:
 
 ### Step 5 — Verify
 
-Visit `http://ministry.st-theresa.org` (and `https://ministry.st-theresa.org` once HTTPS is ready).
+Visit `https://ministry.st-theresa.org` and confirm everything works.
 
 ---
 
@@ -113,22 +149,87 @@ Same process as above — contact eCatholic (or your DNS provider) to add:
 
 - [ ] Set `apiUrl` in CONFIG to your Google Apps Script deployment URL
 - [ ] Test registration on a phone — name, email, phone
+- [ ] Test Google Sign-In (if enabled) — button renders and auto-fills profile
 - [ ] Test ministry signup — tap "I'm Interested" on a ministry
 - [ ] Check Google Sheet — verify signup appeared in "App Signups" tab
-- [ ] Test deep links — `http://ministry.st-theresa.org?m=music` (use a real ministry ID)
-- [ ] Generate QR codes for `http://ministry.st-theresa.org` (main) and `http://ministry.st-theresa.org?m=MINISTRY_ID` (per-ministry)
+- [ ] Test deep links — `https://ministry.st-theresa.org?m=music` (use a real ministry ID)
+- [ ] Generate QR codes for `https://ministry.st-theresa.org` (main) and `https://ministry.st-theresa.org?m=MINISTRY_ID` (per-ministry)
 - [ ] Verify HTTPS is working at `https://ministry.st-theresa.org`
 
 ---
 
-## Updating the app
+## Applying updates and corrections
 
-Since the app is a single file, updates are simple:
+When you've made changes to the app (bug fixes, new features, configuration changes), follow the steps below based on your deployment method.
 
-1. Edit `index.html` locally
-2. In Netlify: **Deploys → Drag and drop** your updated folder (or push to GitHub if connected)
+### Updating `index.html` (frontend)
+
+**If deployed via drag-and-drop (Option A):**
+1. In Netlify, go to **Deploys**
+2. Drag and drop your updated project folder
 3. Changes are live immediately
 
-For the Google Sheets backend, if you update `google-apps-script.js`:
-1. Paste new code into Apps Script editor
-2. Go to **Deploy → Manage deployments → Edit → New version → Deploy**
+**If deployed via Git (Option B):**
+1. Commit your changes:
+   ```bash
+   git add index.html
+   git commit -m "Description of what changed"
+   git push github main
+   ```
+2. Netlify auto-deploys within seconds
+
+### Updating `google-apps-script.js` (backend)
+
+The backend runs on Google Apps Script, separate from Netlify. To update:
+
+1. Open your Google Sheet → **Extensions → Apps Script**
+2. Replace the code with the updated `google-apps-script.js` contents
+3. Click **Deploy → Manage deployments**
+4. Click the pencil icon (edit) on your active deployment
+5. Change **Version** to **New version**
+6. Click **Deploy**
+
+The new deployment URL stays the same — no need to update `index.html`.
+
+### Recent changes (session history)
+
+The following changes have been made and merged to `main` across recent sessions:
+
+**PR #1 — Backend connection**
+- Connected the app to the St. Theresa Google Apps Script backend
+- Set `apiUrl` in CONFIG to the live deployment URL
+
+**PR #2 — Google Sign-In**
+- Added optional Google Sign-In to the registration page
+- Auto-fills name and email from Google account
+
+**PR #3 — Sign-In button fix**
+- Fixed a bug where the Google Sign-In button did not render when the registration view was initially hidden
+
+**Test suite (separate branch)**
+- 129 automated tests covering registration, ministry rendering, deep linking, localStorage, edge cases, and XSS
+- Bug report documenting 14 known issues (see `BUG_REPORT.md` on the `claude/comprehensive-testing-QluT4` branch)
+
+To apply these changes to a live deployment, redeploy using whichever method you chose above (drag-and-drop or Git push).
+
+---
+
+## Troubleshooting
+
+**Ministries don't load:**
+- Check that `apiUrl` in the CONFIG section of `index.html` points to a valid Google Apps Script deployment URL
+- Verify the Apps Script is deployed as a Web App with "Anyone" access
+
+**Google Sign-In button doesn't appear:**
+- The button only renders when the registration view is visible
+- Ensure you're serving the page over HTTPS (required by Google Sign-In)
+
+**Custom domain not working:**
+- Verify the CNAME record is set correctly (use `dig ministry.st-theresa.org` or an online DNS checker)
+- DNS changes can take up to 48 hours to propagate
+- Check Netlify **Site settings → Domain management** for any error messages
+
+**HTTPS not working:**
+- Netlify provisions HTTPS automatically after DNS is verified
+- Check **Site settings → Domain management → HTTPS** for status
+- If stuck, click **Verify DNS configuration** then **Provision certificate**

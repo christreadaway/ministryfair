@@ -156,7 +156,9 @@ Auto-populated list of visitors who want to join the parish
 |------|-------------|
 | `index.html` | The complete web app (single file, no build needed) |
 | `google-apps-script.js` | Google Apps Script backend |
+| `netlify.toml` | Netlify deployment config (headers, redirects, caching) |
 | `README.md` | This file |
+| `DEPLOY.md` | Step-by-step deployment guide for Netlify and GitHub Pages |
 | `PRODUCT-SPEC.md` | Detailed product specification |
 
 ---

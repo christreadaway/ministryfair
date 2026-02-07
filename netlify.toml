@@ -1,0 +1,28 @@
+# Netlify configuration for Parish Ministry Fair App
+# This file is auto-detected when deploying via Git-connected Netlify sites.
+
+[build]
+  # No build step needed — the app is a single HTML file
+  publish = "."
+  command = "echo 'No build step required'"
+
+# Security headers applied to all routes
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache static assets (Google Fonts are loaded via CDN, so this mainly covers index.html)
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# SPA redirect — all paths serve index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
