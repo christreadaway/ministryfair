@@ -1134,6 +1134,94 @@
     }
 
     /* ======================================== */
+    /* DOMAIN DETECTION                         */
+    /* ======================================== */
+    .detection-card {
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .detection-card.detecting {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f2ff 100%);
+      border: 1px solid #d0e3ff;
+    }
+    .detection-card.found {
+      background: linear-gradient(135deg, #f0f9f4 0%, #e8f5ed 100%);
+      border: 1px solid #b7e4c7;
+    }
+    .detection-card.not-found {
+      background: #faf8f5;
+      border: 1px solid #e8e4de;
+    }
+    .detection-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .detection-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .detection-detail {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+      font-family: 'Inter', sans-serif;
+    }
+    .detection-org-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2d6a4f;
+      margin: 8px 0 4px;
+    }
+    .detection-meta {
+      font-size: 13px;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+    }
+    .detection-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .detection-actions button { flex: 1; }
+    .detection-spinner-sm {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #bee3f8;
+      border-top-color: #2b6cb0;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    /* Dark mode overrides for detection */
+    body.dark .detection-card.detecting {
+      background: linear-gradient(135deg, #1a2030 0%, #1a2535 100%);
+      border-color: #2a3a50;
+    }
+    body.dark .detection-card.found {
+      background: linear-gradient(135deg, #1a2a20 0%, #1e2e24 100%);
+      border-color: #2a5a3a;
+    }
+    body.dark .detection-card.not-found {
+      background: #1e1e1e;
+      border-color: #3a3a3a;
+    }
+    body.dark .detection-title { color: #e0e0e0; }
+    body.dark .detection-detail { color: #a0a0a0; }
+    body.dark .detection-org-name { color: #6fbc8f; }
+    body.dark .detection-meta { color: #707070; }
+    body.dark .detection-spinner-sm {
+      border-color: #2a3a50;
+      border-top-color: #7db3e0;
+    }
+
+    /* ======================================== */
     /* DARK MODE                                */
     /* ======================================== */
     body.dark {
@@ -1513,6 +1601,8 @@
             </div>
             <div class="signed-in-check">&#10003;</div>
           </div>
+          <!-- Domain detection results -->
+          <div id="domain-detection" class="hidden"></div>
         </div>
         <div class="form" style="margin-top: 24px;">
           <div class="input-group">
@@ -2189,6 +2279,229 @@ function decodeJwt(credential) {
   return JSON.parse(atob(credential.split('.')[1]));
 }
 
+// ============================================
+// DOMAIN DETECTION & CHURCH LOOKUP
+// ============================================
+var CONSUMER_DOMAINS = [
+  'gmail.com','googlemail.com','yahoo.com','yahoo.co.uk','hotmail.com',
+  'outlook.com','live.com','msn.com','aol.com','icloud.com','me.com',
+  'mac.com','mail.com','protonmail.com','proton.me','zoho.com',
+  'yandex.com','gmx.com','gmx.net','fastmail.com','tutanota.com',
+  'hey.com','pm.me','comcast.net','verizon.net','att.net','sbcglobal.net',
+  'cox.net','charter.net','earthlink.net','juno.com','bellsouth.net',
+  'rocketmail.com','aim.com','optonline.net','frontier.com','windstream.net'
+];
+
+var detectedOrg = null; // stores AI detection result
+
+function getDomain(email) {
+  if (!email || !email.includes('@')) return '';
+  return email.split('@')[1].toLowerCase();
+}
+
+function isConsumerDomain(domain) {
+  return CONSUMER_DOMAINS.includes(domain);
+}
+
+// Check if this domain is already registered (local check for now)
+// FUTURE: Replace this with an API call to a central registry
+function checkRegistration(domain) {
+  // Single-tenant check: if app is set up and the domain matches
+  // any admin's domain, it's "registered"
+  if (appConfig.setupComplete) {
+    var admins = loadAdmins();
+    return admins.some(function(a) {
+      return getDomain(a.email) === domain;
+    });
+  }
+  return false;
+}
+
+// Call Claude API to identify if a domain belongs to a church
+async function lookupChurchDomain(domain, apiKey) {
+  if (!apiKey) return null;
+
+  var prompt = 'Analyze this email domain: "' + domain + '"\n\n' +
+    'Based on the domain name and any knowledge you have, determine:\n' +
+    '1. Is this likely a church, parish, temple, synagogue, mosque, or other religious organization?\n' +
+    '2. If yes, what is the probable full name of the organization?\n' +
+    '3. What denomination or religious tradition (if identifiable from the domain)?\n' +
+    '4. What city/state or region (if identifiable)?\n\n' +
+    'Return ONLY a JSON object with these fields:\n' +
+    '{\n' +
+    '  "isReligiousOrg": boolean,\n' +
+    '  "organizationName": string (full name, e.g. "St. Theresa Catholic Church"),\n' +
+    '  "denomination": string (e.g. "Catholic", "Baptist", "Methodist", "Non-denominational", or ""),\n' +
+    '  "location": string (e.g. "Austin, TX" or "" if unknown),\n' +
+    '  "confidence": "high" | "medium" | "low"\n' +
+    '}\n\n' +
+    'If you cannot determine, set isReligiousOrg to false. Return ONLY JSON, no explanation.';
+
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 256,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) return null;
+
+    var result = await response.json();
+    var text = result.content[0].text;
+    text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    return JSON.parse(text);
+  } catch(err) {
+    console.error('Church lookup error:', err);
+    return null;
+  }
+}
+
+// Run full domain detection flow
+async function runDomainDetection(email) {
+  var detectionDiv = document.getElementById('domain-detection');
+  var domain = getDomain(email);
+
+  if (!domain || isConsumerDomain(domain)) {
+    // Personal email - no detection needed
+    detectionDiv.classList.add('hidden');
+    detectedOrg = null;
+    return;
+  }
+
+  // Show detecting state
+  detectionDiv.classList.remove('hidden');
+  detectionDiv.innerHTML =
+    '<div class="detection-card detecting">' +
+      '<div class="detection-spinner-sm"></div>' +
+      '<span class="detection-detail">Checking ' + domain + '...</span>' +
+    '</div>';
+
+  // Check if already registered with us
+  if (checkRegistration(domain)) {
+    detectionDiv.innerHTML =
+      '<div class="detection-card found">' +
+        '<div class="detection-icon">&#9989;</div>' +
+        '<div class="detection-title">Welcome back!</div>' +
+        '<div class="detection-detail">This organization is already set up. You\'ll be added as an administrator.</div>' +
+      '</div>';
+    detectedOrg = { isReligiousOrg: true, alreadyRegistered: true };
+    return;
+  }
+
+  // Try AI lookup
+  var apiKey = document.getElementById('setup-api-key').value.trim();
+  if (!apiKey) {
+    // No API key yet - try heuristic detection from domain name
+    var heuristic = heuristicChurchDetect(domain);
+    if (heuristic) {
+      detectedOrg = heuristic;
+      showDetectionResult(heuristic, domain);
+    } else {
+      detectionDiv.innerHTML =
+        '<div class="detection-card not-found">' +
+          '<div class="detection-icon">&#127970;</div>' +
+          '<div class="detection-title">Custom domain detected</div>' +
+          '<div class="detection-detail">We detected <strong>' + domain + '</strong>. ' +
+          'Enter your API key above and we\'ll try to identify your organization automatically.</div>' +
+        '</div>';
+      detectedOrg = null;
+    }
+    return;
+  }
+
+  // AI-powered lookup
+  var result = await lookupChurchDomain(domain, apiKey);
+
+  if (result && result.isReligiousOrg) {
+    detectedOrg = result;
+    showDetectionResult(result, domain);
+  } else {
+    detectionDiv.innerHTML =
+      '<div class="detection-card not-found">' +
+        '<div class="detection-icon">&#127970;</div>' +
+        '<div class="detection-title">Organization detected</div>' +
+        '<div class="detection-detail">We see you\'re using <strong>' + domain + '</strong>. ' +
+        'You\'ll configure your organization details in the next step.</div>' +
+      '</div>';
+    detectedOrg = null;
+  }
+}
+
+function showDetectionResult(result, domain) {
+  var detectionDiv = document.getElementById('domain-detection');
+  var meta = [];
+  if (result.denomination) meta.push(result.denomination);
+  if (result.location) meta.push(result.location);
+
+  detectionDiv.innerHTML =
+    '<div class="detection-card found">' +
+      '<div class="detection-icon">&#9962;</div>' +
+      '<div class="detection-title">We found your organization!</div>' +
+      '<div class="detection-org-name">' + (result.organizationName || domain) + '</div>' +
+      (meta.length > 0 ? '<div class="detection-meta">' + meta.join(' &middot; ') + '</div>' : '') +
+      '<div class="detection-detail" style="margin-top:10px;">We\'ll pre-fill your setup with this information.</div>' +
+    '</div>';
+}
+
+// Heuristic church detection from domain name patterns
+function heuristicChurchDetect(domain) {
+  var name = domain.split('.')[0].toLowerCase();
+  var churchWords = [
+    'church','parish','catholic','baptist','methodist','lutheran',
+    'presbyterian','episcopal','pentecostal','adventist','orthodox',
+    'assembly','temple','synagogue','mosque','masjid','chapel',
+    'ministry','ministries','diocese','archdiocese','congregation',
+    'covenant','gospel','faith','grace','hope','trinity','calvary',
+    'bethel','zion','emmanuel','immanuel','redeemer','shepherd',
+    'saint','saints','st-','umc','cogic'
+  ];
+
+  var found = churchWords.some(function(word) {
+    return name.includes(word);
+  });
+
+  if (!found) return null;
+
+  // Try to build a readable name from the domain
+  var readable = name
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, function(c) { return c.toUpperCase(); })
+    .replace(/\bSt /g, 'St. ')
+    .replace(/\bUmc\b/g, 'United Methodist Church')
+    .replace(/\bCogic\b/g, 'Church of God in Christ');
+
+  return {
+    isReligiousOrg: true,
+    organizationName: readable,
+    denomination: '',
+    location: '',
+    confidence: 'low'
+  };
+}
+
+// Re-run detection when API key is entered (in case domain was already captured)
+document.getElementById('setup-api-key').addEventListener('change', function() {
+  if (setupAdminData && setupAdminData.email) {
+    var domain = getDomain(setupAdminData.email);
+    if (domain && !isConsumerDomain(domain) && !detectedOrg) {
+      runDomainDetection(setupAdminData.email);
+    }
+  }
+});
+
+// ============================================
+// GOOGLE SIGN-IN HANDLERS
+// ============================================
+
 // Admin sign-in (during /start wizard)
 function handleAdminSignIn(response) {
   var payload = decodeJwt(response.credential);
@@ -2209,11 +2522,41 @@ function handleAdminSignIn(response) {
 
   // Enable next button
   document.getElementById('step1-next').disabled = false;
+
+  // Run domain detection
+  runDomainDetection(setupAdminData.email);
 }
 
 // Parishioner sign-in (auto-fill registration form)
 function handleParishionerSignIn(response) {
   var payload = decodeJwt(response.credential);
+
+  // Check if this is a church domain + app not set up = potential first-time admin
+  var domain = getDomain(payload.email || '');
+  if (domain && !isConsumerDomain(domain) && !appConfig.setupComplete) {
+    // This looks like an org admin, not a parishioner
+    // Route them to /start wizard with their data pre-loaded
+    setupAdminData = {
+      email: payload.email || '',
+      firstName: payload.given_name || '',
+      lastName: payload.family_name || '',
+      picture: payload.picture || ''
+    };
+    showView('start');
+    showWizardStep(1);
+    // Trigger the signed-in state on the wizard
+    document.getElementById('admin-signed-in').classList.remove('hidden');
+    document.getElementById('admin-setup-initials').textContent =
+      (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
+    document.getElementById('admin-setup-name').textContent =
+      setupAdminData.firstName + ' ' + setupAdminData.lastName;
+    document.getElementById('admin-setup-email').textContent = setupAdminData.email;
+    document.getElementById('step1-next').disabled = false;
+    runDomainDetection(setupAdminData.email);
+    return;
+  }
+
+  // Normal parishioner flow - auto-fill form
   document.getElementById('firstName').value = payload.given_name || '';
   document.getElementById('lastName').value = payload.family_name || '';
   document.getElementById('email').value = payload.email || '';
@@ -2311,8 +2654,16 @@ function showWizardStep(step) {
   if (step === 5) renderSummary();
 }
 
-// Step 2: Color grid + preview
+// Step 2: Color grid + preview + pre-fill from detection
 function initStep2() {
+  // Pre-fill from AI detection results
+  if (detectedOrg && detectedOrg.organizationName) {
+    var orgInput = document.getElementById('setup-org-name');
+    if (!orgInput.value) {
+      orgInput.value = detectedOrg.organizationName;
+    }
+  }
+
   var grid = document.getElementById('color-grid');
   if (grid.children.length > 0) return; // already rendered
 
@@ -2841,6 +3192,24 @@ document.getElementById('step5-back').addEventListener('click', function() { sho
 
 // Launch!
 document.getElementById('launch-btn').addEventListener('click', function() {
+  // ──────────────────────────────────────────────
+  // FUTURE: Payment step hook
+  // Uncomment and implement when ready to add billing:
+  //
+  // if (!appConfig.paymentComplete) {
+  //   showPaymentStep({
+  //     organizationName: document.getElementById('setup-org-name').value,
+  //     adminEmail: setupAdminData ? setupAdminData.email : '',
+  //     detectedOrg: detectedOrg,
+  //     onComplete: function() {
+  //       appConfig.paymentComplete = true;
+  //       // continue with launch below
+  //     }
+  //   });
+  //   return;
+  // }
+  // ──────────────────────────────────────────────
+
   // Save all config
   appConfig.organizationName = document.getElementById('setup-org-name').value || '';
   appConfig.appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
@@ -2848,6 +3217,8 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
   appConfig.claudeApiKey = document.getElementById('setup-api-key').value || '';
+  appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
+  appConfig.detectedOrg = detectedOrg || null;
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
 
