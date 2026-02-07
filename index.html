@@ -1948,99 +1948,43 @@
       </div>
     </div>
 
-    <!-- STEP 3: Upload & Analyze Spreadsheet -->
+    <!-- STEP 3: Connect Google Sheet -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
-        <h2 class="section-title">Upload Your Ministry List</h2>
+        <h2 class="section-title">Connect Your Google Sheet</h2>
         <p class="welcome-text">
-          Upload a spreadsheet with your ministries. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
+          Paste the URL of your Google Sheet below. We'll automatically set up the needed tabs and connect everything.
         </p>
 
-        <!-- Upload area -->
-        <div id="upload-area" class="upload-area">
-          <div class="upload-area-icon">&#128203;</div>
-          <div class="upload-area-text">Drop your file here, or click to browse</div>
-          <div class="upload-area-hint">CSV, Excel, or any spreadsheet format</div>
-          <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
-        </div>
-        <div id="upload-filename" class="upload-filename hidden">
-          <span>&#128196;</span>
-          <span id="filename-text"></span>
-          <button class="remove-file" id="remove-file-btn">&times;</button>
-        </div>
-
-        <!-- AI analysis area (hidden until file uploaded) -->
-        <div id="analysis-section" class="hidden">
-          <!-- Progress spinner -->
-          <div id="analysis-progress" class="analysis-progress hidden">
-            <div class="analysis-spinner"></div>
-            <div class="analysis-status-text">Reading your spreadsheet with AI...</div>
-          </div>
-
-          <!-- Mapping results -->
-          <div id="mapping-results" class="hidden">
-            <div id="mapping-summary-box"></div>
-            <table class="mapping-table" id="mapping-table">
-              <thead>
-                <tr>
-                  <th>Our Field</th>
-                  <th>Your Column</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="mapping-table-body"></tbody>
-            </table>
-
-            <div id="mapping-suggestions"></div>
-
-            <p style="font-size: 14px; font-weight: 600; color: #333; margin-top: 20px; font-family: 'Inter', sans-serif;">
-              Preview (first 3 rows):
-            </p>
-            <div class="data-preview-scroll">
-              <table class="sheet-preview" id="data-preview-table"></table>
-            </div>
-
-            <button class="btn-download" id="download-formatted-btn" style="margin-top: 16px;">&#128196; Download Formatted Sheet (.csv)</button>
-          </div>
-        </div>
-
-        <!-- Connect section (shown after analysis or if skipping upload) -->
-        <div style="margin-top: 24px;">
-          <div class="setup-step">
-            <span class="step-number">1</span>
-            <div class="setup-step-content">
-              <div class="setup-step-title">Import into Google Sheets</div>
-              <div class="setup-step-desc">Create a new Google Sheet. If you downloaded the formatted file above, use File &rarr; Import to bring it in. Otherwise, paste your ministry data directly.</div>
-            </div>
-          </div>
-          <div class="setup-step">
-            <span class="step-number">2</span>
-            <div class="setup-step-content">
-              <div class="setup-step-title">Add the backend script</div>
-              <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code, paste the contents of <strong>google-apps-script.js</strong> (included with this app), and click Save.</div>
-            </div>
-          </div>
-          <div class="setup-step">
-            <span class="step-number">3</span>
-            <div class="setup-step-content">
-              <div class="setup-step-title">Deploy as a Web App</div>
-              <div class="setup-step-desc">In Apps Script, click <strong>Deploy &rarr; New deployment</strong>. Set type to "Web app", execute as "Me", access "Anyone". Click Deploy and copy the URL.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form" style="margin-top: 20px;">
+        <div class="form">
           <div class="input-group">
             <label class="label">Google Sheet URL</label>
             <input type="url" class="input" id="setup-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+            <p style="font-size: 12px; color: #888; margin-top: 4px; font-family: 'Inter', sans-serif;">
+              Open an existing Google Sheet with your ministries, or create a new blank one.
+            </p>
           </div>
+          <button class="btn" id="auto-connect-btn" type="button">&#128268; Connect &amp; Set Up</button>
+          <div id="auto-connect-status" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- Hidden API URL input (auto-populated or manually entered) -->
+        <div id="manual-setup-section" class="hidden" style="margin-top: 24px; border-top: 1px solid #e8e4de; padding-top: 20px;">
+          <p style="font-size: 14px; font-weight: 600; color: #555; font-family: 'Inter', sans-serif; margin-bottom: 12px;">
+            Advanced: Manual Apps Script Setup
+          </p>
+          <p style="font-size: 13px; color: #888; font-family: 'Inter', sans-serif; margin-bottom: 16px;">
+            If the automatic setup didn't work, you can set up the backend script manually.
+            See the instructions in Settings after completing setup.
+          </p>
           <div class="input-group">
-            <label class="label">Apps Script API URL</label>
+            <label class="label">Apps Script API URL (optional)</label>
             <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
           <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Test Connection</button>
           <div id="connection-status"></div>
         </div>
+
         <div class="wizard-nav">
           <button class="btn-secondary" id="step3-back">&larr; Back</button>
           <button class="btn" id="step3-next">Next &rarr;</button>
@@ -2159,6 +2103,29 @@
         <div class="settings-section-title">Administrators</div>
         <div class="settings-card" id="settings-admins-card">
           <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Apps Script Backend (Advanced)</div>
+        <div class="settings-card">
+          <div class="settings-item" id="settings-deploy-script-item" style="cursor:pointer;">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Auto-Deploy Apps Script</div>
+              <div class="settings-item-desc" id="settings-script-status">Enables signup collection from parishioners</div>
+            </div>
+            <span class="settings-item-arrow">&rsaquo;</span>
+          </div>
+          <div id="settings-script-info" style="padding: 12px 16px; font-size: 13px; color: #666; font-family: 'Inter', sans-serif; line-height: 1.6;">
+            <strong>What does Apps Script do?</strong>
+            <ul style="margin: 8px 0; padding-left: 20px;">
+              <li>Allows parishioners to submit signups without needing Google sign-in</li>
+              <li>Enables email notifications to ministry leaders</li>
+              <li>Powers AI-assisted spreadsheet analysis</li>
+              <li>Stores API keys securely server-side</li>
+            </ul>
+            <div id="settings-script-deploy-area"></div>
+          </div>
         </div>
       </div>
 
@@ -2491,6 +2458,7 @@ const DEFAULT_CONFIG = {
   tagline: 'Find your place to serve',
   apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
   spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1ize-jKdf70YY6fy9yxbnXvlDzSIPRJ2daT8SAQ1-ktE/edit',
+  spreadsheetId: '1ize-jKdf70YY6fy9yxbnXvlDzSIPRJ2daT8SAQ1-ktE',
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
@@ -2747,6 +2715,302 @@ function decodeJwt(credential) {
   var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   return JSON.parse(atob(base64));
 }
+
+// ============================================
+// GOOGLE OAUTH2 - SHEETS API ACCESS
+// ============================================
+var sheetsAccessToken = null;
+var tokenClient = null;
+var _tokenResolve = null;
+
+function initTokenClient() {
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+    setTimeout(initTokenClient, 300);
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: appConfig.googleClientId || DEFAULT_CONFIG.googleClientId,
+    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments',
+    callback: function(tokenResponse) {
+      if (tokenResponse.error) {
+        console.error('OAuth2 token error:', tokenResponse.error);
+        if (_tokenResolve) { _tokenResolve.reject(new Error(tokenResponse.error)); _tokenResolve = null; }
+        return;
+      }
+      sheetsAccessToken = tokenResponse.access_token;
+      if (_tokenResolve) { _tokenResolve.resolve(sheetsAccessToken); _tokenResolve = null; }
+    }
+  });
+}
+
+function requestSheetsAccess() {
+  return new Promise(function(resolve, reject) {
+    if (sheetsAccessToken) { resolve(sheetsAccessToken); return; }
+    if (!tokenClient) { reject(new Error('Google API not loaded yet. Please wait a moment and try again.')); return; }
+    _tokenResolve = { resolve: resolve, reject: reject };
+    tokenClient.requestAccessToken();
+  });
+}
+
+// Extract spreadsheet ID from a Google Sheets URL
+function extractSpreadsheetId(url) {
+  if (!url) return null;
+  var match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+// ============================================
+// GOOGLE SHEETS API
+// ============================================
+var SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets/';
+
+async function sheetsApiCall(method, url, body) {
+  var token = sheetsAccessToken;
+  if (!token) token = await requestSheetsAccess();
+  var opts = {
+    method: method,
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  var resp = await fetch(url, opts);
+  if (resp.status === 403) {
+    var errData = await resp.json().catch(function() { return {}; });
+    var msg = (errData.error && errData.error.message) || '';
+    if (msg.includes('not been used') || msg.includes('disabled')) {
+      throw new Error('ENABLE_API: ' + msg);
+    }
+    throw new Error('Permission denied: ' + msg);
+  }
+  if (!resp.ok) throw new Error('Sheets API error ' + resp.status);
+  return await resp.json();
+}
+
+// Read values from a range
+async function sheetsRead(spreadsheetId, range) {
+  return sheetsApiCall('GET', SHEETS_API + spreadsheetId + '/values/' + encodeURIComponent(range));
+}
+
+// Append rows
+async function sheetsAppend(spreadsheetId, range, values) {
+  return sheetsApiCall('POST',
+    SHEETS_API + spreadsheetId + '/values/' + encodeURIComponent(range) +
+    ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS',
+    { values: values });
+}
+
+// Update a range
+async function sheetsUpdate(spreadsheetId, range, values) {
+  return sheetsApiCall('PUT',
+    SHEETS_API + spreadsheetId + '/values/' + encodeURIComponent(range) +
+    '?valueInputOption=USER_ENTERED',
+    { values: values });
+}
+
+// Get spreadsheet metadata (which sheets exist)
+async function sheetsGetMetadata(spreadsheetId) {
+  return sheetsApiCall('GET', SHEETS_API + spreadsheetId + '?fields=sheets.properties');
+}
+
+// Batch update (create sheets, etc.)
+async function sheetsBatchUpdate(spreadsheetId, requests) {
+  return sheetsApiCall('POST', SHEETS_API + spreadsheetId + ':batchUpdate', { requests: requests });
+}
+
+// Delete a row by sheet ID and row index
+async function sheetsDeleteRow(spreadsheetId, sheetId, rowIndex) {
+  return sheetsBatchUpdate(spreadsheetId, [{
+    deleteDimension: {
+      range: { sheetId: sheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
+    }
+  }]);
+}
+
+// ============================================
+// AUTO-SETUP: CREATE SHEETS + DEPLOY APPS SCRIPT
+// ============================================
+var REQUIRED_SHEETS = {
+  'Ministries': ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3', 'Tags'],
+  'App Signups': ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'New Parishioner', 'Ministry', 'Action', 'Q1', 'Q2', 'Q3'],
+  'New Parishioners': ['Date', 'Time', 'First', 'Last', 'Email', 'Phone'],
+  'Admins': ['Email', 'Name', 'Date Added']
+};
+
+async function autoSetupSheet(spreadsheetId, statusCallback) {
+  statusCallback = statusCallback || function() {};
+
+  // 1. Get existing sheet tabs
+  statusCallback('Reading spreadsheet...');
+  var metadata = await sheetsGetMetadata(spreadsheetId);
+  var existingSheets = (metadata.sheets || []).map(function(s) { return s.properties.title; });
+
+  // 2. Create missing tabs
+  var toCreate = Object.keys(REQUIRED_SHEETS).filter(function(name) {
+    return existingSheets.indexOf(name) === -1;
+  });
+
+  if (toCreate.length > 0) {
+    statusCallback('Creating tabs: ' + toCreate.join(', ') + '...');
+    var requests = toCreate.map(function(name) {
+      return { addSheet: { properties: { title: name } } };
+    });
+    await sheetsBatchUpdate(spreadsheetId, requests);
+
+    // Add headers to each new sheet
+    for (var i = 0; i < toCreate.length; i++) {
+      var name = toCreate[i];
+      var headers = REQUIRED_SHEETS[name];
+      await sheetsUpdate(spreadsheetId, name + '!A1:' + String.fromCharCode(64 + headers.length) + '1', [headers]);
+    }
+  }
+
+  // 3. Check if Ministries tab has data
+  statusCallback('Checking ministries...');
+  var ministriesData;
+  try {
+    ministriesData = await sheetsRead(spreadsheetId, 'Ministries!A2:K');
+  } catch(e) {
+    ministriesData = { values: [] };
+  }
+  var ministryCount = (ministriesData.values || []).filter(function(r) { return r[0]; }).length;
+
+  // 4. Add admin to Admins sheet if not already there
+  if (setupAdminData && setupAdminData.email) {
+    statusCallback('Setting up admin access...');
+    try {
+      var adminsData = await sheetsRead(spreadsheetId, 'Admins!A2:C');
+      var adminEmails = (adminsData.values || []).map(function(r) { return (r[0] || '').toLowerCase(); });
+      if (adminEmails.indexOf(setupAdminData.email.toLowerCase()) === -1) {
+        var now = new Date().toLocaleDateString();
+        await sheetsAppend(spreadsheetId, 'Admins!A:C', [[setupAdminData.email, setupAdminData.firstName + ' ' + setupAdminData.lastName, now]]);
+      }
+    } catch(e) {
+      console.warn('Could not add admin to sheet:', e);
+    }
+  }
+
+  return {
+    created: toCreate,
+    existing: existingSheets,
+    ministryCount: ministryCount
+  };
+}
+
+// Auto-deploy Apps Script to the spreadsheet
+async function autoDeployAppsScript(spreadsheetId, statusCallback) {
+  statusCallback = statusCallback || function() {};
+
+  // 1. Fetch the latest code from GitHub
+  statusCallback('Fetching backend code...');
+  var codeResp = await fetch('https://raw.githubusercontent.com/christreadaway/ministryfair/main/google-apps-script.js');
+  if (!codeResp.ok) throw new Error('Could not fetch Apps Script code from GitHub');
+  var code = await codeResp.text();
+
+  // 2. Create a bound script project
+  statusCallback('Creating Apps Script project...');
+  var token = sheetsAccessToken;
+  if (!token) token = await requestSheetsAccess();
+
+  var projectResp = await fetch('https://script.googleapis.com/v1/projects', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Ministry Fair Backend', parentId: spreadsheetId })
+  });
+  if (!projectResp.ok) {
+    var err = await projectResp.text();
+    if (err.includes('not been used') || err.includes('disabled')) {
+      throw new Error('ENABLE_SCRIPT_API');
+    }
+    throw new Error('Could not create script project: ' + projectResp.status);
+  }
+  var project = await projectResp.json();
+  var scriptId = project.scriptId;
+
+  // 3. Push the code
+  statusCallback('Uploading backend code...');
+  var manifest = JSON.stringify({
+    timeZone: 'America/Chicago',
+    webapp: { executeAs: 'USER_DEPLOYING', access: 'ANYONE_ANONYMOUS' },
+    exceptionLogging: 'STACKDRIVER',
+    runtimeVersion: 'V8'
+  });
+
+  var contentResp = await fetch('https://script.googleapis.com/v1/projects/' + scriptId + '/content', {
+    method: 'PUT',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      files: [
+        { name: 'Code', type: 'SERVER_JS', source: code },
+        { name: 'appsscript', type: 'JSON', source: manifest }
+      ]
+    })
+  });
+  if (!contentResp.ok) throw new Error('Could not push code: ' + contentResp.status);
+
+  // 4. Create a version
+  statusCallback('Creating deployment...');
+  var versionResp = await fetch('https://script.googleapis.com/v1/projects/' + scriptId + '/versions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ description: 'Ministry Fair Backend' })
+  });
+  if (!versionResp.ok) throw new Error('Could not create version: ' + versionResp.status);
+  var version = await versionResp.json();
+
+  // 5. Create a web app deployment
+  var deployResp = await fetch('https://script.googleapis.com/v1/projects/' + scriptId + '/deployments', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      versionNumber: version.versionNumber,
+      description: 'Ministry Fair API',
+      manifestFileName: 'appsscript'
+    })
+  });
+  if (!deployResp.ok) throw new Error('Could not deploy: ' + deployResp.status);
+  var deployment = await deployResp.json();
+
+  var apiUrl = 'https://script.google.com/macros/s/' + deployment.deploymentId + '/exec';
+
+  return { scriptId: scriptId, apiUrl: apiUrl };
+}
+
+// Read ministries directly from Sheets API
+async function loadMinistriesFromSheet(spreadsheetId) {
+  var data = await sheetsRead(spreadsheetId, 'Ministries!A2:K');
+  var rows = data.values || [];
+  return rows.filter(function(r) { return r[0]; }).map(function(row) {
+    var ministry = {
+      id: row[0],
+      name: row[1] || '',
+      description: row[2] || '',
+      icon: row[3] || '📋',
+      organizerName: row[4] || '',
+      organizerEmail: row[5] || '',
+      organizerPhone: row[6] || '',
+      questions: []
+    };
+    // Tags (column K, index 10)
+    if (row[10]) {
+      ministry.tags = row[10].toString().split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+    }
+    // Questions (columns H, I, J - index 7, 8, 9)
+    for (var q = 0; q < 3; q++) {
+      if (row[7 + q]) {
+        var parts = row[7 + q].split('|');
+        ministry.questions.push({
+          id: 'q' + (q + 1),
+          type: parts.length > 1 ? (parts[0] || 'text') : 'text',
+          label: parts.length > 1 ? (parts[1] || '') : parts[0],
+          options: parts[2] ? parts[2].split(',').map(function(s) { return s.trim(); }) : []
+        });
+      }
+    }
+    return ministry;
+  });
+}
+
+// Initialize OAuth2 token client on load
+initTokenClient();
 
 // ============================================
 // DOMAIN DETECTION & CHURCH LOOKUP
@@ -3238,11 +3502,8 @@ function updateHeaderPreview() {
 }
 
 // ============================================
-// STEP 3: FILE UPLOAD + AI SPREADSHEET ANALYSIS
+// CSV / TSV PARSERS
 // ============================================
-
-var uploadedFileData = null; // { headers: [], rows: [] }
-var aiMappingResult = null;  // result from Claude
 
 // CSV Parser - handles quoted fields, commas in values, newlines in quotes
 function parseCSV(text) {
@@ -3307,327 +3568,92 @@ function parseTSV(text) {
   });
 }
 
-// File upload - drag & drop and click
-(function() {
-  var area = document.getElementById('upload-area');
-  var fileInput = document.getElementById('file-input');
+// Auto-connect: detect sheets, create tabs, deploy Apps Script
+var _autoConnectBtn = document.getElementById('auto-connect-btn');
+if (_autoConnectBtn) _autoConnectBtn.addEventListener('click', async function() {
+  var btn = this;
+  var sheetUrl = document.getElementById('setup-sheet-url').value.trim();
+  var statusDiv = document.getElementById('auto-connect-status');
+  var spreadsheetId = extractSpreadsheetId(sheetUrl);
 
-  area.addEventListener('click', function() { fileInput.click(); });
-
-  area.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    area.classList.add('dragover');
-  });
-  area.addEventListener('dragleave', function() {
-    area.classList.remove('dragover');
-  });
-  area.addEventListener('drop', function(e) {
-    e.preventDefault();
-    area.classList.remove('dragover');
-    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
-  });
-
-  fileInput.addEventListener('change', function() {
-    if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
-  });
-
-  document.getElementById('remove-file-btn').addEventListener('click', function() {
-    uploadedFileData = null;
-    aiMappingResult = null;
-    fileInput.value = '';
-    document.getElementById('upload-area').classList.remove('hidden');
-    document.getElementById('upload-filename').classList.add('hidden');
-    document.getElementById('analysis-section').classList.add('hidden');
-    document.getElementById('mapping-results').classList.add('hidden');
-  });
-})();
-
-function handleFile(file) {
-  document.getElementById('upload-area').classList.add('hidden');
-  document.getElementById('upload-filename').classList.remove('hidden');
-  document.getElementById('filename-text').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-  document.getElementById('analysis-section').classList.remove('hidden');
-
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var text = e.target.result;
-    var parsed;
-
-    // Detect format
-    if (file.name.endsWith('.tsv') || file.name.endsWith('.txt')) {
-      parsed = parseTSV(text);
-    } else {
-      // Try CSV first; if first row has only 1 column but has tabs, try TSV
-      parsed = parseCSV(text);
-      if (parsed.length > 0 && parsed[0].length === 1 && parsed[0][0].includes('\t')) {
-        parsed = parseTSV(text);
-      }
-    }
-
-    if (parsed.length < 2) {
-      document.getElementById('analysis-progress').classList.add('hidden');
-      document.getElementById('mapping-results').classList.remove('hidden');
-      document.getElementById('mapping-summary-box').innerHTML =
-        '<div class="mapping-summary warn"><h4>Not enough data</h4><p>The file needs at least a header row and one data row.</p></div>';
-      return;
-    }
-
-    uploadedFileData = {
-      headers: parsed[0],
-      rows: parsed.slice(1)
-    };
-
-    analyzeWithAI(uploadedFileData);
-  };
-  reader.readAsText(file);
-}
-
-// Call Claude API to analyze the spreadsheet.
-// Routes through GAS proxy when available, falls back to direct browser call during setup.
-async function analyzeWithAI(data) {
-  var apiKey = document.getElementById('setup-api-key').value.trim();
-  var progress = document.getElementById('analysis-progress');
-  var results = document.getElementById('mapping-results');
-
-  progress.classList.remove('hidden');
-  results.classList.add('hidden');
-
-  var hasDirectKey = !!apiKey;
-  var hasGasUrl = !!appConfig.apiUrl;
-
-  if (!hasDirectKey && !hasGasUrl) {
-    progress.classList.add('hidden');
-    results.classList.remove('hidden');
-    document.getElementById('mapping-summary-box').innerHTML =
-      '<div class="mapping-summary warn"><h4>No API key provided</h4>' +
-      '<p>Go back to Step 1 and enter your Claude API key to enable AI-powered spreadsheet analysis.</p></div>';
+  if (!spreadsheetId) {
+    statusDiv.innerHTML = '<div class="connection-status error">Please paste a valid Google Sheets URL.</div>';
     return;
   }
 
-  // Build sample data for the prompt (headers + first 5 rows max)
-  var sampleRows = data.rows.slice(0, 5);
-  var sampleText = 'HEADERS: ' + JSON.stringify(data.headers) + '\n\nSAMPLE ROWS:\n';
-  sampleRows.forEach(function(row, i) {
-    sampleText += 'Row ' + (i + 1) + ': ' + JSON.stringify(row) + '\n';
-  });
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
 
-  var prompt = 'I have a spreadsheet with ministry/group data from a church or parish. I need to map the columns to this schema:\n\n' +
-    'REQUIRED FIELDS:\n' +
-    '- name: The ministry or group name (REQUIRED)\n' +
-    '- description: What the ministry does\n\n' +
-    'OPTIONAL FIELDS:\n' +
-    '- id: A short slug/identifier (if not present, we can generate from name)\n' +
-    '- icon: An emoji representing the ministry\n' +
-    '- organizerName: Contact person name\n' +
-    '- organizerEmail: Contact person email\n' +
-    '- organizerPhone: Contact person phone\n' +
-    '- question1, question2, question3: Questions to ask people who sign up (in format: type|label|options where type is text/select/checkbox)\n\n' +
-    'Here is the spreadsheet data:\n\n' + sampleText + '\n\n' +
-    'Analyze the headers and data. Return a JSON object with:\n' +
-    '1. "mapping": An object where each key is one of my schema fields (name, description, id, icon, organizerName, organizerEmail, organizerPhone, question1, question2, question3) and the value is the 0-based column index that best matches it, or -1 if no column matches.\n' +
-    '2. "confidence": "high", "medium", or "low" - overall confidence in the mapping.\n' +
-    '3. "found": Number of fields that were successfully mapped.\n' +
-    '4. "missing": Array of field names that could not be mapped.\n' +
-    '5. "suggestions": Array of human-readable suggestions for improving the data (e.g., "Add a Description column to explain what each ministry does"). Keep this to genuinely useful suggestions only.\n' +
-    '6. "columnNotes": Object mapping column index to a note about what we think that column contains (for columns that DO map to something).\n\n' +
-    'IMPORTANT: Return ONLY the JSON object, no markdown formatting, no explanation outside the JSON.';
+  function showStatus(msg) {
+    statusDiv.innerHTML = '<div class="connection-status testing"><div class="analysis-spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px;vertical-align:middle;"></div> ' + escapeHtml(msg) + '</div>';
+  }
 
   try {
-    var mappingText = null;
+    // Step 1: Request Sheets API access (pops up Google consent screen)
+    showStatus('Requesting Google Sheets access...');
+    await requestSheetsAccess();
 
-    // Try GAS proxy first (key stored server-side)
-    if (hasGasUrl) {
-      try {
-        var proxyResp = await fetch(appConfig.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'ai-analyze', sampleData: sampleText, prompt: prompt })
-        });
-        var proxyResult = await proxyResp.json();
-        if (proxyResult.success && proxyResult.result) {
-          aiMappingResult = typeof proxyResult.result === 'string' ? JSON.parse(proxyResult.result) : proxyResult.result;
-          mappingText = 'done';
-        }
-      } catch(proxyErr) {
-        console.warn('GAS proxy analysis failed, trying direct:', proxyErr);
-      }
+    // Step 2: Auto-setup sheet tabs
+    var result = await autoSetupSheet(spreadsheetId, showStatus);
+
+    // Step 3: Try to auto-deploy Apps Script
+    var apiUrl = '';
+    var scriptDeployed = false;
+    try {
+      showStatus('Setting up backend (this may take a moment)...');
+      var deployResult = await autoDeployAppsScript(spreadsheetId, showStatus);
+      apiUrl = deployResult.apiUrl;
+      scriptDeployed = true;
+      document.getElementById('setup-api-url').value = apiUrl;
+    } catch(scriptErr) {
+      console.warn('Auto-deploy Apps Script failed:', scriptErr);
+      // Not fatal - will show manual fallback
     }
 
-    // Fall back to direct browser call
-    if (!mappingText && hasDirectKey) {
-      var response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250929',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-
-      if (!response.ok) {
-        var errBody = await response.text();
-        throw new Error('API error ' + response.status + ': ' + errBody);
-      }
-
-      var result = await response.json();
-      var text = result.content[0].text;
-      text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      aiMappingResult = JSON.parse(text);
+    // Show results
+    var html = '<div class="connection-status success" style="line-height:1.8;">';
+    html += '<strong>&#10003; Connected to your Google Sheet!</strong><br>';
+    if (result.ministryCount > 0) {
+      html += '&#128203; Found <strong>' + result.ministryCount + '</strong> ministr' + (result.ministryCount === 1 ? 'y' : 'ies') + '<br>';
     }
-
-    if (!aiMappingResult) {
-      throw new Error('No AI analysis result received');
+    if (result.created.length > 0) {
+      html += '&#10024; Created tabs: ' + result.created.join(', ') + '<br>';
     }
+    if (scriptDeployed) {
+      html += '&#9889; Backend deployed automatically!<br>';
+    } else {
+      html += '<span style="color:#a04000;">&#9888; Backend could not be auto-deployed. You can set it up later in Settings.</span><br>';
+      document.getElementById('manual-setup-section').classList.remove('hidden');
+    }
+    html += '</div>';
+    statusDiv.innerHTML = html;
 
-    progress.classList.add('hidden');
-    results.classList.remove('hidden');
-    renderMappingResults(aiMappingResult, data);
+    // Store spreadsheet ID in config
+    appConfig.spreadsheetId = spreadsheetId;
+    appConfig.spreadsheetUrl = sheetUrl;
+    if (apiUrl) appConfig.apiUrl = apiUrl;
 
   } catch(err) {
-    progress.classList.add('hidden');
-    results.classList.remove('hidden');
-    document.getElementById('mapping-summary-box').innerHTML =
-      '<div class="mapping-summary warn"><h4>Analysis error</h4>' +
-      '<p>' + escapeHtml(err.message) + '</p>' +
-      '<p style="margin-top:8px;">Check that your API key is correct and try again.</p></div>';
-  }
-}
-
-// Render AI mapping results
-function renderMappingResults(mapping, data) {
-  var FIELD_LABELS = {
-    name: { label: 'Ministry Name', required: true },
-    description: { label: 'Description', required: false },
-    id: { label: 'ID / Slug', required: false },
-    icon: { label: 'Icon (emoji)', required: false },
-    organizerName: { label: 'Organizer Name', required: false },
-    organizerEmail: { label: 'Organizer Email', required: false },
-    organizerPhone: { label: 'Organizer Phone', required: false },
-    question1: { label: 'Question 1', required: false },
-    question2: { label: 'Question 2', required: false },
-    question3: { label: 'Question 3', required: false }
-  };
-
-  // Summary box
-  var summaryClass = mapping.confidence === 'high' ? 'good' : 'warn';
-  var summaryIcon = mapping.confidence === 'high' ? '&#10003;' : '&#9888;';
-  var summaryText = 'Mapped ' + mapping.found + ' of 10 fields from your spreadsheet (' + data.rows.length + ' ministries found).';
-  document.getElementById('mapping-summary-box').innerHTML =
-    '<div class="mapping-summary ' + summaryClass + '">' +
-    '<h4>' + summaryIcon + ' ' + summaryText + '</h4></div>';
-
-  // Mapping table
-  var tbody = document.getElementById('mapping-table-body');
-  var fields = Object.keys(FIELD_LABELS);
-  tbody.innerHTML = fields.map(function(field) {
-    var info = FIELD_LABELS[field];
-    var colIdx = mapping.mapping[field];
-    var isMapped = colIdx !== undefined && colIdx >= 0 && colIdx < data.headers.length;
-    var yourCol = isMapped ? data.headers[colIdx] : '&mdash;';
-    var statusClass = isMapped ? 'mapped' : (info.required ? 'missing' : 'optional');
-    var statusText = isMapped ? '&#10003; Mapped' : (info.required ? '&#10007; Missing' : 'Not found');
-    var note = (mapping.columnNotes && mapping.columnNotes[String(colIdx)]) ? ' <span style="color:#888;font-size:11px;">(' + escapeHtml(mapping.columnNotes[String(colIdx)]) + ')</span>' : '';
-
-    return '<tr>' +
-      '<td>' + escapeHtml(info.label) + (info.required ? ' <span style="color:#c53030;">*</span>' : '') + '</td>' +
-      '<td>' + escapeHtml(yourCol) + note + '</td>' +
-      '<td><span class="mapping-status ' + statusClass + '">' + statusText + '</span></td>' +
-      '</tr>';
-  }).join('');
-
-  // Suggestions
-  var suggestionsDiv = document.getElementById('mapping-suggestions');
-  if (mapping.suggestions && mapping.suggestions.length > 0) {
-    suggestionsDiv.innerHTML =
-      '<div class="mapping-summary warn" style="margin-top: 12px;">' +
-      '<h4>Suggestions</h4><ul>' +
-      mapping.suggestions.map(function(s) { return '<li>' + escapeHtml(s) + '</li>'; }).join('') +
-      '</ul></div>';
-  } else {
-    suggestionsDiv.innerHTML = '';
-  }
-
-  // Data preview (first 3 rows mapped to our fields)
-  renderDataPreview(mapping, data);
-}
-
-function renderDataPreview(mapping, data) {
-  var table = document.getElementById('data-preview-table');
-  var ourHeaders = ['ID', 'Name', 'Description', 'Icon', 'Organizer', 'Email', 'Phone'];
-  var fieldKeys = ['id', 'name', 'description', 'icon', 'organizerName', 'organizerEmail', 'organizerPhone'];
-
-  var thead = '<thead><tr>' + ourHeaders.map(function(h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('') + '</tr></thead>';
-
-  var previewRows = data.rows.slice(0, 3);
-  var tbody = '<tbody>' + previewRows.map(function(row) {
-    return '<tr>' + fieldKeys.map(function(key) {
-      var idx = mapping.mapping[key];
-      if (idx === undefined || idx < 0 || idx >= row.length) return '<td style="color:#ccc;">-</td>';
-      var val = row[idx] || '';
-      if (val.length > 30) val = val.substring(0, 30) + '...';
-      return '<td>' + escapeHtml(val) + '</td>';
-    }).join('') + '</tr>';
-  }).join('') + '</tbody>';
-
-  table.innerHTML = thead + tbody;
-}
-
-// Download formatted CSV using the AI mapping
-document.getElementById('download-formatted-btn').addEventListener('click', function() {
-  if (!uploadedFileData || !aiMappingResult) return;
-
-  var outHeaders = ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3'];
-  var fieldKeys = ['id', 'name', 'description', 'icon', 'organizerName', 'organizerEmail', 'organizerPhone', 'question1', 'question2', 'question3'];
-  var m = aiMappingResult.mapping;
-
-  function csvEscape(val) {
-    val = String(val || '');
-    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-      return '"' + val.replace(/"/g, '""') + '"';
+    var errMsg = err.message || 'Unknown error';
+    if (errMsg.includes('ENABLE_API')) {
+      statusDiv.innerHTML =
+        '<div class="connection-status error" style="line-height:1.8;">' +
+        '<strong>&#10007; Google Sheets API needs to be enabled.</strong><br>' +
+        'Go to your <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank" style="color:#1a5276;">Google Cloud Console</a>, ' +
+        'find "Google Sheets API", and click <strong>Enable</strong>. Then try again.' +
+        '</div>';
+    } else if (errMsg.includes('popup_closed') || errMsg.includes('access_denied')) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Sign-in was cancelled. Please try again and grant access to Google Sheets.</div>';
+    } else {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; ' + escapeHtml(errMsg) + '</div>';
     }
-    return val;
   }
 
-  function slugify(text) {
-    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  }
-
-  var csv = '\uFEFF'; // BOM
-  csv += outHeaders.map(csvEscape).join(',') + '\n';
-
-  uploadedFileData.rows.forEach(function(row) {
-    var outRow = fieldKeys.map(function(key) {
-      var idx = m[key];
-      if (idx === undefined || idx < 0 || idx >= row.length) {
-        // Auto-generate ID from name if missing
-        if (key === 'id' && m.name >= 0 && m.name < row.length) {
-          return slugify(row[m.name] || '');
-        }
-        return '';
-      }
-      return row[idx] || '';
-    });
-    csv += outRow.map(csvEscape).join(',') + '\n';
-  });
-
-  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'ministries-formatted.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  btn.disabled = false;
+  btn.textContent = '\uD83D\uDD17 Connect & Set Up';
 });
 
-// Test connection
+// Test connection (manual Apps Script URL)
 document.getElementById('test-connection-btn').addEventListener('click', async function() {
   var url = document.getElementById('setup-api-url').value.trim();
   var statusDiv = document.getElementById('connection-status');
@@ -3785,8 +3811,9 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.organizationName = document.getElementById('setup-org-name').value || '';
   appConfig.appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
-  appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
+  appConfig.apiUrl = document.getElementById('setup-api-url').value || appConfig.apiUrl || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  appConfig.spreadsheetId = extractSpreadsheetId(appConfig.spreadsheetUrl) || appConfig.spreadsheetId || '';
   var enteredKey = document.getElementById('setup-api-key').value || '';
   setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
@@ -3907,6 +3934,55 @@ function showSettingsView() {
 
     // Email templates
     renderEmailTemplates();
+
+    // Apps Script status
+    var scriptStatusEl = document.getElementById('settings-script-status');
+    var scriptDeployArea = document.getElementById('settings-script-deploy-area');
+    if (appConfig.apiUrl) {
+      scriptStatusEl.textContent = 'Connected';
+      scriptStatusEl.style.color = '#4a9c6d';
+      scriptDeployArea.innerHTML = '<p style="color:#4a9c6d;">&#10003; Apps Script backend is active.</p>';
+    } else if (appConfig.spreadsheetId) {
+      scriptStatusEl.textContent = 'Not set up';
+      scriptStatusEl.style.color = '#a04000';
+      scriptDeployArea.innerHTML =
+        '<button class="btn-sm" id="settings-auto-deploy-btn">&#9889; Auto-Deploy Now</button>' +
+        '<p style="margin-top:8px;font-size:12px;color:#888;">Or set up manually: ' +
+        '<a href="https://raw.githubusercontent.com/christreadaway/ministryfair/main/google-apps-script.js" target="_blank" style="color:#1a5276;">download the code</a>, ' +
+        'paste it in Extensions &rarr; Apps Script in your Google Sheet, and deploy as a web app.</p>';
+
+      setTimeout(function() {
+        var deployBtn = document.getElementById('settings-auto-deploy-btn');
+        if (deployBtn) {
+          deployBtn.addEventListener('click', async function() {
+            deployBtn.disabled = true;
+            deployBtn.textContent = 'Deploying...';
+            try {
+              await requestSheetsAccess();
+              var result = await autoDeployAppsScript(appConfig.spreadsheetId, function(msg) {
+                deployBtn.textContent = msg;
+              });
+              appConfig.apiUrl = result.apiUrl;
+              saveAppConfig(appConfig);
+              deployBtn.textContent = '✓ Deployed!';
+              showSettingsView();
+            } catch(e) {
+              deployBtn.disabled = false;
+              deployBtn.textContent = '⚡ Auto-Deploy Now';
+              var errMsg = e.message || '';
+              if (errMsg.includes('ENABLE_SCRIPT_API')) {
+                scriptDeployArea.innerHTML += '<p style="color:#c53030;margin-top:8px;">Please enable the <a href="https://console.cloud.google.com/apis/library/script.googleapis.com" target="_blank" style="color:#1a5276;">Apps Script API</a> in your Google Cloud Console first.</p>';
+              } else {
+                scriptDeployArea.innerHTML += '<p style="color:#c53030;margin-top:8px;">Error: ' + escapeHtml(errMsg) + '</p>';
+              }
+            }
+          });
+        }
+      }, 0);
+    } else {
+      scriptStatusEl.textContent = 'No spreadsheet connected';
+      scriptDeployArea.innerHTML = '<p style="color:#888;">Connect a Google Sheet first (in the setup wizard).</p>';
+    }
   }
 }
 
@@ -4076,38 +4152,64 @@ function applyConfig() {
 // FETCH MINISTRIES
 // ============================================
 async function loadMinistries() {
+  var spreadsheetId = appConfig.spreadsheetId;
   var apiUrl = appConfig.apiUrl;
-  if (!apiUrl) {
-    MINISTRIES = FALLBACK_MINISTRIES;
-    initializeApp();
-    return;
+
+  // Try Sheets API first (direct, fast) if admin has a token
+  if (spreadsheetId && sheetsAccessToken) {
+    try {
+      MINISTRIES = await loadMinistriesFromSheet(spreadsheetId);
+      if (MINISTRIES.length > 0) {
+        cleanStaleInterests();
+        initializeApp();
+        return;
+      }
+    } catch(e) {
+      console.warn('Sheets API read failed, trying Apps Script:', e);
+    }
   }
 
-  try {
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var response = await fetch(apiUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    var data = await response.json();
-    if (data.ministries && data.ministries.length > 0) {
-      MINISTRIES = data.ministries;
-    } else {
+  // Fall back to Apps Script URL
+  if (apiUrl) {
+    try {
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+      var response = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      var data = await response.json();
+      if (data.ministries && data.ministries.length > 0) {
+        MINISTRIES = data.ministries;
+      } else {
+        MINISTRIES = FALLBACK_MINISTRIES;
+      }
+    } catch (error) {
+      console.error('Error loading ministries:', error);
       MINISTRIES = FALLBACK_MINISTRIES;
     }
-  } catch (error) {
-    console.error('Error loading ministries:', error);
+  } else if (spreadsheetId) {
+    // No API URL, try Sheets API (will prompt for sign-in if needed)
+    try {
+      MINISTRIES = await loadMinistriesFromSheet(spreadsheetId);
+      if (MINISTRIES.length === 0) MINISTRIES = FALLBACK_MINISTRIES;
+    } catch(e) {
+      console.error('Error loading ministries from sheet:', e);
+      MINISTRIES = FALLBACK_MINISTRIES;
+    }
+  } else {
     MINISTRIES = FALLBACK_MINISTRIES;
   }
 
-  // Clean up stale interests referencing deleted ministries
+  cleanStaleInterests();
+  initializeApp();
+}
+
+function cleanStaleInterests() {
   var validIds = new Set(MINISTRIES.map(function(m) { return m.id; }));
   var cleanInterests = interests.filter(function(i) { return validIds.has(i.ministryId); });
   if (cleanInterests.length !== interests.length) {
     interests = cleanInterests;
     localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
   }
-
-  initializeApp();
 }
 
 // ============================================
@@ -4644,14 +4746,31 @@ document.getElementById('admin-tabs').addEventListener('click', function(e) {
 
 // Signups tab
 async function loadAdminSignups() {
+  var spreadsheetId = appConfig.spreadsheetId;
+
+  // Try Sheets API first
+  if (spreadsheetId && sheetsAccessToken) {
+    try {
+      var data = await sheetsRead(spreadsheetId, "'App Signups'!A2:L");
+      adminSignups = (data.values || []).map(function(r) {
+        return { date: r[0]||'', time: r[1]||'', firstName: r[2]||'', lastName: r[3]||'', email: r[4]||'', phone: r[5]||'', newParishioner: r[6]||'', ministry: r[7]||'', action: r[8]||'Signup', q1: r[9]||'', q2: r[10]||'', q3: r[11]||'' };
+      });
+      renderAdminSignupsTable();
+      return;
+    } catch(e) {
+      console.warn('Sheets API signups read failed, trying Apps Script:', e);
+    }
+  }
+
+  // Fall back to Apps Script
   var email = currentSession ? currentSession.email : '';
   var apiUrl = appConfig.apiUrl;
   if (!apiUrl || !email) return;
 
   try {
     var resp = await fetch(apiUrl + '?action=getSignups&email=' + encodeURIComponent(email));
-    var data = await resp.json();
-    adminSignups = data.signups || [];
+    var result = await resp.json();
+    adminSignups = result.signups || [];
     renderAdminSignupsTable();
   } catch(e) {
     console.error('Error loading signups:', e);
@@ -4703,14 +4822,31 @@ document.getElementById('export-signups-btn').addEventListener('click', function
 
 // New Parishioners tab
 async function loadAdminNewParishioners() {
+  var spreadsheetId = appConfig.spreadsheetId;
+
+  // Try Sheets API first
+  if (spreadsheetId && sheetsAccessToken) {
+    try {
+      var data = await sheetsRead(spreadsheetId, "'New Parishioners'!A2:F");
+      adminNewParishioners = (data.values || []).map(function(r) {
+        return { date: r[0]||'', time: r[1]||'', firstName: r[2]||'', lastName: r[3]||'', email: r[4]||'', phone: r[5]||'' };
+      });
+      renderAdminNPTable();
+      return;
+    } catch(e) {
+      console.warn('Sheets API NP read failed, trying Apps Script:', e);
+    }
+  }
+
+  // Fall back to Apps Script
   var email = currentSession ? currentSession.email : '';
   var apiUrl = appConfig.apiUrl;
   if (!apiUrl || !email) return;
 
   try {
     var resp = await fetch(apiUrl + '?action=getNewParishioners&email=' + encodeURIComponent(email));
-    var data = await resp.json();
-    adminNewParishioners = data.newParishioners || [];
+    var result = await resp.json();
+    adminNewParishioners = result.newParishioners || [];
     renderAdminNPTable();
   } catch(e) {
     console.error('Error loading new parishioners:', e);
@@ -4931,6 +5067,23 @@ async function deleteMinistryFromDashboard(id) {
 
 // Manage Users tab
 async function loadAdminUsers() {
+  var spreadsheetId = appConfig.spreadsheetId;
+
+  // Try Sheets API first
+  if (spreadsheetId && sheetsAccessToken) {
+    try {
+      var data = await sheetsRead(spreadsheetId, "'Admins'!A2:C");
+      adminUsersList = (data.values || []).map(function(r) {
+        return { email: r[0]||'', name: r[1]||'', dateAdded: r[2]||'' };
+      });
+      renderAdminUsersServer();
+      return;
+    } catch(e) {
+      console.warn('Sheets API admins read failed:', e);
+    }
+  }
+
+  // Fall back to Apps Script
   var email = currentSession ? currentSession.email : '';
   var apiUrl = appConfig.apiUrl;
   if (!apiUrl || !email) {
@@ -4940,9 +5093,9 @@ async function loadAdminUsers() {
 
   try {
     var resp = await fetch(apiUrl + '?action=getAdmins&email=' + encodeURIComponent(email));
-    var data = await resp.json();
-    if (data.admins) {
-      adminUsersList = data.admins;
+    var result = await resp.json();
+    if (result.admins) {
+      adminUsersList = result.admins;
       renderAdminUsersServer();
     } else {
       renderAdminUsersFromLocal();
