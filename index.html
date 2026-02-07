@@ -3740,8 +3740,7 @@ initTheme();
 // ============================================
 
 function getMinistryUrl(ministryId) {
-  var base = window.location.origin + window.location.pathname;
-  return base + '?m=' + encodeURIComponent(ministryId);
+  return window.location.origin + '/?m=' + encodeURIComponent(ministryId);
 }
 
 function getQRImageUrl(text, size) {
@@ -3874,6 +3873,12 @@ document.getElementById('detail-qr-btn').addEventListener('click', function() {
 // BOOT SEQUENCE
 // ============================================
 function boot() {
+  // Normalize path-based routes to hash routes (for Netlify SPA)
+  var path = window.location.pathname;
+  if (path === '/start' || path === '/settings') {
+    window.history.replaceState(null, '', '/#' + path);
+  }
+
   var hash = window.location.hash;
 
   // If #/start is in URL or setup not complete, show wizard
