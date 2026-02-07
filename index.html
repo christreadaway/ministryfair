@@ -1769,27 +1769,27 @@
           </div>
         </div>
 
-        <!-- Connect section (shown after analysis or if skipping upload) -->
+        <!-- Connect & push section -->
         <div style="margin-top: 24px;">
           <div class="setup-step">
             <span class="step-number">1</span>
-            <div class="setup-step-content">
-              <div class="setup-step-title">Import into Google Sheets</div>
-              <div class="setup-step-desc">Create a new Google Sheet. If you downloaded the formatted file above, use File &rarr; Import to bring it in. Otherwise, paste your ministry data directly.</div>
-            </div>
-          </div>
-          <div class="setup-step">
-            <span class="step-number">2</span>
             <div class="setup-step-content">
               <div class="setup-step-title">Add the backend script</div>
               <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code, paste the contents of <strong>google-apps-script.js</strong> (included with this app), and click Save.</div>
             </div>
           </div>
           <div class="setup-step">
-            <span class="step-number">3</span>
+            <span class="step-number">2</span>
             <div class="setup-step-content">
               <div class="setup-step-title">Deploy as a Web App</div>
               <div class="setup-step-desc">In Apps Script, click <strong>Deploy &rarr; New deployment</strong>. Set type to "Web app", execute as "Me", access "Anyone". Click Deploy and copy the URL.</div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <span class="step-number">3</span>
+            <div class="setup-step-content">
+              <div class="setup-step-title">Connect &amp; push your data</div>
+              <div class="setup-step-desc">Paste the API URL below, test the connection, then push your formatted ministry data directly to the sheet. We'll create a clean "Ministries" tab automatically.</div>
             </div>
           </div>
         </div>
@@ -1805,6 +1805,8 @@
           </div>
           <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Test Connection</button>
           <div id="connection-status"></div>
+          <button class="btn btn-green hidden" id="push-to-sheet-btn" type="button">&#9889; Push Ministries to Sheet</button>
+          <div id="push-status"></div>
         </div>
         <div class="wizard-nav">
           <button class="btn-secondary" id="step3-back">&larr; Back</button>
@@ -3079,6 +3081,11 @@ async function analyzeWithAI(data) {
     results.classList.remove('hidden');
     renderMappingResults(aiMappingResult, data);
 
+    // Show push button if API URL is already configured
+    if (document.getElementById('setup-api-url').value.trim()) {
+      document.getElementById('push-to-sheet-btn').classList.remove('hidden');
+    }
+
   } catch(err) {
     progress.classList.add('hidden');
     results.classList.remove('hidden');
@@ -3236,9 +3243,13 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
     clearTimeout(timeoutId);
     var data = await response.json();
 
-    if (data.ministries) {
+    if (data.ministries !== undefined) {
       var count = data.ministries.length;
-      statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '.</div>';
+      statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + ' in your sheet.</div>';
+      // Show push button if we have AI-mapped data ready
+      if (aiMappingResult && uploadedFileData) {
+        document.getElementById('push-to-sheet-btn').classList.remove('hidden');
+      }
     } else if (data.error) {
       statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + data.error + '</div>';
     } else {
@@ -3246,6 +3257,77 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
     }
   } catch(err) {
     statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+  }
+});
+
+// Push ministries to Google Sheet
+document.getElementById('push-to-sheet-btn').addEventListener('click', async function() {
+  var apiUrl = document.getElementById('setup-api-url').value.trim();
+  var pushBtn = document.getElementById('push-to-sheet-btn');
+  var statusDiv = document.getElementById('push-status');
+
+  if (!apiUrl || !aiMappingResult || !uploadedFileData) return;
+
+  pushBtn.disabled = true;
+  pushBtn.textContent = 'Pushing...';
+  statusDiv.innerHTML = '<div class="connection-status testing">Sending ministry data to your Google Sheet...</div>';
+
+  // Build ministry objects from uploaded data + AI mapping
+  var m = aiMappingResult.mapping;
+  function getVal(row, field) {
+    var idx = m[field];
+    if (idx === undefined || idx < 0 || idx >= row.length) return '';
+    return row[idx] || '';
+  }
+  function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  var ministries = uploadedFileData.rows.map(function(row) {
+    var name = getVal(row, 'name');
+    if (!name) return null;
+    return {
+      id: getVal(row, 'id') || slugify(name),
+      name: name,
+      description: getVal(row, 'description'),
+      icon: getVal(row, 'icon') || '📋',
+      organizerName: getVal(row, 'organizerName'),
+      organizerEmail: getVal(row, 'organizerEmail'),
+      organizerPhone: getVal(row, 'organizerPhone'),
+      question1: getVal(row, 'question1'),
+      question2: getVal(row, 'question2'),
+      question3: getVal(row, 'question3')
+    };
+  }).filter(Boolean);
+
+  if (ministries.length === 0) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; No valid ministries to push. Make sure the "Name" field is mapped.</div>';
+    pushBtn.disabled = false;
+    pushBtn.textContent = '\u26A1 Push Ministries to Sheet';
+    return;
+  }
+
+  try {
+    var response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'writeMinistries', ministries: ministries })
+    });
+
+    var result = await response.json();
+
+    if (result.success) {
+      statusDiv.innerHTML = '<div class="connection-status success">&#10003; ' + result.message + '. Your Google Sheet now has a formatted "Ministries" tab.</div>';
+      pushBtn.textContent = '\u2713 Pushed!';
+    } else {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; ' + (result.error || 'Unknown error writing to sheet.') + '</div>';
+      pushBtn.disabled = false;
+      pushBtn.textContent = '\u26A1 Push Ministries to Sheet';
+    }
+  } catch(err) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Failed to reach the API. Check the URL and try again.</div>';
+    pushBtn.disabled = false;
+    pushBtn.textContent = '\u26A1 Push Ministries to Sheet';
   }
 });
 

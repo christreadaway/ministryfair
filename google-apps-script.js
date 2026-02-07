@@ -6,62 +6,141 @@ const TIMEZONE = 'America/Chicago'; // Change to your timezone
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const signupsSheet = getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
-    
-    const now = new Date();
-    const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
-    const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
-    
-    // Determine action type (default to "Signup" for backward compatibility)
     const action = data.action || 'Signup';
-    
-    const row = [
-      date,
-      time,
-      data.firstName || '',
-      data.lastName || '',
-      data.email || '',
-      data.phone || '',
-      data.wantsToJoinParish ? 'Yes' : 'No',
-      data.ministry || '',
-      action,
-      data.q1 || '',
-      data.q2 || '',
-      data.q3 || ''
-    ];
-    
-    signupsSheet.appendRow(row);
-    
-    // Only add to New Parishioners on signup (not removal)
-    if (action === 'Signup' && data.wantsToJoinParish) {
-      const newParishionersSheet = getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
-      const existingData = newParishionersSheet.getDataRange().getValues();
-      const emailColumn = 4;
-      const alreadyExists = existingData.some(row => row[emailColumn] === data.email);
-      
-      if (!alreadyExists) {
-        const newParishionerRow = [
-          date,
-          time,
-          data.firstName || '',
-          data.lastName || '',
-          data.email || '',
-          data.phone || ''
-        ];
-        newParishionersSheet.appendRow(newParishionerRow);
-      }
+
+    // Route to the right handler based on action
+    if (action === 'writeMinistries') {
+      return handleWriteMinistries(data);
     }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
+
+    return handleSignup(data, action);
+
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, error: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// Handle signups and removals
+function handleSignup(data, action) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const signupsSheet = getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
+
+  const now = new Date();
+  const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
+  const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
+
+  const row = [
+    date,
+    time,
+    data.firstName || '',
+    data.lastName || '',
+    data.email || '',
+    data.phone || '',
+    data.wantsToJoinParish ? 'Yes' : 'No',
+    data.ministry || '',
+    action,
+    data.q1 || '',
+    data.q2 || '',
+    data.q3 || ''
+  ];
+
+  signupsSheet.appendRow(row);
+
+  // Only add to New Parishioners on signup (not removal)
+  if (action === 'Signup' && data.wantsToJoinParish) {
+    const newParishionersSheet = getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
+    const existingData = newParishionersSheet.getDataRange().getValues();
+    const emailColumn = 4;
+    const alreadyExists = existingData.some(row => row[emailColumn] === data.email);
+
+    if (!alreadyExists) {
+      const newParishionerRow = [
+        date,
+        time,
+        data.firstName || '',
+        data.lastName || '',
+        data.email || '',
+        data.phone || ''
+      ];
+      newParishionersSheet.appendRow(newParishionerRow);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Write AI-formatted ministry data to a clean "Ministries" tab
+function handleWriteMinistries(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ministries = data.ministries;
+
+  if (!ministries || !Array.isArray(ministries) || ministries.length === 0) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: 'No ministry data provided' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const headers = getMinistriesHeaders();
+
+  // Delete existing Ministries sheet if present, then recreate
+  let sheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+  if (sheet) {
+    // Clear existing data but keep the sheet
+    sheet.clear();
+  } else {
+    sheet = ss.insertSheet(MINISTRIES_SHEET_NAME);
+  }
+
+  // Write headers
+  sheet.appendRow(headers);
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#8B2635');
+  headerRange.setFontColor('#FFFFFF');
+  sheet.setFrozenRows(1);
+
+  // Write ministry rows
+  const rows = ministries.map(m => [
+    m.id || '',
+    m.name || '',
+    m.description || '',
+    m.icon || '📋',
+    m.organizerName || '',
+    m.organizerEmail || '',
+    m.organizerPhone || '',
+    m.question1 || '',
+    m.question2 || '',
+    m.question3 || ''
+  ]);
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+
+  // Auto-resize and set description column wider
+  for (let i = 1; i <= headers.length; i++) {
+    sheet.autoResizeColumn(i);
+  }
+  sheet.setColumnWidth(3, 400);
+  sheet.setColumnWidth(8, 250);
+  sheet.setColumnWidth(9, 250);
+  sheet.setColumnWidth(10, 250);
+
+  // Also ensure the other tabs exist
+  getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
+  getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: true,
+      message: 'Wrote ' + rows.length + ' ministries to sheet',
+      count: rows.length
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
