@@ -2044,15 +2044,15 @@
 // CONFIGURATION
 // ============================================
 const DEFAULT_CONFIG = {
-  organizationName: '',
+  organizationName: 'St. Theresa',
   appTitle: 'Ministry Fair',
   tagline: 'Find your place to serve',
-  apiUrl: '',
-  spreadsheetUrl: '',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
+  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/146WY3S0WTMl_uLpufjU0z6zKtX2svKhxtu4G8w8VVHk/edit',
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-  setupComplete: false
+  setupComplete: true
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -3684,8 +3684,8 @@ function initializeApp() {
 // ============================================
 function initTheme() {
   var saved = localStorage.getItem('mf-theme');
-  // Default to dark
-  var theme = saved || 'dark';
+  // Default to light for parish use
+  var theme = saved || 'light';
   applyTheme(theme);
 }
 
@@ -3716,8 +3716,8 @@ initTheme();
 function boot() {
   var hash = window.location.hash;
 
-  // If #/start is in URL or setup not complete, show wizard
-  if (hash === '#/start' || !appConfig.setupComplete) {
+  // If setup not complete, show wizard. Admins can access via #/start
+  if (!appConfig.setupComplete || (hash === '#/start' && currentSession && getUserRole(currentSession.email) === 'admin')) {
     applyConfig();
     showView('start');
     showWizardStep(1);
