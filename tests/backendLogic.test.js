@@ -486,7 +486,7 @@ describe('Helper Functions', () => {
     expect(headers).toEqual([
       'ID', 'Name', 'Description', 'Icon',
       'Organizer Name', 'Organizer Email', 'Organizer Phone',
-      'Question 1', 'Question 2', 'Question 3',
+      'Question 1', 'Question 2', 'Question 3', 'Tags',
     ]);
   });
 });
