@@ -11,8 +11,13 @@ const path = require('path');
 const { JSDOM } = require('jsdom');
 
 const RAW_HTML = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf-8');
-const SCRIPT_MATCH = RAW_HTML.match(/<script>([\s\S]*?)<\/script>/);
-const RAW_SCRIPT = SCRIPT_MATCH ? SCRIPT_MATCH[1] : '';
+
+// Extract the MAIN script (the large one, not the small theme script)
+// Match the last <script>...</script> block in the file
+const SCRIPT_MATCHES = [...RAW_HTML.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+const RAW_SCRIPT = SCRIPT_MATCHES.length > 0
+  ? SCRIPT_MATCHES[SCRIPT_MATCHES.length - 1][1]
+  : '';
 
 // Rewrite top-level const/let to var so they end up on `window`
 function makeGlobalVars(script) {
@@ -28,7 +33,8 @@ function getCleanedHtml() {
     .replace(/<script src="https:\/\/accounts\.google\.com[^"]*"[^>]*><\/script>/, '')
     .replace(/<link rel="preconnect"[^>]*>/g, '')
     .replace(/<link href="https:\/\/fonts\.googleapis[^"]*"[^>]*>/g, '')
-    .replace(/<script>[\s\S]*?<\/script>/, '<script></script>');
+    // Remove ALL script tags (both theme script and main app script)
+    .replace(/<script>[\s\S]*?<\/script>/g, '<script></script>');
 }
 
 /**
@@ -38,12 +44,14 @@ function createTestDom(options = {}) {
   const {
     localStorage: localStorageData = {},
     urlParams = '',
+    urlHash = '',
     fetchMock = null,
     confirmMock = null,
     runScript = true,
   } = options;
 
-  const url = urlParams ? `http://localhost?${urlParams}` : 'http://localhost';
+  let url = urlParams ? `http://localhost?${urlParams}` : 'http://localhost';
+  if (urlHash) url += urlHash;
   const htmlNoScript = getCleanedHtml();
 
   const dom = new JSDOM(htmlNoScript, {
@@ -61,10 +69,33 @@ function createTestDom(options = {}) {
         constructor() { this.signal = {}; this.abort = jest.fn(); }
       };
       window.google = undefined;
+      window.Set = Set; // Ensure Set is available for stale interest cleanup
     },
   });
 
   // Populate localStorage AFTER JSDOM creation (JSDOM v24 overrides beforeParse localStorage)
+  // Must include default app config with setupComplete: true to skip wizard
+  const defaultLocalStorage = {
+    'mf-app-config': JSON.stringify({
+      organizationName: 'Test Parish',
+      appTitle: 'Ministry Fair',
+      tagline: 'Find your place to serve',
+      apiUrl: 'http://localhost/api',
+      spreadsheetUrl: '',
+      primaryColor: '#8B2635',
+      primaryColorDark: '#6B1D29',
+      googleClientId: 'test-client-id',
+      claudeApiKey: '',
+      setupComplete: true,
+    }),
+  };
+
+  // Apply defaults first, then user-specified values override
+  for (const [key, value] of Object.entries(defaultLocalStorage)) {
+    if (!(key in localStorageData)) {
+      dom.window.localStorage.setItem(key, value);
+    }
+  }
   for (const [key, value] of Object.entries(localStorageData)) {
     dom.window.localStorage.setItem(key, value);
   }
@@ -84,15 +115,40 @@ function createTestDom(options = {}) {
         set currentMinistry(v) { currentMinistry = v; },
         get showAll() { return showAll; },
         set showAll(v) { showAll = v; },
+        get appConfig() { return appConfig; },
+        set appConfig(v) { appConfig = v; },
+        get appAdmins() { return appAdmins; },
+        get currentSession() { return currentSession; },
+        set currentSession(v) { currentSession = v; },
+        get notificationSettings() { return notificationSettings; },
+        get wizardStep() { return wizardStep; },
+        get setupAdminData() { return setupAdminData; },
         showView: showView,
         showMinistriesList: showMinistriesList,
         showMinistryDetail: showMinistryDetail,
         showConfirmation: showConfirmation,
         renderMinistryList: renderMinistryList,
         formatPhoneNumber: formatPhoneNumber,
+        escapeHtml: escapeHtml,
+        isValidEmail: isValidEmail,
         loadMinistries: loadMinistries,
         initializeApp: initializeApp,
-        CONFIG: CONFIG,
+        applyConfig: applyConfig,
+        showSettingsView: typeof showSettingsView === 'function' ? showSettingsView : undefined,
+        showWizardStep: typeof showWizardStep === 'function' ? showWizardStep : undefined,
+        decodeJwt: typeof decodeJwt === 'function' ? decodeJwt : undefined,
+        boot: typeof boot === 'function' ? boot : undefined,
+        hasSavedProfile: typeof hasSavedProfile === 'function' ? hasSavedProfile : undefined,
+        loadAppConfig: typeof loadAppConfig === 'function' ? loadAppConfig : undefined,
+        saveAppConfig: typeof saveAppConfig === 'function' ? saveAppConfig : undefined,
+        loadAdmins: typeof loadAdmins === 'function' ? loadAdmins : undefined,
+        saveAdmins: typeof saveAdmins === 'function' ? saveAdmins : undefined,
+        isAdmin: typeof isAdmin === 'function' ? isAdmin : undefined,
+        getUserRole: typeof getUserRole === 'function' ? getUserRole : undefined,
+        DEFAULT_CONFIG: typeof DEFAULT_CONFIG !== 'undefined' ? DEFAULT_CONFIG : undefined,
+        DEFAULT_NOTIFICATIONS: typeof DEFAULT_NOTIFICATIONS !== 'undefined' ? DEFAULT_NOTIFICATIONS : undefined,
+        parseCSV: typeof parseCSV === 'function' ? parseCSV : undefined,
+        parseTSV: typeof parseTSV === 'function' ? parseTSV : undefined,
       };
     `);
   }

@@ -261,14 +261,14 @@ describe('CONFIG Application', () => {
   test('applies consent text with organization name', () => {
     const dom = createTestDom({ fetchMock: ministriesFetch() });
     const consent = dom.window.document.getElementById('consentText').textContent;
-    expect(consent).toContain('St. Theresa');
+    expect(consent).toContain('Test Parish');
     expect(consent).toContain('permission to contact you');
   });
 
   test('applies join parish label with organization name', () => {
     const dom = createTestDom({ fetchMock: ministriesFetch() });
     const label = dom.window.document.getElementById('joinParishLabel').textContent;
-    expect(label).toContain('St. Theresa');
+    expect(label).toContain('Test Parish');
   });
 });
 

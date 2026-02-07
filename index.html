@@ -2198,10 +2198,11 @@ let wizardStep = 1;
 let setupAdminData = null; // temp admin data during wizard
 
 // Load saved parishioner data
-const savedProfile = localStorage.getItem('ministry-fair-profile');
-const savedInterests = localStorage.getItem('ministry-fair-interests');
-if (savedProfile) { try { profile = JSON.parse(savedProfile); } catch(e) {} }
-if (savedInterests) { try { interests = JSON.parse(savedInterests); } catch(e) {} }
+function hasSavedProfile() { return !!localStorage.getItem('ministry-fair-profile'); }
+var _savedProfile = localStorage.getItem('ministry-fair-profile');
+var _savedInterests = localStorage.getItem('ministry-fair-interests');
+if (_savedProfile) { try { profile = JSON.parse(_savedProfile); } catch(e) {} }
+if (_savedInterests) { try { interests = JSON.parse(_savedInterests); } catch(e) {} }
 
 // Check URL for ministry param
 const urlParams = new URLSearchParams(window.location.search);
@@ -2252,11 +2253,15 @@ function showView(viewName) {
 // ============================================
 // GOOGLE SIGN-IN
 // ============================================
+var _googleRetryCount = {};
 function renderGoogleButton(containerId, callback) {
   if (typeof google === 'undefined' || !google.accounts) {
+    _googleRetryCount[containerId] = (_googleRetryCount[containerId] || 0) + 1;
+    if (_googleRetryCount[containerId] > 50) return; // Stop after ~10 seconds
     setTimeout(function() { renderGoogleButton(containerId, callback); }, 200);
     return;
   }
+  _googleRetryCount[containerId] = 0;
   google.accounts.id.initialize({
     client_id: appConfig.googleClientId || DEFAULT_CONFIG.googleClientId,
     callback: callback
@@ -2276,7 +2281,9 @@ function renderGoogleButton(containerId, callback) {
 }
 
 function decodeJwt(credential) {
-  return JSON.parse(atob(credential.split('.')[1]));
+  var base64Url = credential.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(atob(base64));
 }
 
 // ============================================
@@ -2382,7 +2389,7 @@ async function runDomainDetection(email) {
   detectionDiv.innerHTML =
     '<div class="detection-card detecting">' +
       '<div class="detection-spinner-sm"></div>' +
-      '<span class="detection-detail">Checking ' + domain + '...</span>' +
+      '<span class="detection-detail">Checking ' + escapeHtml(domain) + '...</span>' +
     '</div>';
 
   // Check if already registered with us
@@ -2410,7 +2417,7 @@ async function runDomainDetection(email) {
         '<div class="detection-card not-found">' +
           '<div class="detection-icon">&#127970;</div>' +
           '<div class="detection-title">Custom domain detected</div>' +
-          '<div class="detection-detail">We detected <strong>' + domain + '</strong>. ' +
+          '<div class="detection-detail">We detected <strong>' + escapeHtml(domain) + '</strong>. ' +
           'Enter your API key above and we\'ll try to identify your organization automatically.</div>' +
         '</div>';
       detectedOrg = null;
@@ -2429,7 +2436,7 @@ async function runDomainDetection(email) {
       '<div class="detection-card not-found">' +
         '<div class="detection-icon">&#127970;</div>' +
         '<div class="detection-title">Organization detected</div>' +
-        '<div class="detection-detail">We see you\'re using <strong>' + domain + '</strong>. ' +
+        '<div class="detection-detail">We see you\'re using <strong>' + escapeHtml(domain) + '</strong>. ' +
         'You\'ll configure your organization details in the next step.</div>' +
       '</div>';
     detectedOrg = null;
@@ -2446,8 +2453,8 @@ function showDetectionResult(result, domain) {
     '<div class="detection-card found">' +
       '<div class="detection-icon">&#9962;</div>' +
       '<div class="detection-title">We found your organization!</div>' +
-      '<div class="detection-org-name">' + (result.organizationName || domain) + '</div>' +
-      (meta.length > 0 ? '<div class="detection-meta">' + meta.join(' &middot; ') + '</div>' : '') +
+      '<div class="detection-org-name">' + escapeHtml(result.organizationName || domain) + '</div>' +
+      (meta.length > 0 ? '<div class="detection-meta">' + meta.map(escapeHtml).join(' &middot; ') + '</div>' : '') +
       '<div class="detection-detail" style="margin-top:10px;">We\'ll pre-fill your setup with this information.</div>' +
     '</div>';
 }
@@ -2604,7 +2611,7 @@ document.getElementById('nav-logout-btn').addEventListener('click', function() {
     saveSession(null);
     document.getElementById('top-nav').classList.add('hidden');
     // If they also had a parishioner profile, keep that flow
-    if (savedProfile) {
+    if (hasSavedProfile()) {
       showMinistriesList();
     } else {
       showView('register');
@@ -2613,13 +2620,34 @@ document.getElementById('nav-logout-btn').addEventListener('click', function() {
 });
 
 // ============================================
+// SECURITY: HTML ESCAPING
+// ============================================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isValidEmail(email) {
+  if (!email) return false;
+  if (/^javascript:/i.test(email.trim())) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// ============================================
 // PHONE FORMATTING
 // ============================================
 function formatPhoneNumber(value) {
   if (!value) return '';
-  var digits = value.replace(/\D/g, '').slice(0, 10);
+  var digits = value.replace(/\D/g, '');
+  if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+  digits = digits.slice(0, 10);
   if (digits.length === 0) return '';
-  if (digits.length <= 3) return '(' + digits;
+  if (digits.length <= 3) return '(' + digits + ')';
   if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
   return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
 }
@@ -2929,7 +2957,7 @@ async function analyzeWithAI(data) {
     results.classList.remove('hidden');
     document.getElementById('mapping-summary-box').innerHTML =
       '<div class="mapping-summary warn"><h4>Analysis error</h4>' +
-      '<p>' + err.message + '</p>' +
+      '<p>' + escapeHtml(err.message) + '</p>' +
       '<p style="margin-top:8px;">Check that your API key is correct and try again.</p></div>';
   }
 }
@@ -2967,11 +2995,11 @@ function renderMappingResults(mapping, data) {
     var yourCol = isMapped ? data.headers[colIdx] : '&mdash;';
     var statusClass = isMapped ? 'mapped' : (info.required ? 'missing' : 'optional');
     var statusText = isMapped ? '&#10003; Mapped' : (info.required ? '&#10007; Missing' : 'Not found');
-    var note = (mapping.columnNotes && mapping.columnNotes[String(colIdx)]) ? ' <span style="color:#888;font-size:11px;">(' + mapping.columnNotes[String(colIdx)] + ')</span>' : '';
+    var note = (mapping.columnNotes && mapping.columnNotes[String(colIdx)]) ? ' <span style="color:#888;font-size:11px;">(' + escapeHtml(mapping.columnNotes[String(colIdx)]) + ')</span>' : '';
 
     return '<tr>' +
-      '<td>' + info.label + (info.required ? ' <span style="color:#c53030;">*</span>' : '') + '</td>' +
-      '<td>' + yourCol + note + '</td>' +
+      '<td>' + escapeHtml(info.label) + (info.required ? ' <span style="color:#c53030;">*</span>' : '') + '</td>' +
+      '<td>' + escapeHtml(yourCol) + note + '</td>' +
       '<td><span class="mapping-status ' + statusClass + '">' + statusText + '</span></td>' +
       '</tr>';
   }).join('');
@@ -2982,7 +3010,7 @@ function renderMappingResults(mapping, data) {
     suggestionsDiv.innerHTML =
       '<div class="mapping-summary warn" style="margin-top: 12px;">' +
       '<h4>Suggestions</h4><ul>' +
-      mapping.suggestions.map(function(s) { return '<li>' + s + '</li>'; }).join('') +
+      mapping.suggestions.map(function(s) { return '<li>' + escapeHtml(s) + '</li>'; }).join('') +
       '</ul></div>';
   } else {
     suggestionsDiv.innerHTML = '';
@@ -2997,7 +3025,7 @@ function renderDataPreview(mapping, data) {
   var ourHeaders = ['ID', 'Name', 'Description', 'Icon', 'Organizer', 'Email', 'Phone'];
   var fieldKeys = ['id', 'name', 'description', 'icon', 'organizerName', 'organizerEmail', 'organizerPhone'];
 
-  var thead = '<thead><tr>' + ourHeaders.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead>';
+  var thead = '<thead><tr>' + ourHeaders.map(function(h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('') + '</tr></thead>';
 
   var previewRows = data.rows.slice(0, 3);
   var tbody = '<tbody>' + previewRows.map(function(row) {
@@ -3006,7 +3034,7 @@ function renderDataPreview(mapping, data) {
       if (idx === undefined || idx < 0 || idx >= row.length) return '<td style="color:#ccc;">-</td>';
       var val = row[idx] || '';
       if (val.length > 30) val = val.substring(0, 30) + '...';
-      return '<td>' + val + '</td>';
+      return '<td>' + escapeHtml(val) + '</td>';
     }).join('') + '</tr>';
   }).join('') + '</tbody>';
 
@@ -3085,7 +3113,7 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
       var count = data.ministries.length;
       statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '.</div>';
     } else if (data.error) {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + data.error + '</div>';
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(data.error) + '</div>';
     } else {
       statusDiv.innerHTML = '<div class="connection-status error">&#10007; Unexpected response. Make sure you deployed the correct Apps Script.</div>';
     }
@@ -3113,13 +3141,13 @@ function renderAdminList() {
   }
 
   list.innerHTML = admins.map(function(admin, idx) {
-    var initials = (admin.firstName[0] || '') + (admin.lastName[0] || '');
+    var initials = escapeHtml((admin.firstName[0] || '') + (admin.lastName[0] || ''));
     var isSetupAdmin = setupAdminData && admin.email === setupAdminData.email;
     return '<div class="admin-item">' +
       '<div class="profile-icon">' + initials + '</div>' +
       '<div class="admin-item-details">' +
-        '<div class="admin-item-name">' + admin.firstName + ' ' + admin.lastName + '</div>' +
-        '<div class="admin-item-email">' + admin.email + '</div>' +
+        '<div class="admin-item-name">' + escapeHtml(admin.firstName + ' ' + admin.lastName) + '</div>' +
+        '<div class="admin-item-email">' + escapeHtml(admin.email) + '</div>' +
       '</div>' +
       (isSetupAdmin ? '<span class="admin-item-tag">You</span>' :
         '<button class="admin-remove-btn" data-idx="' + idx + '" title="Remove">&times;</button>') +
@@ -3172,11 +3200,11 @@ function renderSummary() {
   var adminCount = loadAdmins().length;
 
   document.getElementById('setup-summary').innerHTML =
-    '<div class="summary-row"><span class="summary-label">Organization</span><span class="summary-value">' + orgName + '</span></div>' +
-    '<div class="summary-row"><span class="summary-label">App Title</span><span class="summary-value">' + appTitle + '</span></div>' +
-    '<div class="summary-row"><span class="summary-label">Tagline</span><span class="summary-value">' + tagline + '</span></div>' +
-    '<div class="summary-row"><span class="summary-label">Theme</span><span class="summary-value"><span style="display:inline-block;width:20px;height:20px;border-radius:4px;vertical-align:middle;background:' + appConfig.primaryColor + '"></span></span></div>' +
-    '<div class="summary-row"><span class="summary-label">API URL</span><span class="summary-value">' + (apiUrl.length > 30 ? apiUrl.substring(0, 30) + '...' : apiUrl) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Organization</span><span class="summary-value">' + escapeHtml(orgName) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">App Title</span><span class="summary-value">' + escapeHtml(appTitle) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Tagline</span><span class="summary-value">' + escapeHtml(tagline) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Theme</span><span class="summary-value"><span style="display:inline-block;width:20px;height:20px;border-radius:4px;vertical-align:middle;background:' + escapeHtml(appConfig.primaryColor) + '"></span></span></div>' +
+    '<div class="summary-row"><span class="summary-label">API URL</span><span class="summary-value">' + escapeHtml(apiUrl.length > 30 ? apiUrl.substring(0, 30) + '...' : apiUrl) + '</span></div>' +
     '<div class="summary-row"><span class="summary-label">Admins</span><span class="summary-value">' + adminCount + '</span></div>';
 }
 
@@ -3266,7 +3294,7 @@ function showSettingsView() {
   if (currentSession) {
     document.getElementById('settings-user-name').textContent = currentSession.firstName + ' ' + currentSession.lastName;
     document.getElementById('settings-user-email').textContent = currentSession.email;
-  } else if (savedProfile) {
+  } else if (hasSavedProfile()) {
     document.getElementById('settings-user-name').textContent = profile.firstName + ' ' + profile.lastName;
     document.getElementById('settings-user-email').textContent = profile.email;
   }
@@ -3276,14 +3304,14 @@ function showSettingsView() {
     var adminsCard = document.getElementById('settings-admins-card');
     var admins = loadAdmins();
     adminsCard.innerHTML = admins.map(function(admin) {
-      var initials = (admin.firstName[0] || '') + (admin.lastName[0] || '');
+      var initials = escapeHtml((admin.firstName[0] || '') + (admin.lastName[0] || ''));
       var isMe = currentSession && admin.email.toLowerCase() === currentSession.email.toLowerCase();
       return '<div class="settings-item">' +
         '<div style="display:flex;align-items:center;gap:10px;">' +
           '<div class="profile-icon" style="width:32px;height:32px;font-size:12px;">' + initials + '</div>' +
           '<div class="settings-item-left">' +
-            '<div class="settings-item-label">' + admin.firstName + ' ' + admin.lastName + (isMe ? ' (you)' : '') + '</div>' +
-            '<div class="settings-item-desc">' + admin.email + '</div>' +
+            '<div class="settings-item-label">' + escapeHtml(admin.firstName + ' ' + admin.lastName) + (isMe ? ' (you)' : '') + '</div>' +
+            '<div class="settings-item-desc">' + escapeHtml(admin.email) + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -3307,9 +3335,9 @@ function renderEmailTemplates() {
   keys.forEach(function(key) {
     var t = ns.templates[key];
     html += '<div class="template-card">' +
-      '<h4>' + t.name + '</h4>' +
-      '<p>Subject: ' + t.subject + '</p>' +
-      '<textarea data-template-key="' + key + '">' + t.body + '</textarea>' +
+      '<h4>' + escapeHtml(t.name) + '</h4>' +
+      '<p>Subject: ' + escapeHtml(t.subject) + '</p>' +
+      '<textarea data-template-key="' + escapeHtml(key) + '">' + escapeHtml(t.body) + '</textarea>' +
     '</div>';
   });
   container.innerHTML = html;
@@ -3419,6 +3447,14 @@ async function loadMinistries() {
     MINISTRIES = FALLBACK_MINISTRIES;
   }
 
+  // Clean up stale interests referencing deleted ministries
+  var validIds = new Set(MINISTRIES.map(function(m) { return m.id; }));
+  var cleanInterests = interests.filter(function(i) { return validIds.has(i.ministryId); });
+  if (cleanInterests.length !== interests.length) {
+    interests = cleanInterests;
+    localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
+  }
+
   initializeApp();
 }
 
@@ -3426,7 +3462,7 @@ async function loadMinistries() {
 // APP INITIALIZATION
 // ============================================
 function initializeApp() {
-  if (savedProfile) {
+  if (hasSavedProfile()) {
     // Check if this user is an admin and auto-create session
     if (isAdmin(profile.email) && !currentSession) {
       currentSession = {
@@ -3613,15 +3649,15 @@ function renderMinistryList() {
   var displayed = (showAll || searchTerm) ? sorted : sorted.slice(0, 5);
 
   if (displayed.length === 0) {
-    list.innerHTML = '<div class="no-results">No ministries found matching "' + searchTerm + '"</div>';
+    list.innerHTML = '<div class="no-results">No ministries found matching "' + escapeHtml(searchTerm) + '"</div>';
   } else {
     list.innerHTML = displayed.map(function(m) {
       var interested = interests.some(function(i) { return i.ministryId === m.id; });
-      return '<div class="ministry-card ' + (interested ? 'interested' : '') + '" data-id="' + m.id + '">' +
-        '<div class="ministry-icon">' + m.icon + '</div>' +
+      return '<div class="ministry-card ' + (interested ? 'interested' : '') + '" data-id="' + escapeHtml(m.id) + '">' +
+        '<div class="ministry-icon">' + escapeHtml(m.icon) + '</div>' +
         '<div class="ministry-info">' +
-          '<h3 class="ministry-name">' + m.name + '</h3>' +
-          '<p class="ministry-desc">' + m.description + '</p>' +
+          '<h3 class="ministry-name">' + escapeHtml(m.name) + '</h3>' +
+          '<p class="ministry-desc">' + escapeHtml(m.description) + '</p>' +
         '</div>' +
         (interested ? '<span class="badge">Interested</span>' : '') +
       '</div>';
@@ -3665,25 +3701,25 @@ function showMinistryDetail(ministry) {
     questionsDiv.innerHTML = '<div class="form">' + ministry.questions.map(function(q) {
       if (q.type === 'select') {
         return '<div class="input-group">' +
-          '<label class="label">' + q.label + '</label>' +
-          '<select class="select" data-qid="' + q.id + '">' +
+          '<label class="label">' + escapeHtml(q.label) + '</label>' +
+          '<select class="select" data-qid="' + escapeHtml(q.id) + '">' +
             '<option value="">Select...</option>' +
-            q.options.map(function(opt) { return '<option value="' + opt + '">' + opt + '</option>'; }).join('') +
+            q.options.map(function(opt) { return '<option value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</option>'; }).join('') +
           '</select></div>';
       } else if (q.type === 'checkbox') {
         return '<div class="input-group">' +
-          '<label class="label">' + q.label + '</label>' +
-          '<div class="checkbox-options" data-qid="' + q.id + '" data-type="checkbox">' +
+          '<label class="label">' + escapeHtml(q.label) + '</label>' +
+          '<div class="checkbox-options" data-qid="' + escapeHtml(q.id) + '" data-type="checkbox">' +
             q.options.map(function(opt, idx) {
               return '<div class="checkbox-option">' +
-                '<input type="checkbox" id="q-' + q.id + '-' + idx + '" value="' + opt + '">' +
-                '<label for="q-' + q.id + '-' + idx + '">' + opt + '</label></div>';
+                '<input type="checkbox" id="q-' + escapeHtml(q.id) + '-' + idx + '" value="' + escapeHtml(opt) + '">' +
+                '<label for="q-' + escapeHtml(q.id) + '-' + idx + '">' + escapeHtml(opt) + '</label></div>';
             }).join('') +
           '</div></div>';
       } else {
         return '<div class="input-group">' +
-          '<label class="label">' + q.label + '</label>' +
-          '<input type="text" class="input" data-qid="' + q.id + '" placeholder="Your answer">' +
+          '<label class="label">' + escapeHtml(q.label) + '</label>' +
+          '<input type="text" class="input" data-qid="' + escapeHtml(q.id) + '" placeholder="Your answer">' +
         '</div>';
       }
     }).join('') + '</div>';
@@ -3738,7 +3774,6 @@ document.getElementById('modal-confirm').addEventListener('click', function() {
     };
     fetch(apiUrl, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     }).catch(function(err) { console.error('API error:', err); });
@@ -3789,12 +3824,17 @@ document.getElementById('interest-btn').addEventListener('click', async function
 
     var apiUrl = appConfig.apiUrl;
     if (apiUrl) {
-      fetch(apiUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(function(err) { console.error('API error:', err); });
+      try {
+        var response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var result = await response.json();
+        if (result.success === false) {
+          console.warn('Server reported error:', result.error);
+        }
+      } catch(err) { console.error('API error:', err); }
     }
 
     var newInterest = {
@@ -3808,6 +3848,7 @@ document.getElementById('interest-btn').addEventListener('click', async function
     interests.push(newInterest);
     localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
 
+    btn.disabled = false;
     showConfirmation();
 
   } catch (error) {
@@ -3833,19 +3874,21 @@ function showConfirmation() {
   var organizerDiv = document.getElementById('organizer-info');
   if (currentMinistry.organizerName) {
     var contactHtml = '';
-    if (currentMinistry.organizerEmail) {
-      contactHtml += '<a href="mailto:' + currentMinistry.organizerEmail + '">' + currentMinistry.organizerEmail + '</a>';
+    if (currentMinistry.organizerEmail && isValidEmail(currentMinistry.organizerEmail)) {
+      contactHtml += '<a href="mailto:' + escapeHtml(currentMinistry.organizerEmail) + '">' + escapeHtml(currentMinistry.organizerEmail) + '</a>';
+    } else if (currentMinistry.organizerEmail) {
+      contactHtml += escapeHtml(currentMinistry.organizerEmail);
     }
     if (currentMinistry.organizerPhone) {
       if (contactHtml) contactHtml += ' &middot; ';
       var formattedPhone = formatPhoneNumber(currentMinistry.organizerPhone);
-      contactHtml += '<a href="tel:' + currentMinistry.organizerPhone + '">' + formattedPhone + '</a>';
+      contactHtml += '<a href="tel:' + escapeHtml(currentMinistry.organizerPhone) + '">' + escapeHtml(formattedPhone) + '</a>';
     }
 
     organizerDiv.innerHTML =
       '<div class="organizer-box">' +
         '<div class="organizer-title">Ministry Contact</div>' +
-        '<div class="organizer-name">' + currentMinistry.organizerName + '</div>' +
+        '<div class="organizer-name">' + escapeHtml(currentMinistry.organizerName) + '</div>' +
         (contactHtml ? '<div class="organizer-contact">' + contactHtml + '</div>' : '') +
       '</div>';
   } else {
@@ -3858,8 +3901,8 @@ function showConfirmation() {
       interests.map(function(i) {
         var m = MINISTRIES.find(function(min) { return min.id === i.ministryId; });
         return '<div class="ministry-card" style="cursor: default;">' +
-          '<div class="ministry-icon">' + (m ? m.icon : '&#128203;') + '</div>' +
-          '<div class="ministry-info"><h3 class="ministry-name">' + i.ministryName + '</h3></div>' +
+          '<div class="ministry-icon">' + (m ? escapeHtml(m.icon) : '&#128203;') + '</div>' +
+          '<div class="ministry-info"><h3 class="ministry-name">' + escapeHtml(i.ministryName) + '</h3></div>' +
           '<span class="badge">&#10003;</span></div>';
       }).join('');
   } else {
