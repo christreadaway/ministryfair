@@ -10,7 +10,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
+    body {
       font-family: 'Crimson Pro', Georgia, serif;
       background: linear-gradient(145deg, #faf8f5 0%, #f5f0e8 100%);
       min-height: 100vh;
@@ -135,7 +135,8 @@
       text-align: center;
       margin-bottom: 8px;
     }
-    .google-signin-section #g_id_signin {
+    .google-signin-section #g_id_signin,
+    .google-signin-section #g_id_signin_admin {
       display: flex;
       justify-content: center;
     }
@@ -249,7 +250,7 @@
       box-shadow: 0 8px 24px rgba(74, 156, 109, 0.35);
     }
     .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .loading {
       text-align: center;
       padding: 40px 20px;
@@ -349,7 +350,7 @@
       justify-content: center;
     }
     .modal.hidden {
-      display: none;
+      display: none !important;
     }
     .modal-backdrop {
       position: absolute;
@@ -388,9 +389,498 @@
     .modal-buttons button {
       flex: 1;
     }
+
+    /* ======================================== */
+    /* TOP NAVIGATION BAR                       */
+    /* ======================================== */
+    .top-nav {
+      background: white;
+      border-bottom: 1px solid #e8e4de;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .role-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'Inter', sans-serif;
+    }
+    .role-badge.role-admin {
+      background: #8B2635;
+      color: white;
+    }
+    .role-badge.role-ministry_lead {
+      background: #4a9c6d;
+      color: white;
+    }
+    .role-badge.role-parishioner {
+      background: #e8e4de;
+      color: #666;
+    }
+    .nav-user-info {
+      text-align: right;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+    .nav-user-email {
+      font-size: 11px;
+      color: #888;
+    }
+    .nav-btn {
+      background: none;
+      border: 1px solid #e8e4de;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #666;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-btn:hover {
+      background: #f5f0e8;
+    }
+
+    /* ======================================== */
+    /* START WIZARD                             */
+    /* ======================================== */
+    .wizard-hero {
+      text-align: center;
+      padding: 48px 20px 24px;
+    }
+    .wizard-hero-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+    .wizard-hero-title {
+      font-size: 30px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .wizard-hero-sub {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 20px;
+    }
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e8e4de;
+      transition: all 0.3s;
+    }
+    .step-dot.active {
+      background: #8B2635;
+      transform: scale(1.3);
+    }
+    .step-dot.done {
+      background: #4a9c6d;
+    }
+    .step-line {
+      width: 24px;
+      height: 2px;
+      background: #e8e4de;
+    }
+    .step-line.done {
+      background: #4a9c6d;
+    }
+    .wizard-step {
+      display: none;
+    }
+    .wizard-step.active {
+      display: block;
+    }
+    .wizard-nav {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .wizard-nav .btn,
+    .wizard-nav .btn-secondary {
+      flex: 1;
+    }
+    .signed-in-as {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, #f0f9f4 0%, #e8f5ed 100%);
+      border: 1px solid #b7e4c7;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+    .signed-in-as .profile-icon {
+      background: #4a9c6d;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+    .signed-in-check {
+      color: #4a9c6d;
+      font-size: 20px;
+      font-weight: bold;
+      margin-left: auto;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .color-swatch {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .color-swatch:hover {
+      transform: scale(1.1);
+    }
+    .color-swatch.selected {
+      border-color: #333;
+      transform: scale(1.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .header-preview {
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+    .header-preview h3 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .header-preview p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    .info-box {
+      background: #f0f7ff;
+      border: 1px solid #d0e3ff;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .info-box h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2b6cb0;
+      margin-bottom: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+    .info-box ol {
+      padding-left: 20px;
+      font-size: 14px;
+      color: #444;
+      line-height: 2;
+      font-family: 'Inter', sans-serif;
+    }
+    .info-box a {
+      color: #8B2635;
+      font-weight: 500;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+    .connection-status.success {
+      background: #f0f9f4;
+      color: #2d6a4f;
+      border: 1px solid #b7e4c7;
+    }
+    .connection-status.error {
+      background: #fff5f5;
+      color: #c53030;
+      border: 1px solid #feb2b2;
+    }
+    .connection-status.testing {
+      background: #f0f7ff;
+      color: #2b6cb0;
+      border: 1px solid #bee3f8;
+    }
+    .admin-list {
+      margin-top: 16px;
+    }
+    .admin-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #faf8f5;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .admin-item .profile-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 14px;
+    }
+    .admin-item-details { flex: 1; }
+    .admin-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .admin-item-email {
+      font-size: 12px;
+      color: #666;
+    }
+    .admin-item-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: #8B2635;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+    }
+    .admin-remove-btn {
+      background: none;
+      border: none;
+      color: #c53030;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+    .add-admin-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .add-admin-row .input { flex: 1; }
+    .btn-sm {
+      background: #8B2635;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .summary-list {
+      margin-top: 16px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0ebe3;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label {
+      font-size: 13px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'Inter', sans-serif;
+    }
+    .summary-value {
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-all;
+    }
+    .launch-area {
+      text-align: center;
+      margin-top: 32px;
+    }
+    .launch-area .success-icon {
+      width: 64px;
+      height: 64px;
+      font-size: 32px;
+    }
+
+    /* ======================================== */
+    /* SETTINGS                                 */
+    /* ======================================== */
+    .settings-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: #8B2635;
+      cursor: pointer;
+      font-size: 15px;
+      font-family: 'Crimson Pro', Georgia, serif;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    .settings-section {
+      margin-bottom: 28px;
+    }
+    .settings-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      font-family: 'Inter', sans-serif;
+    }
+    .settings-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f5f0e8;
+      cursor: pointer;
+    }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item:hover { background: #faf8f5; }
+    .settings-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .settings-item-label {
+      font-size: 15px;
+      color: #333;
+    }
+    .settings-item-desc {
+      font-size: 12px;
+      color: #999;
+      font-family: 'Inter', sans-serif;
+    }
+    .settings-item-value {
+      font-size: 14px;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+    }
+    .settings-item-arrow {
+      color: #ccc;
+      margin-left: 8px;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .toggle-switch.on {
+      background: #4a9c6d;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.on::after {
+      transform: translateX(20px);
+    }
+    .template-card {
+      background: #faf8f5;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+    .template-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      font-family: 'Inter', sans-serif;
+    }
+    .template-card p {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      font-family: 'Inter', sans-serif;
+    }
+    .template-card textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid #e8e4de;
+      border-radius: 8px;
+      margin-top: 8px;
+      resize: vertical;
+      outline: none;
+    }
+    .template-card textarea:focus {
+      border-color: #8B2635;
+    }
   </style>
 </head>
 <body>
+
+<!-- TOP NAVIGATION BAR -->
+<nav id="top-nav" class="top-nav hidden">
+  <div class="nav-brand" id="nav-brand-text">Ministry Fair</div>
+  <div class="nav-right">
+    <span class="role-badge" id="nav-role-badge"></span>
+    <div class="nav-user-info">
+      <div class="nav-user-name" id="nav-user-name"></div>
+      <div class="nav-user-email" id="nav-user-email"></div>
+    </div>
+    <button class="nav-btn" id="nav-settings-btn" title="Settings">&#9881;</button>
+    <button class="nav-btn" id="nav-logout-btn" title="Log out">&#10140;</button>
+  </div>
+</nav>
 
 <!-- LOADING VIEW -->
 <div id="view-loading">
@@ -401,6 +891,278 @@
   <div class="content">
     <div class="card">
       <div class="loading">Loading ministries...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- START WIZARD VIEW                        -->
+<!-- ======================================== -->
+<div id="view-start" class="hidden">
+  <div class="wizard-hero">
+    <div class="wizard-hero-icon">&#9962;</div>
+    <h1 class="wizard-hero-title">Set Up Your Ministry Fair</h1>
+    <p class="wizard-hero-sub">Let's get your parish ministry fair up and running.<br>This will only take a few minutes.</p>
+  </div>
+
+  <div class="step-indicator" id="step-indicator">
+    <div class="step-dot active" data-step="1"></div>
+    <div class="step-line" data-after="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-line" data-after="2"></div>
+    <div class="step-dot" data-step="3"></div>
+    <div class="step-line" data-after="3"></div>
+    <div class="step-dot" data-step="4"></div>
+    <div class="step-line" data-after="4"></div>
+    <div class="step-dot" data-step="5"></div>
+  </div>
+
+  <div class="content">
+    <!-- STEP 1: Sign In -->
+    <div class="wizard-step active" data-wizard-step="1">
+      <div class="card">
+        <h2 class="section-title">Sign In as Administrator</h2>
+        <p class="welcome-text">
+          Sign in with your Google account. You'll be the first administrator and can add others later.
+        </p>
+        <div class="google-signin-section">
+          <div id="g_id_signin_admin"></div>
+        </div>
+        <div id="admin-signed-in" class="hidden">
+          <div class="signed-in-as">
+            <div class="profile-icon" id="admin-setup-initials"></div>
+            <div>
+              <div class="profile-name" id="admin-setup-name"></div>
+              <div class="profile-email" id="admin-setup-email"></div>
+            </div>
+            <div class="signed-in-check">&#10003;</div>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn" id="step1-next" disabled>Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Organization Details -->
+    <div class="wizard-step" data-wizard-step="2">
+      <div class="card">
+        <h2 class="section-title">Your Organization</h2>
+        <p class="welcome-text">Tell us about your parish or organization.</p>
+        <div class="form">
+          <div class="input-group">
+            <label class="label">Organization Name</label>
+            <input type="text" class="input" id="setup-org-name" placeholder="St. Theresa Catholic Church">
+          </div>
+          <div class="input-group">
+            <label class="label">App Title</label>
+            <input type="text" class="input" id="setup-app-title" value="Ministry Fair">
+          </div>
+          <div class="input-group">
+            <label class="label">Tagline</label>
+            <input type="text" class="input" id="setup-tagline" value="Find your place to serve">
+          </div>
+          <div class="input-group">
+            <label class="label">Theme Color</label>
+            <div class="color-grid" id="color-grid"></div>
+          </div>
+          <div class="header-preview" id="header-preview">
+            <h3 id="preview-title">Ministry Fair</h3>
+            <p id="preview-tagline">Find your place to serve</p>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn-secondary" id="step2-back">&larr; Back</button>
+          <button class="btn" id="step2-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Connect Spreadsheet -->
+    <div class="wizard-step" data-wizard-step="3">
+      <div class="card">
+        <h2 class="section-title">Connect Your Ministries</h2>
+        <p class="welcome-text">
+          Ministry Fair uses a Google Sheet to store your ministry list and track signups. Set up a sheet and connect it here.
+        </p>
+        <div class="info-box">
+          <h4>Quick Setup</h4>
+          <ol>
+            <li>Create a new Google Sheet (or copy our template)</li>
+            <li>Add your ministries with columns: ID, Name, Description, Icon, Organizer Name, Organizer Email, Organizer Phone, Question 1-3</li>
+            <li>Open Extensions &rarr; Apps Script, paste the backend code from <strong>google-apps-script.js</strong></li>
+            <li>Deploy as Web App (Execute as: Me, Access: Anyone)</li>
+            <li>Copy the deployment URL and paste below</li>
+          </ol>
+        </div>
+        <div class="form">
+          <div class="input-group">
+            <label class="label">Google Sheet URL (optional)</label>
+            <input type="url" class="input" id="setup-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+          </div>
+          <div class="input-group">
+            <label class="label">Apps Script API URL</label>
+            <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <button class="btn-secondary" id="test-connection-btn" type="button">Test Connection</button>
+          <div id="connection-status"></div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn-secondary" id="step3-back">&larr; Back</button>
+          <button class="btn" id="step3-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Add Admins -->
+    <div class="wizard-step" data-wizard-step="4">
+      <div class="card">
+        <h2 class="section-title">Add Administrators</h2>
+        <p class="welcome-text">
+          Add other people who should be able to manage this app. You can always add or remove admins later in Settings.
+        </p>
+        <div class="admin-list" id="setup-admin-list"></div>
+        <div class="add-admin-row">
+          <input type="email" class="input" id="setup-new-admin-email" placeholder="colleague@gmail.com">
+          <button class="btn-sm" id="setup-add-admin-btn">Add</button>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn-secondary" id="step4-back">&larr; Back</button>
+          <button class="btn" id="step4-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Review & Launch -->
+    <div class="wizard-step" data-wizard-step="5">
+      <div class="card">
+        <h2 class="section-title">Review &amp; Launch</h2>
+        <p class="welcome-text">Everything looks good! Here's a summary of your setup.</p>
+        <div class="summary-list" id="setup-summary"></div>
+        <div class="launch-area">
+          <div class="success-icon">&#9889;</div>
+          <button class="btn btn-green" id="launch-btn" style="margin-top: 16px;">Launch Ministry Fair</button>
+        </div>
+        <div class="wizard-nav" style="margin-top: 16px;">
+          <button class="btn-secondary" id="step5-back">&larr; Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SETTINGS VIEW                            -->
+<!-- ======================================== -->
+<div id="view-settings" class="hidden">
+  <div class="content" style="padding-top: 16px;">
+    <button class="settings-back" id="settings-back-btn">&larr; Back</button>
+    <h2 class="section-title">Settings</h2>
+
+    <!-- Admin-only sections -->
+    <div id="settings-admin-sections">
+      <div class="settings-section">
+        <div class="settings-section-title">Organization</div>
+        <div class="settings-card">
+          <div class="settings-item" id="settings-org-name-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Organization Name</div>
+            </div>
+            <div style="display:flex;align-items:center;">
+              <span class="settings-item-value" id="settings-org-name-val"></span>
+              <span class="settings-item-arrow">&rsaquo;</span>
+            </div>
+          </div>
+          <div class="settings-item" id="settings-app-title-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">App Title</div>
+            </div>
+            <div style="display:flex;align-items:center;">
+              <span class="settings-item-value" id="settings-app-title-val"></span>
+              <span class="settings-item-arrow">&rsaquo;</span>
+            </div>
+          </div>
+          <div class="settings-item" id="settings-color-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Theme Color</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div id="settings-color-swatch" style="width:24px;height:24px;border-radius:6px;"></div>
+              <span class="settings-item-arrow">&rsaquo;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Data Connection</div>
+        <div class="settings-card">
+          <div class="settings-item" id="settings-api-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">API URL</div>
+              <div class="settings-item-desc" id="settings-api-status">Connected</div>
+            </div>
+            <span class="settings-item-arrow">&rsaquo;</span>
+          </div>
+          <div class="settings-item" id="settings-sheet-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Google Sheet</div>
+              <div class="settings-item-desc" id="settings-sheet-status">Not set</div>
+            </div>
+            <span class="settings-item-arrow">&rsaquo;</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Administrators</div>
+        <div class="settings-card" id="settings-admins-card">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Notifications</div>
+        <div class="settings-card">
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Email Notifications</div>
+              <div class="settings-item-desc">Sent from your signed-in account</div>
+            </div>
+            <div class="toggle-switch on" id="toggle-email" data-key="emailEnabled"></div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Text Notifications</div>
+              <div class="settings-item-desc">SMS to members</div>
+            </div>
+            <div class="toggle-switch" id="toggle-text" data-key="textEnabled"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Email Templates</div>
+        <div id="settings-email-templates">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Parishioner-visible section -->
+    <div class="settings-section">
+      <div class="settings-section-title">Your Account</div>
+      <div class="settings-card">
+        <div class="settings-item">
+          <div class="settings-item-left">
+            <div class="settings-item-label" id="settings-user-name"></div>
+            <div class="settings-item-desc" id="settings-user-email"></div>
+          </div>
+        </div>
+        <div class="settings-item" id="settings-logout-item" style="cursor:pointer;">
+          <div class="settings-item-label" style="color:#c53030;">Log Out</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -444,7 +1206,7 @@
           <label for="joinParish" id="joinParishLabel"></label>
         </div>
         <p class="consent-text" id="consentText"></p>
-        <button type="submit" class="btn">Continue to Ministries →</button>
+        <button type="submit" class="btn">Continue to Ministries &rarr;</button>
       </form>
     </div>
   </div>
@@ -457,7 +1219,7 @@
     <p id="interest-count">Tap a ministry to learn more</p>
   </header>
   <div class="content">
-    <div class="profile-badge">
+    <div class="profile-badge" id="parishioner-profile-badge">
       <div class="profile-icon" id="profile-initials"></div>
       <div style="flex: 1;">
         <div class="profile-name" id="profile-name"></div>
@@ -468,7 +1230,7 @@
     </div>
     <h2 class="section-title">Our Ministries</h2>
     <div class="search-box">
-      <input type="text" class="input" id="ministry-search" placeholder="🔍 Search ministries...">
+      <input type="text" class="input" id="ministry-search" placeholder="&#128269; Search ministries...">
     </div>
     <div id="ministry-list"></div>
     <button class="btn-secondary hidden" id="show-all-btn">Show All Ministries</button>
@@ -488,7 +1250,7 @@
       <div class="btn-group">
         <button class="btn" id="interest-btn">I'm Interested!</button>
         <button class="btn-remove hidden" id="remove-btn">Remove Interest</button>
-        <button class="btn-secondary" id="back-btn">← Back to All Ministries</button>
+        <button class="btn-secondary" id="back-btn">&larr; Back to All Ministries</button>
       </div>
     </div>
   </div>
@@ -515,7 +1277,7 @@
   </header>
   <div class="content">
     <div class="card" style="text-align: center;">
-      <div class="success-icon">✓</div>
+      <div class="success-icon">&#10003;</div>
       <h2 class="section-title" style="margin-bottom: 12px;">You're on the list!</h2>
       <p class="welcome-text" style="margin-bottom: 8px;">
         The <strong id="confirmed-ministry"></strong> ministry leader will reach out to you soon.
@@ -532,102 +1294,227 @@
 
 <script>
 // ============================================
-// CONFIGURATION - Edit these for your parish
+// CONFIGURATION
 // ============================================
-const CONFIG = {
-  // ========== EDIT THESE FOR YOUR PARISH ==========
-  organizationName: 'St. Theresa',
+const DEFAULT_CONFIG = {
+  organizationName: '',
   appTitle: 'Ministry Fair',
   tagline: 'Find your place to serve',
-  apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
-  primaryColor: '#8B2635',      // Burgundy - change to match your parish
-  primaryColorDark: '#6B1D29'   // Darker shade for gradients
-  // ================================================
+  apiUrl: '',
+  spreadsheetUrl: '',
+  primaryColor: '#8B2635',
+  primaryColorDark: '#6B1D29',
+  googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+  setupComplete: false
 };
 
-// API URL - this both fetches ministry data AND receives signups
-const API_URL = CONFIG.apiUrl;
+const DEFAULT_NOTIFICATIONS = {
+  emailEnabled: true,
+  textEnabled: false,
+  templates: {
+    addedToMinistry: {
+      name: 'Added to Ministry',
+      subject: 'Welcome to {{ministry}}!',
+      body: 'Hi {{firstName}},\n\nYou\'ve been added to {{ministry}} at {{organization}}. We\'re glad to have you!\n\nIf you have any questions, please reach out to your ministry lead.\n\nGod bless,\n{{organization}}'
+    },
+    appointedLead: {
+      name: 'Appointed Ministry Lead',
+      subject: 'You\'ve been appointed Ministry Lead of {{ministry}}',
+      body: 'Hi {{firstName}},\n\nYou\'ve been appointed as Ministry Lead of {{ministry}} at {{organization}}. Thank you for stepping up to serve!\n\nYou can now manage members and communicate with your ministry team.\n\nGod bless,\n{{organization}}'
+    },
+    removedFromMinistry: {
+      name: 'Removed from Ministry',
+      subject: 'Update regarding {{ministry}}',
+      body: 'Hi {{firstName}},\n\nThis is to let you know that you have been removed from {{ministry}} at {{organization}}.\n\nIf you believe this was a mistake, please contact your parish administrator.\n\nGod bless,\n{{organization}}'
+    },
+    removedAsLead: {
+      name: 'Removed as Ministry Lead',
+      subject: 'Update regarding {{ministry}} leadership',
+      body: 'Hi {{firstName}},\n\nThis is to let you know that you have been removed as Ministry Lead of {{ministry}} at {{organization}}.\n\nThank you for your service. If you have questions, please contact your parish administrator.\n\nGod bless,\n{{organization}}'
+    },
+    newEvent: {
+      name: 'New Event',
+      subject: 'New Event: {{eventName}}',
+      body: 'Hi {{firstName}},\n\nA new event has been scheduled for {{ministry}} at {{organization}}:\n\n{{eventName}}\nDate: {{eventDate}}\nLocation: {{eventLocation}}\n\nWe hope to see you there!\n\nGod bless,\n{{organization}}'
+    }
+  }
+};
 
-// Fallback ministries in case API fails
-const FALLBACK_MINISTRIES = [
-  { id: 'music', name: 'Music Ministry', description: 'Supports parish liturgies through choirs, cantors, and instrumentalists.', icon: '🎵', questions: [] },
-  { id: 'hospitality', name: 'Hospitality Ministers', description: 'Welcomes parishioners and assists during Masses and parish events.', icon: '🚪', questions: [] }
+const COLOR_OPTIONS = [
+  { color: '#8B2635', dark: '#6B1D29', name: 'Burgundy' },
+  { color: '#1a5276', dark: '#154360', name: 'Navy' },
+  { color: '#1e8449', dark: '#196f3d', name: 'Forest' },
+  { color: '#6c3483', dark: '#5b2c6f', name: 'Purple' },
+  { color: '#c0392b', dark: '#a93226', name: 'Red' },
+  { color: '#2c3e50', dark: '#1a252f', name: 'Charcoal' },
+  { color: '#d4ac0d', dark: '#b7950b', name: 'Gold' },
+  { color: '#148f77', dark: '#117a65', name: 'Teal' },
+  { color: '#1f618d', dark: '#1a5276', name: 'Blue' },
+  { color: '#a04000', dark: '#873600', name: 'Rust' },
+  { color: '#7d3c98', dark: '#6c3483', name: 'Violet' },
+  { color: '#117864', dark: '#0e6655', name: 'Emerald' },
 ];
 
-// State
+// ============================================
+// STATE MANAGEMENT
+// ============================================
+function loadAppConfig() {
+  try {
+    const saved = localStorage.getItem('mf-app-config');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return { ...DEFAULT_CONFIG };
+}
+
+function saveAppConfig(config) {
+  localStorage.setItem('mf-app-config', JSON.stringify(config));
+}
+
+function loadAdmins() {
+  try {
+    const saved = localStorage.getItem('mf-admins');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return [];
+}
+
+function saveAdmins(admins) {
+  localStorage.setItem('mf-admins', JSON.stringify(admins));
+}
+
+function loadSession() {
+  try {
+    const saved = localStorage.getItem('mf-session');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return null;
+}
+
+function saveSession(session) {
+  if (session) {
+    localStorage.setItem('mf-session', JSON.stringify(session));
+  } else {
+    localStorage.removeItem('mf-session');
+  }
+}
+
+function loadNotificationSettings() {
+  try {
+    const saved = localStorage.getItem('mf-notifications');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_NOTIFICATIONS));
+}
+
+function saveNotificationSettings(settings) {
+  localStorage.setItem('mf-notifications', JSON.stringify(settings));
+}
+
+function isAdmin(email) {
+  if (!email) return false;
+  const admins = loadAdmins();
+  return admins.some(a => a.email.toLowerCase() === email.toLowerCase());
+}
+
+function getUserRole(email) {
+  if (isAdmin(email)) return 'admin';
+  return 'parishioner';
+}
+
+function darkenColor(hex, amount) {
+  hex = hex.replace('#', '');
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  r = Math.max(0, r - amount);
+  g = Math.max(0, g - amount);
+  b = Math.max(0, b - amount);
+  return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+}
+
+// ============================================
+// GLOBAL STATE
+// ============================================
+let appConfig = loadAppConfig();
+let appAdmins = loadAdmins();
+let currentSession = loadSession();
+let notificationSettings = loadNotificationSettings();
+
 let MINISTRIES = [];
 let profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
 let interests = [];
 let currentMinistry = null;
 let showAll = false;
 let searchTerm = '';
+let wizardStep = 1;
+let setupAdminData = null; // temp admin data during wizard
 
-// Google Sign-In callback
-function handleGoogleSignIn(response) {
-  // Decode the JWT token to get user info
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
-
-  // Auto-fill the form fields
-  document.getElementById('firstName').value = payload.given_name || '';
-  document.getElementById('lastName').value = payload.family_name || '';
-  document.getElementById('email').value = payload.email || '';
-
-  // Focus on the phone field since that's the only thing Google doesn't provide
-  document.getElementById('phone').focus();
-}
-
-// Phone number formatting
-function formatPhoneNumber(value) {
-  if (!value) return '';
-  // Strip all non-digits
-  const digits = value.replace(/\D/g, '').slice(0, 10);
-  
-  // Format as (xxx) xxx-xxxx
-  if (digits.length === 0) return '';
-  if (digits.length <= 3) return '(' + digits;
-  if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
-  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
-}
+// Load saved parishioner data
+const savedProfile = localStorage.getItem('ministry-fair-profile');
+const savedInterests = localStorage.getItem('ministry-fair-interests');
+if (savedProfile) { try { profile = JSON.parse(savedProfile); } catch(e) {} }
+if (savedInterests) { try { interests = JSON.parse(savedInterests); } catch(e) {} }
 
 // Check URL for ministry param
 const urlParams = new URLSearchParams(window.location.search);
 const ministryParam = urlParams.get('m');
 
-// Load saved data
-const savedProfile = localStorage.getItem('ministry-fair-profile');
-const savedInterests = localStorage.getItem('ministry-fair-interests');
-if (savedProfile) profile = JSON.parse(savedProfile);
-if (savedInterests) interests = JSON.parse(savedInterests);
+// Fallback ministries
+const FALLBACK_MINISTRIES = [
+  { id: 'music', name: 'Music Ministry', description: 'Supports parish liturgies through choirs, cantors, and instrumentalists.', icon: '&#127925;', questions: [] },
+  { id: 'hospitality', name: 'Hospitality Ministers', description: 'Welcomes parishioners and assists during Masses and parish events.', icon: '&#128682;', questions: [] }
+];
 
-// Views
+// ============================================
+// VIEWS
+// ============================================
 const views = {
   loading: document.getElementById('view-loading'),
+  start: document.getElementById('view-start'),
   register: document.getElementById('view-register'),
   ministries: document.getElementById('view-ministries'),
   detail: document.getElementById('view-detail'),
-  confirmed: document.getElementById('view-confirmed')
+  confirmed: document.getElementById('view-confirmed'),
+  settings: document.getElementById('view-settings')
 };
 
 function showView(viewName) {
   Object.values(views).forEach(v => v.classList.add('hidden'));
   views[viewName].classList.remove('hidden');
   window.scrollTo(0, 0);
+
+  // Show/hide nav bar
+  const nav = document.getElementById('top-nav');
+  if (viewName === 'start' || viewName === 'loading' || viewName === 'register') {
+    nav.classList.add('hidden');
+  } else if (currentSession) {
+    updateNavBar();
+    nav.classList.remove('hidden');
+  }
+
+  // Render Google buttons when those views show
   if (viewName === 'register') {
-    renderGoogleButton();
+    renderGoogleButton('g_id_signin', handleParishionerSignIn);
+  }
+  if (viewName === 'start') {
+    renderGoogleButton('g_id_signin_admin', handleAdminSignIn);
   }
 }
 
-function renderGoogleButton() {
+// ============================================
+// GOOGLE SIGN-IN
+// ============================================
+function renderGoogleButton(containerId, callback) {
   if (typeof google === 'undefined' || !google.accounts) {
-    // GIS library hasn't loaded yet, retry shortly
-    setTimeout(renderGoogleButton, 200);
+    setTimeout(function() { renderGoogleButton(containerId, callback); }, 200);
     return;
   }
   google.accounts.id.initialize({
-    client_id: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-    callback: handleGoogleSignIn
+    client_id: appConfig.googleClientId || DEFAULT_CONFIG.googleClientId,
+    callback: callback
   });
-  const container = document.getElementById('g_id_signin');
+  var container = document.getElementById(containerId);
+  if (!container) return;
   container.innerHTML = '';
   google.accounts.id.renderButton(container, {
     type: 'standard',
@@ -640,36 +1527,528 @@ function renderGoogleButton() {
   });
 }
 
-// Fetch ministries from Google Sheet
-async function loadMinistries() {
+function decodeJwt(credential) {
+  return JSON.parse(atob(credential.split('.')[1]));
+}
+
+// Admin sign-in (during /start wizard)
+function handleAdminSignIn(response) {
+  var payload = decodeJwt(response.credential);
+  setupAdminData = {
+    email: payload.email || '',
+    firstName: payload.given_name || '',
+    lastName: payload.family_name || '',
+    picture: payload.picture || ''
+  };
+
+  // Show signed-in state
+  document.getElementById('admin-signed-in').classList.remove('hidden');
+  document.getElementById('admin-setup-initials').textContent =
+    (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
+  document.getElementById('admin-setup-name').textContent =
+    setupAdminData.firstName + ' ' + setupAdminData.lastName;
+  document.getElementById('admin-setup-email').textContent = setupAdminData.email;
+
+  // Enable next button
+  document.getElementById('step1-next').disabled = false;
+}
+
+// Parishioner sign-in (auto-fill registration form)
+function handleParishionerSignIn(response) {
+  var payload = decodeJwt(response.credential);
+  document.getElementById('firstName').value = payload.given_name || '';
+  document.getElementById('lastName').value = payload.family_name || '';
+  document.getElementById('email').value = payload.email || '';
+  document.getElementById('phone').focus();
+
+  // If this person is an admin, create a session for them
+  if (isAdmin(payload.email)) {
+    currentSession = {
+      email: payload.email,
+      firstName: payload.given_name || '',
+      lastName: payload.family_name || '',
+      picture: payload.picture || '',
+      role: 'admin'
+    };
+    saveSession(currentSession);
+  }
+}
+
+// ============================================
+// NAV BAR
+// ============================================
+function updateNavBar() {
+  if (!currentSession) return;
+  var role = getUserRole(currentSession.email);
+  document.getElementById('nav-brand-text').textContent = appConfig.appTitle || 'Ministry Fair';
+  document.getElementById('nav-user-name').textContent =
+    currentSession.firstName + ' ' + currentSession.lastName;
+  document.getElementById('nav-user-email').textContent = currentSession.email;
+
+  var badge = document.getElementById('nav-role-badge');
+  badge.textContent = role === 'admin' ? 'Admin' : 'Member';
+  badge.className = 'role-badge role-' + role;
+
+  // Only show settings gear for admins
+  document.getElementById('nav-settings-btn').classList.toggle('hidden', role !== 'admin');
+}
+
+document.getElementById('nav-settings-btn').addEventListener('click', function() {
+  showSettingsView();
+});
+
+document.getElementById('nav-logout-btn').addEventListener('click', function() {
+  if (confirm('Log out of your admin session?')) {
+    currentSession = null;
+    saveSession(null);
+    document.getElementById('top-nav').classList.add('hidden');
+    // If they also had a parishioner profile, keep that flow
+    if (savedProfile) {
+      showMinistriesList();
+    } else {
+      showView('register');
+    }
+  }
+});
+
+// ============================================
+// PHONE FORMATTING
+// ============================================
+function formatPhoneNumber(value) {
+  if (!value) return '';
+  var digits = value.replace(/\D/g, '').slice(0, 10);
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return '(' + digits;
+  if (digits.length <= 6) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+}
+
+// ============================================
+// START WIZARD
+// ============================================
+function showWizardStep(step) {
+  wizardStep = step;
+  // Update step dots
+  document.querySelectorAll('.step-dot').forEach(function(dot) {
+    var s = parseInt(dot.dataset.step);
+    dot.className = 'step-dot';
+    if (s < step) dot.classList.add('done');
+    if (s === step) dot.classList.add('active');
+  });
+  document.querySelectorAll('.step-line').forEach(function(line) {
+    var after = parseInt(line.dataset.after);
+    line.className = 'step-line';
+    if (after < step) line.classList.add('done');
+  });
+
+  // Show/hide steps
+  document.querySelectorAll('.wizard-step').forEach(function(ws) {
+    var s = parseInt(ws.dataset.wizardStep);
+    ws.classList.toggle('active', s === step);
+  });
+
+  // Step-specific init
+  if (step === 2) initStep2();
+  if (step === 4) renderAdminList();
+  if (step === 5) renderSummary();
+}
+
+// Step 2: Color grid + preview
+function initStep2() {
+  var grid = document.getElementById('color-grid');
+  if (grid.children.length > 0) return; // already rendered
+
+  COLOR_OPTIONS.forEach(function(opt) {
+    var swatch = document.createElement('div');
+    swatch.className = 'color-swatch' + (opt.color === appConfig.primaryColor ? ' selected' : '');
+    swatch.style.background = 'linear-gradient(135deg, ' + opt.color + ' 0%, ' + opt.dark + ' 100%)';
+    swatch.title = opt.name;
+    swatch.dataset.color = opt.color;
+    swatch.dataset.dark = opt.dark;
+    swatch.addEventListener('click', function() {
+      grid.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('selected'); });
+      swatch.classList.add('selected');
+      appConfig.primaryColor = opt.color;
+      appConfig.primaryColorDark = opt.dark;
+      updateHeaderPreview();
+    });
+    grid.appendChild(swatch);
+  });
+
+  // Sync inputs to preview
+  var titleInput = document.getElementById('setup-app-title');
+  var taglineInput = document.getElementById('setup-tagline');
+  titleInput.addEventListener('input', updateHeaderPreview);
+  taglineInput.addEventListener('input', updateHeaderPreview);
+  updateHeaderPreview();
+}
+
+function updateHeaderPreview() {
+  var preview = document.getElementById('header-preview');
+  var title = document.getElementById('setup-app-title').value || 'Ministry Fair';
+  var tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
+  preview.style.background = 'linear-gradient(135deg, ' + appConfig.primaryColor + ' 0%, ' + appConfig.primaryColorDark + ' 100%)';
+  document.getElementById('preview-title').textContent = title;
+  document.getElementById('preview-tagline').textContent = tagline;
+}
+
+// Step 3: Test connection
+document.getElementById('test-connection-btn').addEventListener('click', async function() {
+  var url = document.getElementById('setup-api-url').value.trim();
+  var statusDiv = document.getElementById('connection-status');
+
+  if (!url) {
+    statusDiv.innerHTML = '<div class="connection-status error">Please enter an API URL first.</div>';
+    return;
+  }
+
+  statusDiv.innerHTML = '<div class="connection-status testing">Testing connection...</div>';
+
   try {
-    // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    const response = await fetch(API_URL, { signal: controller.signal });
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
-    
-    const data = await response.json();
+    var data = await response.json();
+
+    if (data.ministries) {
+      var count = data.ministries.length;
+      statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '.</div>';
+    } else if (data.error) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + data.error + '</div>';
+    } else {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Unexpected response. Make sure you deployed the correct Apps Script.</div>';
+    }
+  } catch(err) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+  }
+});
+
+// Step 4: Admin management
+function renderAdminList() {
+  var list = document.getElementById('setup-admin-list');
+  var admins = loadAdmins();
+
+  // Make sure setup admin is in the list
+  if (setupAdminData && !admins.some(function(a) { return a.email === setupAdminData.email; })) {
+    admins.unshift({
+      email: setupAdminData.email,
+      firstName: setupAdminData.firstName,
+      lastName: setupAdminData.lastName,
+      picture: setupAdminData.picture,
+      role: 'admin'
+    });
+    saveAdmins(admins);
+    appAdmins = admins;
+  }
+
+  list.innerHTML = admins.map(function(admin, idx) {
+    var initials = (admin.firstName[0] || '') + (admin.lastName[0] || '');
+    var isSetupAdmin = setupAdminData && admin.email === setupAdminData.email;
+    return '<div class="admin-item">' +
+      '<div class="profile-icon">' + initials + '</div>' +
+      '<div class="admin-item-details">' +
+        '<div class="admin-item-name">' + admin.firstName + ' ' + admin.lastName + '</div>' +
+        '<div class="admin-item-email">' + admin.email + '</div>' +
+      '</div>' +
+      (isSetupAdmin ? '<span class="admin-item-tag">You</span>' :
+        '<button class="admin-remove-btn" data-idx="' + idx + '" title="Remove">&times;</button>') +
+    '</div>';
+  }).join('');
+
+  // Remove buttons
+  list.querySelectorAll('.admin-remove-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var admins = loadAdmins();
+      admins.splice(parseInt(btn.dataset.idx), 1);
+      saveAdmins(admins);
+      appAdmins = admins;
+      renderAdminList();
+    });
+  });
+}
+
+document.getElementById('setup-add-admin-btn').addEventListener('click', function() {
+  var input = document.getElementById('setup-new-admin-email');
+  var email = input.value.trim().toLowerCase();
+  if (!email || !email.includes('@')) return;
+
+  var admins = loadAdmins();
+  if (admins.some(function(a) { return a.email.toLowerCase() === email; })) {
+    input.value = '';
+    return; // already exists
+  }
+
+  admins.push({
+    email: email,
+    firstName: email.split('@')[0],
+    lastName: '',
+    picture: '',
+    role: 'admin'
+  });
+  saveAdmins(admins);
+  appAdmins = admins;
+  input.value = '';
+  renderAdminList();
+});
+
+// Step 5: Summary
+function renderSummary() {
+  var orgName = document.getElementById('setup-org-name').value || '(not set)';
+  var appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
+  var tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
+  var apiUrl = document.getElementById('setup-api-url').value || '(not set)';
+  var sheetUrl = document.getElementById('setup-sheet-url').value || '(not set)';
+  var adminCount = loadAdmins().length;
+
+  document.getElementById('setup-summary').innerHTML =
+    '<div class="summary-row"><span class="summary-label">Organization</span><span class="summary-value">' + orgName + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">App Title</span><span class="summary-value">' + appTitle + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Tagline</span><span class="summary-value">' + tagline + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Theme</span><span class="summary-value"><span style="display:inline-block;width:20px;height:20px;border-radius:4px;vertical-align:middle;background:' + appConfig.primaryColor + '"></span></span></div>' +
+    '<div class="summary-row"><span class="summary-label">API URL</span><span class="summary-value">' + (apiUrl.length > 30 ? apiUrl.substring(0, 30) + '...' : apiUrl) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Admins</span><span class="summary-value">' + adminCount + '</span></div>';
+}
+
+// Wizard navigation
+document.getElementById('step1-next').addEventListener('click', function() { showWizardStep(2); });
+document.getElementById('step2-back').addEventListener('click', function() { showWizardStep(1); });
+document.getElementById('step2-next').addEventListener('click', function() { showWizardStep(3); });
+document.getElementById('step3-back').addEventListener('click', function() { showWizardStep(2); });
+document.getElementById('step3-next').addEventListener('click', function() { showWizardStep(4); });
+document.getElementById('step4-back').addEventListener('click', function() { showWizardStep(3); });
+document.getElementById('step4-next').addEventListener('click', function() { showWizardStep(5); });
+document.getElementById('step5-back').addEventListener('click', function() { showWizardStep(4); });
+
+// Launch!
+document.getElementById('launch-btn').addEventListener('click', function() {
+  // Save all config
+  appConfig.organizationName = document.getElementById('setup-org-name').value || '';
+  appConfig.appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
+  appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
+  appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
+  appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  appConfig.setupComplete = true;
+  saveAppConfig(appConfig);
+
+  // Create admin session
+  if (setupAdminData) {
+    currentSession = {
+      email: setupAdminData.email,
+      firstName: setupAdminData.firstName,
+      lastName: setupAdminData.lastName,
+      picture: setupAdminData.picture,
+      role: 'admin'
+    };
+    saveSession(currentSession);
+  }
+
+  // Save default notification settings
+  saveNotificationSettings(notificationSettings);
+
+  // Apply config and load the app
+  applyConfig();
+  loadMinistries();
+});
+
+// ============================================
+// SETTINGS VIEW
+// ============================================
+function showSettingsView() {
+  showView('settings');
+  var role = currentSession ? getUserRole(currentSession.email) : 'parishioner';
+
+  // Show/hide admin sections
+  document.getElementById('settings-admin-sections').classList.toggle('hidden', role !== 'admin');
+
+  // Populate current values
+  document.getElementById('settings-org-name-val').textContent = appConfig.organizationName || '(not set)';
+  document.getElementById('settings-app-title-val').textContent = appConfig.appTitle || 'Ministry Fair';
+  document.getElementById('settings-color-swatch').style.background = appConfig.primaryColor;
+
+  // API/sheet status
+  document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
+  document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
+
+  // User info
+  if (currentSession) {
+    document.getElementById('settings-user-name').textContent = currentSession.firstName + ' ' + currentSession.lastName;
+    document.getElementById('settings-user-email').textContent = currentSession.email;
+  } else if (savedProfile) {
+    document.getElementById('settings-user-name').textContent = profile.firstName + ' ' + profile.lastName;
+    document.getElementById('settings-user-email').textContent = profile.email;
+  }
+
+  // Admin list
+  if (role === 'admin') {
+    var adminsCard = document.getElementById('settings-admins-card');
+    var admins = loadAdmins();
+    adminsCard.innerHTML = admins.map(function(admin) {
+      var initials = (admin.firstName[0] || '') + (admin.lastName[0] || '');
+      var isMe = currentSession && admin.email.toLowerCase() === currentSession.email.toLowerCase();
+      return '<div class="settings-item">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div class="profile-icon" style="width:32px;height:32px;font-size:12px;">' + initials + '</div>' +
+          '<div class="settings-item-left">' +
+            '<div class="settings-item-label">' + admin.firstName + ' ' + admin.lastName + (isMe ? ' (you)' : '') + '</div>' +
+            '<div class="settings-item-desc">' + admin.email + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Notification toggles
+    var ns = loadNotificationSettings();
+    document.getElementById('toggle-email').className = 'toggle-switch' + (ns.emailEnabled ? ' on' : '');
+    document.getElementById('toggle-text').className = 'toggle-switch' + (ns.textEnabled ? ' on' : '');
+
+    // Email templates
+    renderEmailTemplates();
+  }
+}
+
+function renderEmailTemplates() {
+  var ns = loadNotificationSettings();
+  var container = document.getElementById('settings-email-templates');
+  var html = '';
+  var keys = Object.keys(ns.templates);
+  keys.forEach(function(key) {
+    var t = ns.templates[key];
+    html += '<div class="template-card">' +
+      '<h4>' + t.name + '</h4>' +
+      '<p>Subject: ' + t.subject + '</p>' +
+      '<textarea data-template-key="' + key + '">' + t.body + '</textarea>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+
+  // Save on change
+  container.querySelectorAll('textarea').forEach(function(ta) {
+    ta.addEventListener('change', function() {
+      var ns = loadNotificationSettings();
+      ns.templates[ta.dataset.templateKey].body = ta.value;
+      saveNotificationSettings(ns);
+    });
+  });
+}
+
+// Toggle switches
+document.querySelectorAll('.toggle-switch').forEach(function(toggle) {
+  toggle.addEventListener('click', function() {
+    toggle.classList.toggle('on');
+    var ns = loadNotificationSettings();
+    ns[toggle.dataset.key] = toggle.classList.contains('on');
+    saveNotificationSettings(ns);
+  });
+});
+
+// Settings back button
+document.getElementById('settings-back-btn').addEventListener('click', function() {
+  showMinistriesList();
+});
+
+// Settings logout
+document.getElementById('settings-logout-item').addEventListener('click', function() {
+  if (confirm('Are you sure you want to log out?')) {
+    currentSession = null;
+    saveSession(null);
+    localStorage.removeItem('ministry-fair-profile');
+    localStorage.removeItem('ministry-fair-interests');
+    profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+    interests = [];
+    currentMinistry = null;
+    showAll = false;
+    searchTerm = '';
+    showView('register');
+  }
+});
+
+// ============================================
+// APPLY CONFIGURATION
+// ============================================
+function applyConfig() {
+  document.title = appConfig.appTitle || 'Ministry Fair';
+
+  document.querySelectorAll('.app-title').forEach(function(el) {
+    el.textContent = appConfig.appTitle || 'Ministry Fair';
+  });
+  document.querySelectorAll('.app-tagline').forEach(function(el) {
+    el.textContent = appConfig.tagline || 'Find your place to serve';
+  });
+
+  var consentText = document.getElementById('consentText');
+  if (consentText) {
+    consentText.textContent = 'By clicking Continue, you give ' + (appConfig.organizationName || 'us') + ' permission to contact you by email or phone about the ministries you express interest in.';
+  }
+
+  var joinLabel = document.getElementById('joinParishLabel');
+  if (joinLabel) {
+    joinLabel.textContent = "I'm not yet a parishioner but I'd like to join " + (appConfig.organizationName || 'the parish') + '.';
+  }
+
+  // Apply theme color to headers
+  document.querySelectorAll('.header').forEach(function(h) {
+    h.style.background = 'linear-gradient(135deg, ' + appConfig.primaryColor + ' 0%, ' + appConfig.primaryColorDark + ' 100%)';
+  });
+  // Apply to buttons
+  document.querySelectorAll('.btn:not(.btn-green)').forEach(function(b) {
+    b.style.background = 'linear-gradient(135deg, ' + appConfig.primaryColor + ' 0%, ' + appConfig.primaryColorDark + ' 100%)';
+  });
+  document.querySelectorAll('.btn-secondary').forEach(function(b) {
+    b.style.color = appConfig.primaryColor;
+    b.style.borderColor = appConfig.primaryColor;
+  });
+}
+
+// ============================================
+// FETCH MINISTRIES
+// ============================================
+async function loadMinistries() {
+  var apiUrl = appConfig.apiUrl;
+  if (!apiUrl) {
+    MINISTRIES = FALLBACK_MINISTRIES;
+    initializeApp();
+    return;
+  }
+
+  try {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var response = await fetch(apiUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    var data = await response.json();
     if (data.ministries && data.ministries.length > 0) {
       MINISTRIES = data.ministries;
     } else {
-      console.warn('No ministries returned, using fallback');
       MINISTRIES = FALLBACK_MINISTRIES;
     }
   } catch (error) {
     console.error('Error loading ministries:', error);
     MINISTRIES = FALLBACK_MINISTRIES;
   }
-  
-  // Always initialize the app, even if fetch failed
+
   initializeApp();
 }
 
+// ============================================
+// APP INITIALIZATION
+// ============================================
 function initializeApp() {
   if (savedProfile) {
+    // Check if this user is an admin and auto-create session
+    if (isAdmin(profile.email) && !currentSession) {
+      currentSession = {
+        email: profile.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        picture: '',
+        role: 'admin'
+      };
+      saveSession(currentSession);
+    }
+
     if (ministryParam) {
-      currentMinistry = MINISTRIES.find(m => m.id === ministryParam);
+      currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
       if (currentMinistry) {
         showMinistryDetail(currentMinistry);
       } else {
@@ -683,47 +2062,41 @@ function initializeApp() {
   }
 }
 
-// Apply configuration to page - runs immediately
-function applyConfig() {
-  // Update page title
-  document.title = CONFIG.appTitle;
-  
-  // Update all elements with app-title class
-  document.querySelectorAll('.app-title').forEach(el => {
-    el.textContent = CONFIG.appTitle;
-  });
-  
-  // Update all elements with app-tagline class
-  document.querySelectorAll('.app-tagline').forEach(el => {
-    el.textContent = CONFIG.tagline;
-  });
-  
-  // Update consent text
-  const consentText = document.getElementById('consentText');
-  if (consentText) {
-    consentText.textContent = `By clicking Continue, you give ${CONFIG.organizationName} permission to contact you by email or phone about the ministries you express interest in.`;
+// ============================================
+// BOOT SEQUENCE
+// ============================================
+function boot() {
+  var hash = window.location.hash;
+
+  // If #/start is in URL or setup not complete, show wizard
+  if (hash === '#/start' || !appConfig.setupComplete) {
+    applyConfig();
+    showView('start');
+    showWizardStep(1);
+    return;
   }
-  
-  // Update join parish checkbox label
-  const joinLabel = document.getElementById('joinParishLabel');
-  if (joinLabel) {
-    joinLabel.textContent = `I'm not yet a parishioner but I'd like to join ${CONFIG.organizationName}.`;
+
+  // If #/settings, show settings (if admin)
+  if (hash === '#/settings' && currentSession && getUserRole(currentSession.email) === 'admin') {
+    applyConfig();
+    loadMinistries().then(function() {
+      showSettingsView();
+    }).catch(function() {
+      showSettingsView();
+    });
+    return;
   }
+
+  // Normal boot
+  applyConfig();
+  loadMinistries();
 }
 
-// Apply config immediately (before ministries load)
-applyConfig();
-
-// Start loading ministries
-loadMinistries();
-
-// Apply phone formatting to input
-const phoneInput = document.getElementById('phone');
+// Apply phone formatting
+var phoneInput = document.getElementById('phone');
 if (phoneInput) {
   phoneInput.addEventListener('input', function(e) {
-    const input = e.target;
-    const formatted = formatPhoneNumber(input.value);
-    input.value = formatted;
+    e.target.value = formatPhoneNumber(e.target.value);
   });
 }
 
@@ -738,9 +2111,21 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
     wantsToJoinParish: document.getElementById('joinParish').checked
   };
   localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
-  
+
+  // Check if admin
+  if (isAdmin(profile.email) && !currentSession) {
+    currentSession = {
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      picture: '',
+      role: 'admin'
+    };
+    saveSession(currentSession);
+  }
+
   if (ministryParam) {
-    currentMinistry = MINISTRIES.find(m => m.id === ministryParam);
+    currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
     if (currentMinistry) {
       showMinistryDetail(currentMinistry);
       return;
@@ -749,156 +2134,147 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
   showMinistriesList();
 });
 
+// ============================================
+// MINISTRY LIST
+// ============================================
 function showMinistriesList() {
   showView('ministries');
-  
-  // Update profile display
-  document.getElementById('profile-initials').textContent = profile.firstName[0] + profile.lastName[0];
-  document.getElementById('profile-name').textContent = profile.firstName + ' ' + profile.lastName;
-  document.getElementById('profile-email').textContent = profile.email;
-  document.getElementById('profile-phone').textContent = formatPhoneNumber(profile.phone);
-  
-  // Update interest count
-  const count = interests.length;
-  document.getElementById('interest-count').textContent = count > 0 
+
+  // Hide parishioner profile badge if admin (they have the nav)
+  var profileBadge = document.getElementById('parishioner-profile-badge');
+  if (currentSession && getUserRole(currentSession.email) === 'admin') {
+    profileBadge.classList.add('hidden');
+  } else {
+    profileBadge.classList.remove('hidden');
+    document.getElementById('profile-initials').textContent = (profile.firstName[0] || '') + (profile.lastName[0] || '');
+    document.getElementById('profile-name').textContent = profile.firstName + ' ' + profile.lastName;
+    document.getElementById('profile-email').textContent = profile.email;
+    document.getElementById('profile-phone').textContent = formatPhoneNumber(profile.phone);
+  }
+
+  var count = interests.length;
+  document.getElementById('interest-count').textContent = count > 0
     ? count + ' interest' + (count > 1 ? 's' : '') + ' expressed'
     : 'Tap a ministry to learn more';
-  
-  // Set up search
-  const searchInput = document.getElementById('ministry-search');
+
+  var searchInput = document.getElementById('ministry-search');
   searchInput.value = searchTerm;
   searchInput.oninput = function() {
     searchTerm = this.value.toLowerCase();
     renderMinistryList();
   };
-  
+
   renderMinistryList();
 }
 
 function renderMinistryList() {
-  const list = document.getElementById('ministry-list');
-  
-  // Filter by search term (name, description, or organizer name)
-  let filtered = MINISTRIES;
+  var list = document.getElementById('ministry-list');
+
+  var filtered = MINISTRIES;
   if (searchTerm) {
-    filtered = MINISTRIES.filter(m => 
-      m.name.toLowerCase().includes(searchTerm) || 
-      m.description.toLowerCase().includes(searchTerm) ||
-      (m.organizerName && m.organizerName.toLowerCase().includes(searchTerm))
-    );
+    filtered = MINISTRIES.filter(function(m) {
+      return m.name.toLowerCase().includes(searchTerm) ||
+        m.description.toLowerCase().includes(searchTerm) ||
+        (m.organizerName && m.organizerName.toLowerCase().includes(searchTerm));
+    });
   }
-  
-  // Sort: interested ministries first, then alphabetical
-  const sorted = [...filtered].sort((a, b) => {
-    const aInterested = interests.some(i => i.ministryId === a.id);
-    const bInterested = interests.some(i => i.ministryId === b.id);
-    
-    if (aInterested && !bInterested) return -1;
-    if (!aInterested && bInterested) return 1;
+
+  var sorted = filtered.slice().sort(function(a, b) {
+    var aI = interests.some(function(i) { return i.ministryId === a.id; });
+    var bI = interests.some(function(i) { return i.ministryId === b.id; });
+    if (aI && !bI) return -1;
+    if (!aI && bI) return 1;
     return a.name.localeCompare(b.name);
   });
-  
-  // Apply show all limit only when not searching
-  const displayed = (showAll || searchTerm) ? sorted : sorted.slice(0, 5);
-  
+
+  var displayed = (showAll || searchTerm) ? sorted : sorted.slice(0, 5);
+
   if (displayed.length === 0) {
     list.innerHTML = '<div class="no-results">No ministries found matching "' + searchTerm + '"</div>';
   } else {
-    list.innerHTML = displayed.map(m => {
-      const interested = interests.some(i => i.ministryId === m.id);
-      return `
-        <div class="ministry-card ${interested ? 'interested' : ''}" data-id="${m.id}">
-          <div class="ministry-icon">${m.icon}</div>
-          <div class="ministry-info">
-            <h3 class="ministry-name">${m.name}</h3>
-            <p class="ministry-desc">${m.description}</p>
-          </div>
-          ${interested ? '<span class="badge">Interested</span>' : ''}
-        </div>
-      `;
+    list.innerHTML = displayed.map(function(m) {
+      var interested = interests.some(function(i) { return i.ministryId === m.id; });
+      return '<div class="ministry-card ' + (interested ? 'interested' : '') + '" data-id="' + m.id + '">' +
+        '<div class="ministry-icon">' + m.icon + '</div>' +
+        '<div class="ministry-info">' +
+          '<h3 class="ministry-name">' + m.name + '</h3>' +
+          '<p class="ministry-desc">' + m.description + '</p>' +
+        '</div>' +
+        (interested ? '<span class="badge">Interested</span>' : '') +
+      '</div>';
     }).join('');
   }
-  
-  // Show/hide "show all" button
-  const showAllBtn = document.getElementById('show-all-btn');
+
+  var showAllBtn = document.getElementById('show-all-btn');
   if (!showAll && !searchTerm && MINISTRIES.length > 5) {
     showAllBtn.classList.remove('hidden');
     showAllBtn.textContent = 'Show All ' + MINISTRIES.length + ' Ministries';
   } else {
     showAllBtn.classList.add('hidden');
   }
-  
-  // Add click handlers
-  list.querySelectorAll('.ministry-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const ministry = MINISTRIES.find(m => m.id === card.dataset.id);
+
+  list.querySelectorAll('.ministry-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var ministry = MINISTRIES.find(function(m) { return m.id === card.dataset.id; });
       showMinistryDetail(ministry);
     });
   });
 }
 
-document.getElementById('show-all-btn').addEventListener('click', () => {
+document.getElementById('show-all-btn').addEventListener('click', function() {
   showAll = true;
   renderMinistryList();
 });
 
+// ============================================
+// MINISTRY DETAIL
+// ============================================
 function showMinistryDetail(ministry) {
   currentMinistry = ministry;
   showView('detail');
-  
+
   document.getElementById('detail-name').textContent = ministry.name;
   document.getElementById('detail-icon').textContent = ministry.icon;
   document.getElementById('detail-desc').textContent = ministry.description;
-  
-  // Render questions
-  const questionsDiv = document.getElementById('detail-questions');
+
+  var questionsDiv = document.getElementById('detail-questions');
   if (ministry.questions && ministry.questions.length > 0) {
-    questionsDiv.innerHTML = '<div class="form">' + ministry.questions.map(q => {
+    questionsDiv.innerHTML = '<div class="form">' + ministry.questions.map(function(q) {
       if (q.type === 'select') {
-        return `
-          <div class="input-group">
-            <label class="label">${q.label}</label>
-            <select class="select" data-qid="${q.id}">
-              <option value="">Select...</option>
-              ${q.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>
-          </div>
-        `;
+        return '<div class="input-group">' +
+          '<label class="label">' + q.label + '</label>' +
+          '<select class="select" data-qid="' + q.id + '">' +
+            '<option value="">Select...</option>' +
+            q.options.map(function(opt) { return '<option value="' + opt + '">' + opt + '</option>'; }).join('') +
+          '</select></div>';
       } else if (q.type === 'checkbox') {
-        return `
-          <div class="input-group">
-            <label class="label">${q.label}</label>
-            <div class="checkbox-options" data-qid="${q.id}" data-type="checkbox">
-              ${q.options.map((opt, idx) => `
-                <div class="checkbox-option">
-                  <input type="checkbox" id="q-${q.id}-${idx}" value="${opt}">
-                  <label for="q-${q.id}-${idx}">${opt}</label>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
+        return '<div class="input-group">' +
+          '<label class="label">' + q.label + '</label>' +
+          '<div class="checkbox-options" data-qid="' + q.id + '" data-type="checkbox">' +
+            q.options.map(function(opt, idx) {
+              return '<div class="checkbox-option">' +
+                '<input type="checkbox" id="q-' + q.id + '-' + idx + '" value="' + opt + '">' +
+                '<label for="q-' + q.id + '-' + idx + '">' + opt + '</label></div>';
+            }).join('') +
+          '</div></div>';
       } else {
-        return `
-          <div class="input-group">
-            <label class="label">${q.label}</label>
-            <input type="text" class="input" data-qid="${q.id}" placeholder="Your answer">
-          </div>
-        `;
+        return '<div class="input-group">' +
+          '<label class="label">' + q.label + '</label>' +
+          '<input type="text" class="input" data-qid="' + q.id + '" placeholder="Your answer">' +
+        '</div>';
       }
     }).join('') + '</div>';
   } else {
     questionsDiv.innerHTML = '';
   }
-  
-  // Update button states based on interest
-  const interestBtn = document.getElementById('interest-btn');
-  const removeBtn = document.getElementById('remove-btn');
-  const alreadyInterested = interests.some(i => i.ministryId === ministry.id);
-  
+
+  var interestBtn = document.getElementById('interest-btn');
+  var removeBtn = document.getElementById('remove-btn');
+  var alreadyInterested = interests.some(function(i) { return i.ministryId === ministry.id; });
+
   interestBtn.textContent = alreadyInterested ? '✓ Update Interest' : "I'm Interested!";
   interestBtn.className = alreadyInterested ? 'btn btn-green' : 'btn';
-  
+
   if (alreadyInterested) {
     removeBtn.classList.remove('hidden');
   } else {
@@ -906,88 +2282,76 @@ function showMinistryDetail(ministry) {
   }
 }
 
-document.getElementById('back-btn').addEventListener('click', () => {
+document.getElementById('back-btn').addEventListener('click', function() {
   currentMinistry = null;
   showMinistriesList();
 });
 
-// Remove interest button - shows confirmation modal
-document.getElementById('remove-btn').addEventListener('click', () => {
+// Remove interest
+document.getElementById('remove-btn').addEventListener('click', function() {
   document.getElementById('modal-ministry-name').textContent = currentMinistry.name;
   document.getElementById('confirm-modal').classList.remove('hidden');
 });
 
-// Modal cancel button
-document.getElementById('modal-cancel').addEventListener('click', () => {
+document.getElementById('modal-cancel').addEventListener('click', function() {
   document.getElementById('confirm-modal').classList.add('hidden');
 });
 
-// Modal backdrop click to close
-document.querySelector('.modal-backdrop').addEventListener('click', () => {
+document.querySelector('.modal-backdrop').addEventListener('click', function() {
   document.getElementById('confirm-modal').classList.add('hidden');
 });
 
-// Modal confirm button - removes interest
-document.getElementById('modal-confirm').addEventListener('click', () => {
-  // Send removal to API
-  const payload = {
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    email: profile.email,
-    phone: profile.phone,
-    wantsToJoinParish: profile.wantsToJoinParish || false,
-    ministry: currentMinistry.name,
-    action: 'Removed'
-  };
-  
-  fetch(API_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(err => console.error('API error:', err));
-  
-  // Remove from interests array
-  interests = interests.filter(i => i.ministryId !== currentMinistry.id);
+document.getElementById('modal-confirm').addEventListener('click', function() {
+  var apiUrl = appConfig.apiUrl;
+  if (apiUrl) {
+    var payload = {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      phone: profile.phone,
+      wantsToJoinParish: profile.wantsToJoinParish || false,
+      ministry: currentMinistry.name,
+      action: 'Removed'
+    };
+    fetch(apiUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(err) { console.error('API error:', err); });
+  }
+
+  interests = interests.filter(function(i) { return i.ministryId !== currentMinistry.id; });
   localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
-  
-  // Hide modal
   document.getElementById('confirm-modal').classList.add('hidden');
-  
-  // Go back to ministries list
   currentMinistry = null;
   showMinistriesList();
 });
 
+// Submit interest
 document.getElementById('interest-btn').addEventListener('click', async function() {
-  const btn = this;
-  const originalText = btn.textContent;
-  
+  var btn = this;
+  var originalText = btn.textContent;
+
   try {
     btn.disabled = true;
     btn.textContent = 'Submitting...';
-    
-    // Gather question answers
-    const answers = {};
-    
-    // Handle select and text inputs
-    document.querySelectorAll('#detail-questions [data-qid]:not([data-type="checkbox"])').forEach(el => {
+
+    var answers = {};
+    document.querySelectorAll('#detail-questions [data-qid]:not([data-type="checkbox"])').forEach(function(el) {
       answers[el.dataset.qid] = el.value;
     });
-    
-    // Handle checkbox groups
-    document.querySelectorAll('#detail-questions [data-type="checkbox"]').forEach(group => {
-      const qid = group.dataset.qid;
-      const checked = [];
-      group.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('#detail-questions [data-type="checkbox"]').forEach(function(group) {
+      var qid = group.dataset.qid;
+      var checked = [];
+      group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
         checked.push(cb.value);
       });
       answers[qid] = checked.join(', ');
     });
-    
-    // Build payload
-    const questions = currentMinistry.questions || [];
-    const payload = {
+
+    var questions = currentMinistry.questions || [];
+    var payload = {
       firstName: profile.firstName,
       lastName: profile.lastName,
       email: profile.email,
@@ -999,29 +2363,30 @@ document.getElementById('interest-btn').addEventListener('click', async function
       q2: questions[1] ? answers[questions[1].id] || '' : '',
       q3: questions[2] ? answers[questions[2].id] || '' : ''
     };
-    
-    // Submit to API (don't await - no-cors returns opaque response anyway)
-    fetch(API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error('API error:', err));
-    
-    // Update local state
-    const newInterest = {
+
+    var apiUrl = appConfig.apiUrl;
+    if (apiUrl) {
+      fetch(apiUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function(err) { console.error('API error:', err); });
+    }
+
+    var newInterest = {
       ministryId: currentMinistry.id,
       ministryName: currentMinistry.name,
       answers: answers,
       timestamp: new Date().toISOString()
     };
-    
-    interests = [...interests.filter(i => i.ministryId !== currentMinistry.id), newInterest];
+
+    interests = interests.filter(function(i) { return i.ministryId !== currentMinistry.id; });
+    interests.push(newInterest);
     localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
-    
-    // Show confirmation
+
     showConfirmation();
-    
+
   } catch (error) {
     console.error('Error submitting interest:', error);
     alert('Something went wrong. Please try again.');
@@ -1030,79 +2395,91 @@ document.getElementById('interest-btn').addEventListener('click', async function
   }
 });
 
+// ============================================
+// CONFIRMATION
+// ============================================
 function showConfirmation() {
   if (!currentMinistry) {
-    console.error('No current ministry for confirmation');
     showMinistriesList();
     return;
   }
-  
+
   showView('confirmed');
   document.getElementById('confirmed-ministry').textContent = currentMinistry.name;
-  
-  // Show organizer info if available
-  const organizerDiv = document.getElementById('organizer-info');
+
+  var organizerDiv = document.getElementById('organizer-info');
   if (currentMinistry.organizerName) {
-    let contactHtml = '';
+    var contactHtml = '';
     if (currentMinistry.organizerEmail) {
-      contactHtml += `<a href="mailto:${currentMinistry.organizerEmail}">${currentMinistry.organizerEmail}</a>`;
+      contactHtml += '<a href="mailto:' + currentMinistry.organizerEmail + '">' + currentMinistry.organizerEmail + '</a>';
     }
     if (currentMinistry.organizerPhone) {
-      if (contactHtml) contactHtml += ' · ';
-      const formattedPhone = formatPhoneNumber(currentMinistry.organizerPhone);
-      contactHtml += `<a href="tel:${currentMinistry.organizerPhone}">${formattedPhone}</a>`;
+      if (contactHtml) contactHtml += ' &middot; ';
+      var formattedPhone = formatPhoneNumber(currentMinistry.organizerPhone);
+      contactHtml += '<a href="tel:' + currentMinistry.organizerPhone + '">' + formattedPhone + '</a>';
     }
-    
-    organizerDiv.innerHTML = `
-      <div class="organizer-box">
-        <div class="organizer-title">Ministry Contact</div>
-        <div class="organizer-name">${currentMinistry.organizerName}</div>
-        ${contactHtml ? `<div class="organizer-contact">${contactHtml}</div>` : ''}
-      </div>
-    `;
+
+    organizerDiv.innerHTML =
+      '<div class="organizer-box">' +
+        '<div class="organizer-title">Ministry Contact</div>' +
+        '<div class="organizer-name">' + currentMinistry.organizerName + '</div>' +
+        (contactHtml ? '<div class="organizer-contact">' + contactHtml + '</div>' : '') +
+      '</div>';
   } else {
     organizerDiv.innerHTML = '';
   }
-  
-  // Show all interests
-  const listDiv = document.getElementById('interests-list');
+
+  var listDiv = document.getElementById('interests-list');
   if (interests.length > 0) {
     listDiv.innerHTML = '<h3 class="section-title" style="font-size: 18px;">Your Interests Today</h3>' +
-      interests.map(i => {
-        const m = MINISTRIES.find(min => min.id === i.ministryId);
-        return `
-          <div class="ministry-card" style="cursor: default;">
-            <div class="ministry-icon">${m ? m.icon : '📋'}</div>
-            <div class="ministry-info">
-              <h3 class="ministry-name">${i.ministryName}</h3>
-            </div>
-            <span class="badge">✓</span>
-          </div>
-        `;
+      interests.map(function(i) {
+        var m = MINISTRIES.find(function(min) { return min.id === i.ministryId; });
+        return '<div class="ministry-card" style="cursor: default;">' +
+          '<div class="ministry-icon">' + (m ? m.icon : '&#128203;') + '</div>' +
+          '<div class="ministry-info"><h3 class="ministry-name">' + i.ministryName + '</h3></div>' +
+          '<span class="badge">&#10003;</span></div>';
       }).join('');
   } else {
     listDiv.innerHTML = '';
   }
 }
 
-document.getElementById('explore-btn').addEventListener('click', () => {
+document.getElementById('explore-btn').addEventListener('click', function() {
   currentMinistry = null;
   showMinistriesList();
 });
 
-// Logout button
-document.getElementById('logout-btn').addEventListener('click', () => {
+// Parishioner logout (on ministries view)
+document.getElementById('logout-btn').addEventListener('click', function() {
   if (confirm('Are you sure you want to log out? Your interest selections on this device will be cleared.')) {
     localStorage.removeItem('ministry-fair-profile');
     localStorage.removeItem('ministry-fair-interests');
     profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
     interests = [];
     currentMinistry = null;
+    currentSession = null;
+    saveSession(null);
     showAll = false;
     searchTerm = '';
     showView('register');
   }
 });
+
+// Hash change routing
+window.addEventListener('hashchange', function() {
+  var hash = window.location.hash;
+  if (hash === '#/start') {
+    showView('start');
+    showWizardStep(1);
+  } else if (hash === '#/settings' && currentSession && getUserRole(currentSession.email) === 'admin') {
+    showSettingsView();
+  }
+});
+
+// ============================================
+// BOOT
+// ============================================
+boot();
 </script>
 
 </body>
