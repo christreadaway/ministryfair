@@ -564,8 +564,10 @@ let searchTerm = '';
 
 // Google Sign-In callback
 function handleGoogleSignIn(response) {
-  // Decode the JWT token to get user info
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  // Decode the JWT token to get user info (handle base64url encoding)
+  const base64Url = response.credential.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const payload = JSON.parse(atob(base64));
 
   // Auto-fill the form fields
   document.getElementById('firstName').value = payload.given_name || '';
@@ -686,6 +688,14 @@ async function loadMinistries() {
     MINISTRIES = FALLBACK_MINISTRIES;
   }
   
+  // Remove stale interests referencing deleted ministries
+  const validIds = new Set(MINISTRIES.map(m => m.id));
+  const before = interests.length;
+  interests = interests.filter(i => validIds.has(i.ministryId));
+  if (interests.length < before) {
+    localStorage.setItem('ministry-fair-interests', JSON.stringify(interests));
+  }
+
   // Always initialize the app, even if fetch failed
   initializeApp();
 }

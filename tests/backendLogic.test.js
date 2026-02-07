@@ -405,12 +405,12 @@ describe('doGet - Ministry Data Retrieval', () => {
     expect(parsed.error).toBe('Ministries sheet not found');
   });
 
-  test('BUG: question with only type (no pipe separator) creates empty label', () => {
+  test('question with no pipe treats entire string as label with type "text"', () => {
     mockSpreadsheet.getSheetByName.mockReturnValue({
       getDataRange: jest.fn(() => ({
         getValues: () => [
           ['ID', 'Name', 'Description', 'Icon', 'OrgName', 'OrgEmail', 'OrgPhone', 'Q1', 'Q2', 'Q3'],
-          ['test', 'Test', 'Desc', '📋', '', '', '', 'text', '', ''],
+          ['test', 'Test', 'Desc', '📋', '', '', '', 'What is your availability?', '', ''],
         ],
       })),
     });
@@ -419,10 +419,10 @@ describe('doGet - Ministry Data Retrieval', () => {
     const parsed = JSON.parse(result);
     const q = parsed.ministries[0].questions[0];
     expect(q.type).toBe('text');
-    expect(q.label).toBe(''); // Empty label - renders an empty label in the UI
+    expect(q.label).toBe('What is your availability?');
   });
 
-  test('BUG: question with pipe but no type defaults to empty type, not "text"', () => {
+  test('question with pipe but no type defaults type to "text"', () => {
     mockSpreadsheet.getSheetByName.mockReturnValue({
       getDataRange: jest.fn(() => ({
         getValues: () => [
@@ -435,7 +435,6 @@ describe('doGet - Ministry Data Retrieval', () => {
     const result = doGet({});
     const parsed = JSON.parse(result);
     const q = parsed.ministries[0].questions[0];
-    // parts[0] is '' which is falsy, so type defaults to 'text' via || 'text'
     expect(q.type).toBe('text');
     expect(q.label).toBe('Some question');
   });

@@ -101,8 +101,8 @@ function doGet(e) {
           const parts = questionData.split('|');
           const question = {
             id: 'q' + (q + 1),
-            type: parts[0] || 'text',
-            label: parts[1] || '',
+            type: parts.length > 1 ? (parts[0] || 'text') : 'text',
+            label: parts.length > 1 ? (parts[1] || '') : parts[0],
             options: parts[2] ? parts[2].split(',').map(s => s.trim()) : []
           };
           ministry.questions.push(question);

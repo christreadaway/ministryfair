@@ -378,14 +378,22 @@ describe('Interest with Question Answers', () => {
   });
 });
 
-describe('Interests with Stale Ministry Data', () => {
-  test('BUG: interest referencing deleted ministry shows fallback icon in confirmation', async () => {
-    const staleInterests = [{
-      ministryId: 'deleted-ministry',
-      ministryName: 'Deleted Ministry',
-      answers: {},
-      timestamp: '2026-01-15T10:00:00.000Z',
-    }];
+describe('Stale Interest Cleanup', () => {
+  test('interests referencing deleted ministries are removed on load', async () => {
+    const staleInterests = [
+      {
+        ministryId: 'deleted-ministry',
+        ministryName: 'Deleted Ministry',
+        answers: {},
+        timestamp: '2026-01-15T10:00:00.000Z',
+      },
+      {
+        ministryId: 'music',
+        ministryName: 'Music Ministry',
+        answers: {},
+        timestamp: '2026-01-15T10:00:00.000Z',
+      },
+    ];
 
     const dom = createTestDom({
       localStorage: {
@@ -397,24 +405,14 @@ describe('Interests with Stale Ministry Data', () => {
     await waitForApp();
 
     const w = dom.window;
-    // Verify stale interest was loaded
+    // Stale interest for deleted ministry should be cleaned up; valid one kept
     expect(w._app.interests.length).toBe(1);
-    expect(w._app.interests[0].ministryId).toBe('deleted-ministry');
+    expect(w._app.interests[0].ministryId).toBe('music');
 
-    w._app.currentMinistry = w._app.MINISTRIES.find(m => m.id === 'youth');
-    w._app.showMinistryDetail(w._app.currentMinistry);
-
-    dom.window.document.getElementById('interest-btn').click();
-    await waitForApp(100);
-
-    // After adding youth, should have 2 interests total
-    expect(w._app.interests.length).toBe(2);
-
-    // The confirmation view should show both interests
-    // For the stale ministry, MINISTRIES.find() returns undefined so icon fallbacks to '📋'
-    const interestsList = dom.window.document.getElementById('interests-list');
-    const cards = interestsList.querySelectorAll('.ministry-card');
-    expect(cards.length).toBe(2);
+    // localStorage should also be updated
+    const stored = JSON.parse(dom.window.localStorage.getItem('ministry-fair-interests'));
+    expect(stored.length).toBe(1);
+    expect(stored[0].ministryId).toBe('music');
   });
 });
 
