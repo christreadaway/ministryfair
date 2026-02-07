@@ -2574,8 +2574,38 @@ document.getElementById('setup-api-key').addEventListener('change', function() {
 // ============================================
 
 // Admin sign-in (during /start wizard)
+function getSiteRootDomain() {
+  var host = window.location.hostname.toLowerCase();
+  // Strip common subdomains (ministry., www., app.) to get root domain
+  var parts = host.split('.');
+  // For something like ministry.st-theresa.org → st-theresa.org
+  // For localhost or IP, return as-is
+  if (parts.length > 2) {
+    return parts.slice(-2).join('.');
+  }
+  return host;
+}
+
 function handleAdminSignIn(response) {
   var payload = decodeJwt(response.credential);
+
+  // Verify the Google Sign-In email domain matches the site domain
+  var emailDomain = getDomain(payload.email || '');
+  var siteDomain = getSiteRootDomain();
+  // Allow localhost/netlify dev domains to bypass check
+  var isDevDomain = siteDomain === 'localhost' || siteDomain.endsWith('.netlify.app');
+  if (!isDevDomain && emailDomain !== siteDomain) {
+    document.getElementById('admin-signed-in').classList.remove('hidden');
+    document.getElementById('admin-signed-in').innerHTML =
+      '<div class="connection-status error" style="margin-top:12px;">' +
+      '&#10007; <strong>Domain mismatch.</strong> Your Google account (<strong>' + emailDomain + '</strong>) ' +
+      'doesn\'t match this site (<strong>' + siteDomain + '</strong>). ' +
+      'Sign in with your <strong>@' + siteDomain + '</strong> Google account to set up as admin.' +
+      '</div>';
+    document.getElementById('step1-next').disabled = true;
+    return;
+  }
+
   setupAdminData = {
     email: payload.email || '',
     firstName: payload.given_name || '',
