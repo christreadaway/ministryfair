@@ -707,6 +707,156 @@
       line-height: 1.5;
       font-family: 'Inter', sans-serif;
     }
+    /* File upload area */
+    .upload-area {
+      border: 2px dashed #d0d0d0;
+      border-radius: 14px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #faf8f5;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #8B2635;
+      background: #fef7f8;
+    }
+    .upload-area-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    .upload-area-text {
+      font-size: 15px;
+      color: #555;
+      font-family: 'Inter', sans-serif;
+    }
+    .upload-area-hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+    .upload-area input[type="file"] {
+      display: none;
+    }
+    .upload-filename {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #f0f9f4;
+      border: 1px solid #b7e4c7;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: #2d6a4f;
+    }
+    .upload-filename .remove-file {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #c53030;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    /* AI analysis states */
+    .analysis-progress {
+      text-align: center;
+      padding: 24px;
+    }
+    .analysis-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #e8e4de;
+      border-top-color: #8B2635;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .analysis-status-text {
+      font-size: 14px;
+      color: #666;
+      font-family: 'Inter', sans-serif;
+    }
+    /* Mapping results */
+    .mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+    .mapping-table th {
+      text-align: left;
+      padding: 10px 8px;
+      background: #f5f0e8;
+      font-weight: 600;
+      color: #555;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mapping-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #f0ebe3;
+      color: #333;
+    }
+    .mapping-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .mapping-status.mapped {
+      background: #f0f9f4;
+      color: #2d6a4f;
+    }
+    .mapping-status.missing {
+      background: #fff5f5;
+      color: #c53030;
+    }
+    .mapping-status.optional {
+      background: #fefce8;
+      color: #92400e;
+    }
+    .mapping-summary {
+      padding: 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+    }
+    .mapping-summary.good {
+      background: #f0f9f4;
+      border: 1px solid #b7e4c7;
+      color: #2d6a4f;
+    }
+    .mapping-summary.warn {
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .mapping-summary h4 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+    .mapping-summary ul {
+      margin-top: 8px;
+      padding-left: 18px;
+      line-height: 1.8;
+    }
+    .data-preview-scroll {
+      overflow-x: auto;
+      margin: 12px 0;
+      border-radius: 8px;
+    }
     .connection-status {
       display: flex;
       align-items: center;
@@ -1031,6 +1181,16 @@
             <div class="signed-in-check">&#10003;</div>
           </div>
         </div>
+        <div class="form" style="margin-top: 24px;">
+          <div class="input-group">
+            <label class="label">Claude API Key</label>
+            <input type="password" class="input" id="setup-api-key" placeholder="sk-ant-api03-...">
+            <p style="font-size: 12px; color: #888; margin-top: 4px; font-family: 'Inter', sans-serif;">
+              Used to intelligently read your spreadsheet and power notifications.
+              Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: #8B2635;">console.anthropic.com</a>
+            </p>
+          </div>
+        </div>
         <div class="wizard-nav">
           <button class="btn" id="step1-next" disabled>Next &rarr;</button>
         </div>
@@ -1071,77 +1231,76 @@
       </div>
     </div>
 
-    <!-- STEP 3: Connect Spreadsheet -->
+    <!-- STEP 3: Upload & Analyze Spreadsheet -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
-        <h2 class="section-title">Set Up Your Ministry Sheet</h2>
+        <h2 class="section-title">Upload Your Ministry List</h2>
         <p class="welcome-text">
-          Your ministries live in a Google Sheet. Download our template, fill in your ministries, and connect it to the app.
+          Upload a spreadsheet with your ministries. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
         </p>
 
-        <button class="btn-download" id="download-template-btn">&#128196; Download Ministry Template (.csv)</button>
-
-        <p style="font-size: 13px; color: #888; text-align: center; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
-          Preview of the template format:
-        </p>
-        <div class="sheet-scroll">
-          <table class="sheet-preview">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Icon</th>
-                <th>Organizer Name</th>
-                <th>Organizer Email</th>
-                <th>Organizer Phone</th>
-                <th>Question 1</th>
-                <th>Question 2</th>
-                <th>Question 3</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>music</td>
-                <td>Music Ministry</td>
-                <td>Supports parish liturgies...</td>
-                <td>&#127925;</td>
-                <td>Jane Smith</td>
-                <td>jane@parish.org</td>
-                <td>5125551234</td>
-                <td>select|Voice part?|Soprano,Alto,Tenor,Bass</td>
-                <td>text|Instrument?</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>hospitality</td>
-                <td>Hospitality</td>
-                <td>Welcomes parishioners...</td>
-                <td>&#128682;</td>
-                <td>John Doe</td>
-                <td>john@parish.org</td>
-                <td>5125555678</td>
-                <td>checkbox|Mass times?|Sat 5pm,Sun 9am,Sun 11am</td>
-                <td></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Upload area -->
+        <div id="upload-area" class="upload-area">
+          <div class="upload-area-icon">&#128203;</div>
+          <div class="upload-area-text">Drop your file here, or click to browse</div>
+          <div class="upload-area-hint">CSV, Excel, or any spreadsheet format</div>
+          <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
+        </div>
+        <div id="upload-filename" class="upload-filename hidden">
+          <span>&#128196;</span>
+          <span id="filename-text"></span>
+          <button class="remove-file" id="remove-file-btn">&times;</button>
         </div>
 
+        <!-- AI analysis area (hidden until file uploaded) -->
+        <div id="analysis-section" class="hidden">
+          <!-- Progress spinner -->
+          <div id="analysis-progress" class="analysis-progress hidden">
+            <div class="analysis-spinner"></div>
+            <div class="analysis-status-text">Reading your spreadsheet with AI...</div>
+          </div>
+
+          <!-- Mapping results -->
+          <div id="mapping-results" class="hidden">
+            <div id="mapping-summary-box"></div>
+            <table class="mapping-table" id="mapping-table">
+              <thead>
+                <tr>
+                  <th>Our Field</th>
+                  <th>Your Column</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="mapping-table-body"></tbody>
+            </table>
+
+            <div id="mapping-suggestions"></div>
+
+            <p style="font-size: 14px; font-weight: 600; color: #333; margin-top: 20px; font-family: 'Inter', sans-serif;">
+              Preview (first 3 rows):
+            </p>
+            <div class="data-preview-scroll">
+              <table class="sheet-preview" id="data-preview-table"></table>
+            </div>
+
+            <button class="btn-download" id="download-formatted-btn" style="margin-top: 16px;">&#128196; Download Formatted Sheet (.csv)</button>
+          </div>
+        </div>
+
+        <!-- Connect section (shown after analysis or if skipping upload) -->
         <div style="margin-top: 24px;">
           <div class="setup-step">
             <span class="step-number">1</span>
             <div class="setup-step-content">
-              <div class="setup-step-title">Download &amp; fill in the template</div>
-              <div class="setup-step-desc">Open the CSV in Google Sheets (File &rarr; Import), or create a new Sheet and paste. Add a row for each ministry.</div>
+              <div class="setup-step-title">Import into Google Sheets</div>
+              <div class="setup-step-desc">Create a new Google Sheet. If you downloaded the formatted file above, use File &rarr; Import to bring it in. Otherwise, paste your ministry data directly.</div>
             </div>
           </div>
           <div class="setup-step">
             <span class="step-number">2</span>
             <div class="setup-step-content">
               <div class="setup-step-title">Add the backend script</div>
-              <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code and paste the contents of <strong>google-apps-script.js</strong> (included with this app). Click Save.</div>
+              <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code, paste the contents of <strong>google-apps-script.js</strong> (included with this app), and click Save.</div>
             </div>
           </div>
           <div class="setup-step">
@@ -1149,13 +1308,6 @@
             <div class="setup-step-content">
               <div class="setup-step-title">Deploy as a Web App</div>
               <div class="setup-step-desc">In Apps Script, click <strong>Deploy &rarr; New deployment</strong>. Set type to "Web app", execute as "Me", access "Anyone". Click Deploy and copy the URL.</div>
-            </div>
-          </div>
-          <div class="setup-step">
-            <span class="step-number">4</span>
-            <div class="setup-step-content">
-              <div class="setup-step-title">Paste your URLs below</div>
-              <div class="setup-step-desc">Paste your Google Sheet URL and the Apps Script deployment URL so the app can read your ministries and receive signups.</div>
             </div>
           </div>
         </div>
@@ -1273,6 +1425,13 @@
             <div class="settings-item-left">
               <div class="settings-item-label">Google Sheet</div>
               <div class="settings-item-desc" id="settings-sheet-status">Not set</div>
+            </div>
+            <span class="settings-item-arrow">&rsaquo;</span>
+          </div>
+          <div class="settings-item" id="settings-claude-key-item">
+            <div class="settings-item-left">
+              <div class="settings-item-label">Claude API Key</div>
+              <div class="settings-item-desc" id="settings-claude-key-status">Not set</div>
             </div>
             <span class="settings-item-arrow">&rsaquo;</span>
           </div>
@@ -1470,6 +1629,7 @@ const DEFAULT_CONFIG = {
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
+  claudeApiKey: '',
   setupComplete: false
 };
 
@@ -1857,43 +2017,368 @@ function updateHeaderPreview() {
   document.getElementById('preview-tagline').textContent = tagline;
 }
 
-// Step 3: Download ministry template CSV
-document.getElementById('download-template-btn').addEventListener('click', function() {
-  var headers = ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3'];
-  var rows = [
-    ['music', 'Music Ministry', 'Supports parish liturgies through choirs, cantors, and instrumentalists.', '🎵', 'Jane Smith', 'jane@parish.org', '5125551234', 'select|Voice part (if known)?|Not sure,Soprano,Alto,Tenor,Bass', 'text|Do you play an instrument? Which one(s)?', ''],
-    ['hospitality', 'Hospitality Ministers', 'Welcomes parishioners and assists during Masses and parish events.', '🚪', 'John Doe', 'john@parish.org', '5125555678', 'checkbox|Which Mass times work for you?|Saturday 5pm,Sunday 9am,Sunday 11am', '', ''],
-    ['youth', 'Youth Ministry', 'Faith formation and fellowship for middle and high school students.', '🌟', '', '', '', '', '', ''],
-    ['lectors', 'Lectors', 'Proclaims the Word of God at Mass.', '📖', '', '', '', 'select|Which Mass do you typically attend?|Saturday 5pm,Sunday 9am,Sunday 11am', '', ''],
-    ['svdp', 'St. Vincent de Paul Society', 'Assists individuals and families in need through direct support and resources.', '💚', '', '', '', '', '', ''],
-  ];
+// ============================================
+// STEP 3: FILE UPLOAD + AI SPREADSHEET ANALYSIS
+// ============================================
+
+var uploadedFileData = null; // { headers: [], rows: [] }
+var aiMappingResult = null;  // result from Claude
+
+// CSV Parser - handles quoted fields, commas in values, newlines in quotes
+function parseCSV(text) {
+  var rows = [];
+  var row = [];
+  var field = '';
+  var inQuotes = false;
+  var i = 0;
+
+  while (i < text.length) {
+    var ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+        } else {
+          inQuotes = false;
+          i++;
+        }
+      } else {
+        field += ch;
+        i++;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+      } else if (ch === ',') {
+        row.push(field.trim());
+        field = '';
+        i++;
+      } else if (ch === '\n' || (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n')) {
+        row.push(field.trim());
+        if (row.some(function(c) { return c !== ''; })) rows.push(row);
+        row = [];
+        field = '';
+        i += (ch === '\r') ? 2 : 1;
+      } else if (ch === '\r') {
+        row.push(field.trim());
+        if (row.some(function(c) { return c !== ''; })) rows.push(row);
+        row = [];
+        field = '';
+        i++;
+      } else {
+        field += ch;
+        i++;
+      }
+    }
+  }
+  // Last field
+  row.push(field.trim());
+  if (row.some(function(c) { return c !== ''; })) rows.push(row);
+
+  return rows;
+}
+
+// Tab-separated parser
+function parseTSV(text) {
+  return text.split(/\r?\n/).filter(function(line) { return line.trim(); }).map(function(line) {
+    return line.split('\t').map(function(c) { return c.trim(); });
+  });
+}
+
+// File upload - drag & drop and click
+(function() {
+  var area = document.getElementById('upload-area');
+  var fileInput = document.getElementById('file-input');
+
+  area.addEventListener('click', function() { fileInput.click(); });
+
+  area.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    area.classList.add('dragover');
+  });
+  area.addEventListener('dragleave', function() {
+    area.classList.remove('dragover');
+  });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault();
+    area.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
+  });
+
+  document.getElementById('remove-file-btn').addEventListener('click', function() {
+    uploadedFileData = null;
+    aiMappingResult = null;
+    fileInput.value = '';
+    document.getElementById('upload-area').classList.remove('hidden');
+    document.getElementById('upload-filename').classList.add('hidden');
+    document.getElementById('analysis-section').classList.add('hidden');
+    document.getElementById('mapping-results').classList.add('hidden');
+  });
+})();
+
+function handleFile(file) {
+  document.getElementById('upload-area').classList.add('hidden');
+  document.getElementById('upload-filename').classList.remove('hidden');
+  document.getElementById('filename-text').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+  document.getElementById('analysis-section').classList.remove('hidden');
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    var parsed;
+
+    // Detect format
+    if (file.name.endsWith('.tsv') || file.name.endsWith('.txt')) {
+      parsed = parseTSV(text);
+    } else {
+      // Try CSV first; if first row has only 1 column but has tabs, try TSV
+      parsed = parseCSV(text);
+      if (parsed.length > 0 && parsed[0].length === 1 && parsed[0][0].includes('\t')) {
+        parsed = parseTSV(text);
+      }
+    }
+
+    if (parsed.length < 2) {
+      document.getElementById('analysis-progress').classList.add('hidden');
+      document.getElementById('mapping-results').classList.remove('hidden');
+      document.getElementById('mapping-summary-box').innerHTML =
+        '<div class="mapping-summary warn"><h4>Not enough data</h4><p>The file needs at least a header row and one data row.</p></div>';
+      return;
+    }
+
+    uploadedFileData = {
+      headers: parsed[0],
+      rows: parsed.slice(1)
+    };
+
+    analyzeWithAI(uploadedFileData);
+  };
+  reader.readAsText(file);
+}
+
+// Call Claude API to analyze the spreadsheet
+async function analyzeWithAI(data) {
+  var apiKey = document.getElementById('setup-api-key').value.trim();
+  var progress = document.getElementById('analysis-progress');
+  var results = document.getElementById('mapping-results');
+
+  progress.classList.remove('hidden');
+  results.classList.add('hidden');
+
+  if (!apiKey) {
+    progress.classList.add('hidden');
+    results.classList.remove('hidden');
+    document.getElementById('mapping-summary-box').innerHTML =
+      '<div class="mapping-summary warn"><h4>No API key provided</h4>' +
+      '<p>Go back to Step 1 and enter your Claude API key to enable AI-powered spreadsheet analysis.</p></div>';
+    return;
+  }
+
+  // Build sample data for the prompt (headers + first 5 rows max)
+  var sampleRows = data.rows.slice(0, 5);
+  var sampleText = 'HEADERS: ' + JSON.stringify(data.headers) + '\n\nSAMPLE ROWS:\n';
+  sampleRows.forEach(function(row, i) {
+    sampleText += 'Row ' + (i + 1) + ': ' + JSON.stringify(row) + '\n';
+  });
+
+  var prompt = 'I have a spreadsheet with ministry/group data from a church or parish. I need to map the columns to this schema:\n\n' +
+    'REQUIRED FIELDS:\n' +
+    '- name: The ministry or group name (REQUIRED)\n' +
+    '- description: What the ministry does\n\n' +
+    'OPTIONAL FIELDS:\n' +
+    '- id: A short slug/identifier (if not present, we can generate from name)\n' +
+    '- icon: An emoji representing the ministry\n' +
+    '- organizerName: Contact person name\n' +
+    '- organizerEmail: Contact person email\n' +
+    '- organizerPhone: Contact person phone\n' +
+    '- question1, question2, question3: Questions to ask people who sign up (in format: type|label|options where type is text/select/checkbox)\n\n' +
+    'Here is the spreadsheet data:\n\n' + sampleText + '\n\n' +
+    'Analyze the headers and data. Return a JSON object with:\n' +
+    '1. "mapping": An object where each key is one of my schema fields (name, description, id, icon, organizerName, organizerEmail, organizerPhone, question1, question2, question3) and the value is the 0-based column index that best matches it, or -1 if no column matches.\n' +
+    '2. "confidence": "high", "medium", or "low" - overall confidence in the mapping.\n' +
+    '3. "found": Number of fields that were successfully mapped.\n' +
+    '4. "missing": Array of field names that could not be mapped.\n' +
+    '5. "suggestions": Array of human-readable suggestions for improving the data (e.g., "Add a Description column to explain what each ministry does"). Keep this to genuinely useful suggestions only.\n' +
+    '6. "columnNotes": Object mapping column index to a note about what we think that column contains (for columns that DO map to something).\n\n' +
+    'IMPORTANT: Return ONLY the JSON object, no markdown formatting, no explanation outside the JSON.';
+
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      var errBody = await response.text();
+      throw new Error('API error ' + response.status + ': ' + errBody);
+    }
+
+    var result = await response.json();
+    var text = result.content[0].text;
+
+    // Parse JSON from response (strip any accidental markdown fencing)
+    text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    aiMappingResult = JSON.parse(text);
+
+    progress.classList.add('hidden');
+    results.classList.remove('hidden');
+    renderMappingResults(aiMappingResult, data);
+
+  } catch(err) {
+    progress.classList.add('hidden');
+    results.classList.remove('hidden');
+    document.getElementById('mapping-summary-box').innerHTML =
+      '<div class="mapping-summary warn"><h4>Analysis error</h4>' +
+      '<p>' + err.message + '</p>' +
+      '<p style="margin-top:8px;">Check that your API key is correct and try again.</p></div>';
+  }
+}
+
+// Render AI mapping results
+function renderMappingResults(mapping, data) {
+  var FIELD_LABELS = {
+    name: { label: 'Ministry Name', required: true },
+    description: { label: 'Description', required: false },
+    id: { label: 'ID / Slug', required: false },
+    icon: { label: 'Icon (emoji)', required: false },
+    organizerName: { label: 'Organizer Name', required: false },
+    organizerEmail: { label: 'Organizer Email', required: false },
+    organizerPhone: { label: 'Organizer Phone', required: false },
+    question1: { label: 'Question 1', required: false },
+    question2: { label: 'Question 2', required: false },
+    question3: { label: 'Question 3', required: false }
+  };
+
+  // Summary box
+  var summaryClass = mapping.confidence === 'high' ? 'good' : 'warn';
+  var summaryIcon = mapping.confidence === 'high' ? '&#10003;' : '&#9888;';
+  var summaryText = 'Mapped ' + mapping.found + ' of 10 fields from your spreadsheet (' + data.rows.length + ' ministries found).';
+  document.getElementById('mapping-summary-box').innerHTML =
+    '<div class="mapping-summary ' + summaryClass + '">' +
+    '<h4>' + summaryIcon + ' ' + summaryText + '</h4></div>';
+
+  // Mapping table
+  var tbody = document.getElementById('mapping-table-body');
+  var fields = Object.keys(FIELD_LABELS);
+  tbody.innerHTML = fields.map(function(field) {
+    var info = FIELD_LABELS[field];
+    var colIdx = mapping.mapping[field];
+    var isMapped = colIdx !== undefined && colIdx >= 0 && colIdx < data.headers.length;
+    var yourCol = isMapped ? data.headers[colIdx] : '&mdash;';
+    var statusClass = isMapped ? 'mapped' : (info.required ? 'missing' : 'optional');
+    var statusText = isMapped ? '&#10003; Mapped' : (info.required ? '&#10007; Missing' : 'Not found');
+    var note = (mapping.columnNotes && mapping.columnNotes[String(colIdx)]) ? ' <span style="color:#888;font-size:11px;">(' + mapping.columnNotes[String(colIdx)] + ')</span>' : '';
+
+    return '<tr>' +
+      '<td>' + info.label + (info.required ? ' <span style="color:#c53030;">*</span>' : '') + '</td>' +
+      '<td>' + yourCol + note + '</td>' +
+      '<td><span class="mapping-status ' + statusClass + '">' + statusText + '</span></td>' +
+      '</tr>';
+  }).join('');
+
+  // Suggestions
+  var suggestionsDiv = document.getElementById('mapping-suggestions');
+  if (mapping.suggestions && mapping.suggestions.length > 0) {
+    suggestionsDiv.innerHTML =
+      '<div class="mapping-summary warn" style="margin-top: 12px;">' +
+      '<h4>Suggestions</h4><ul>' +
+      mapping.suggestions.map(function(s) { return '<li>' + s + '</li>'; }).join('') +
+      '</ul></div>';
+  } else {
+    suggestionsDiv.innerHTML = '';
+  }
+
+  // Data preview (first 3 rows mapped to our fields)
+  renderDataPreview(mapping, data);
+}
+
+function renderDataPreview(mapping, data) {
+  var table = document.getElementById('data-preview-table');
+  var ourHeaders = ['ID', 'Name', 'Description', 'Icon', 'Organizer', 'Email', 'Phone'];
+  var fieldKeys = ['id', 'name', 'description', 'icon', 'organizerName', 'organizerEmail', 'organizerPhone'];
+
+  var thead = '<thead><tr>' + ourHeaders.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead>';
+
+  var previewRows = data.rows.slice(0, 3);
+  var tbody = '<tbody>' + previewRows.map(function(row) {
+    return '<tr>' + fieldKeys.map(function(key) {
+      var idx = mapping.mapping[key];
+      if (idx === undefined || idx < 0 || idx >= row.length) return '<td style="color:#ccc;">-</td>';
+      var val = row[idx] || '';
+      if (val.length > 30) val = val.substring(0, 30) + '...';
+      return '<td>' + val + '</td>';
+    }).join('') + '</tr>';
+  }).join('') + '</tbody>';
+
+  table.innerHTML = thead + tbody;
+}
+
+// Download formatted CSV using the AI mapping
+document.getElementById('download-formatted-btn').addEventListener('click', function() {
+  if (!uploadedFileData || !aiMappingResult) return;
+
+  var outHeaders = ['ID', 'Name', 'Description', 'Icon', 'Organizer Name', 'Organizer Email', 'Organizer Phone', 'Question 1', 'Question 2', 'Question 3'];
+  var fieldKeys = ['id', 'name', 'description', 'icon', 'organizerName', 'organizerEmail', 'organizerPhone', 'question1', 'question2', 'question3'];
+  var m = aiMappingResult.mapping;
 
   function csvEscape(val) {
-    val = String(val);
+    val = String(val || '');
     if (val.includes(',') || val.includes('"') || val.includes('\n')) {
       return '"' + val.replace(/"/g, '""') + '"';
     }
     return val;
   }
 
-  var csv = '\uFEFF'; // BOM for Excel UTF-8 compat
-  csv += headers.map(csvEscape).join(',') + '\n';
-  rows.forEach(function(row) {
-    csv += row.map(csvEscape).join(',') + '\n';
+  function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  var csv = '\uFEFF'; // BOM
+  csv += outHeaders.map(csvEscape).join(',') + '\n';
+
+  uploadedFileData.rows.forEach(function(row) {
+    var outRow = fieldKeys.map(function(key) {
+      var idx = m[key];
+      if (idx === undefined || idx < 0 || idx >= row.length) {
+        // Auto-generate ID from name if missing
+        if (key === 'id' && m.name >= 0 && m.name < row.length) {
+          return slugify(row[m.name] || '');
+        }
+        return '';
+      }
+      return row[idx] || '';
+    });
+    csv += outRow.map(csvEscape).join(',') + '\n';
   });
 
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'ministry-fair-template.csv';
+  a.download = 'ministries-formatted.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
 
-// Step 3: Test connection
+// Test connection
 document.getElementById('test-connection-btn').addEventListener('click', async function() {
   var url = document.getElementById('setup-api-url').value.trim();
   var statusDiv = document.getElementById('connection-status');
@@ -2029,6 +2514,7 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  appConfig.claudeApiKey = document.getElementById('setup-api-key').value || '';
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
 
@@ -2070,6 +2556,7 @@ function showSettingsView() {
   // API/sheet status
   document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
   document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
+  document.getElementById('settings-claude-key-status').textContent = appConfig.claudeApiKey ? 'Configured (sk-....' + appConfig.claudeApiKey.slice(-4) + ')' : 'Not set';
 
   // User info
   if (currentSession) {
