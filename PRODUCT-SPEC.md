@@ -89,8 +89,8 @@ This app digitizes the signup process, allowing parishioners to register once an
 | Logout | Clears local data to start fresh (useful for shared devices) |
 | Deep linking | QR codes can link directly to a specific ministry via `?m=` parameter |
 | Audit trail | All signups AND removals logged with timestamps |
-| Manual entry | Admin tab to enter signups from physical paper sign-up sheets |
-| Follow-up questionnaires | Ministry leads configure custom follow-up questions with shareable links |
+| Manual entry | Upload CSV/photo for AI-parsed bulk entry, or manual single-entry fallback |
+| Follow-up questionnaires | Ministry leads configure up to 3 questions per round with shareable links |
 | Browser navigation | Back/forward buttons work within the app using History API |
 
 ---
@@ -145,7 +145,10 @@ This app digitizes the signup process, allowing parishioners to register once an
 |-------|------|---------|
 | Ministry ID | Text | music |
 | Ministry Name | Text | Music Ministry |
-| Q1-Q10 | Text | select\|Day availability\|Mon,Tue,Wed,Thu,Fri |
+| Round | Number | 1 |
+| Q1-Q3 | Text | select\|Day availability\|Mon,Tue,Wed,Thu,Fri |
+
+*One row per round per ministry. Max 3 questions per round.*
 
 **To Google Sheet (Follow-Up Responses tab):**
 
@@ -158,7 +161,8 @@ This app digitizes the signup process, allowing parishioners to register once an
 | Email | Email | maria@email.com |
 | Phone | Phone | (512) 555-1234 |
 | Ministry | Text | Music Ministry |
-| Q1-Q10 | Text | Monday, Wednesday |
+| Round | Number | 1 |
+| Q1-Q3 | Text | Monday, Wednesday |
 
 ---
 
@@ -205,18 +209,25 @@ This app digitizes the signup process, allowing parishioners to register once an
 
 ### Follow-Up Questionnaires
 - URL parameter `?followup=ministry-id` opens a standalone follow-up form
-- Ministry leads (or admins) configure up to 10 custom questions per ministry
+- Optional `&round=2` parameter selects which round of questions to show
+- Ministry leads (or admins) configure up to 3 questions per round
+- Multiple rounds supported: each round gets its own shareable link
+- Limit of 3 easy-to-answer questions per round (learned best practice)
 - Questions support text, dropdown, and checkbox types (same format as qualifying questions)
-- Responses saved to dedicated "Follow-Up Responses" sheet
+- Responses saved to dedicated "Follow-Up Responses" sheet with round number
 - Follow-up form does not require prior registration (standalone)
 - Pre-fills contact info from saved profile if available
 - Designed for post-fair outreach: availability, preferences, scheduling, etc.
 
 ### Manual Entry (Physical Signup Sheets)
-- Admins can enter signups from paper sheets via the "Manual Entry" tab
-- Same data captured as digital signups: name, email, phone, ministry, questions
-- Recorded with action type "Manual Entry" for audit trail distinction
-- New parishioner flag respected (triggers New Parishioners sheet entry)
+- **Upload mode** (primary): Upload CSV or photo (JPG/PNG/PDF) of paper sheets
+- CSV files are parsed client-side with automatic column mapping
+- Image files are sent to Claude Vision API for AI extraction of names, emails, phones
+- Parsed entries shown in editable review table before bulk submission
+- Default ministry can be pre-selected for files without ministry column
+- **Manual mode** (fallback): Single-entry form for one-off additions
+- All entries recorded with action type "Manual Entry" for audit trail
+- New parishioner flag respected in manual mode (triggers New Parishioners sheet entry)
 
 ### Browser Navigation
 - All view transitions push state to browser history

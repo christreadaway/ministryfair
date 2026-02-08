@@ -31,6 +31,9 @@ function doPost(e) {
     if (action === 'check-api-key') {
       return handleCheckApiKey();
     }
+    if (action === 'ai-parse-signups') {
+      return handleAiParseSignups(data);
+    }
 
     // ── Follow-up response submission ───────────
     if (action === 'submitFollowupResponse') {
@@ -502,11 +505,11 @@ function handleGetAdmins(ss, email) {
 // ============================================
 
 function getFollowupQuestionsHeaders() {
-  return ['Ministry ID', 'Ministry Name', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'];
+  return ['Ministry ID', 'Ministry Name', 'Round', 'Q1', 'Q2', 'Q3'];
 }
 
 function getFollowupResponsesHeaders() {
-  return ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'Ministry', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10'];
+  return ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'Ministry', 'Round', 'Q1', 'Q2', 'Q3'];
 }
 
 /**
@@ -515,29 +518,43 @@ function getFollowupResponsesHeaders() {
  */
 function handleGetFollowupQuestions(ss, ministryId) {
   if (!ministryId) {
-    return jsonResponse({ questions: [] });
+    return jsonResponse({ rounds: [] });
   }
 
   const sheet = ss.getSheetByName(FOLLOWUP_QUESTIONS_SHEET_NAME);
   if (!sheet) {
-    return jsonResponse({ questions: [] });
+    return jsonResponse({ rounds: [] });
   }
 
   const data = sheet.getDataRange().getValues();
+  // Collect all rounds for this ministry, sorted by round number
+  const roundsMap = {};
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === ministryId) {
-      // Columns C-L (indices 2-11) contain Q1-Q10
+      const roundNum = parseInt(data[i][2]) || 1;
       const questions = [];
-      for (let q = 2; q <= 11; q++) {
+      // Columns D-F (indices 3-5) contain Q1-Q3
+      for (let q = 3; q <= 5; q++) {
         if (data[i][q]) {
           questions.push(data[i][q].toString());
         }
       }
-      return jsonResponse({ questions: questions });
+      roundsMap[roundNum] = questions;
     }
   }
 
-  return jsonResponse({ questions: [] });
+  // Convert to ordered array
+  const rounds = [];
+  const roundNums = Object.keys(roundsMap).map(Number).sort();
+  roundNums.forEach(function(num) {
+    // Ensure rounds array is filled up to this index
+    while (rounds.length < num) {
+      rounds.push([]);
+    }
+    rounds[num - 1] = roundsMap[num];
+  });
+
+  return jsonResponse({ rounds: rounds });
 }
 
 /**
@@ -573,9 +590,8 @@ function handleGetFollowupResponses(ss, email, ministryId) {
     if (ministryId && row[6] !== ministryId) continue;
     responses.push({
       date: row[0], time: row[1], firstName: row[2], lastName: row[3],
-      email: row[4], phone: row[5], ministry: row[6],
-      q1: row[7], q2: row[8], q3: row[9], q4: row[10], q5: row[11],
-      q6: row[12], q7: row[13], q8: row[14], q9: row[15], q10: row[16]
+      email: row[4], phone: row[5], ministry: row[6], round: row[7],
+      q1: row[8], q2: row[9], q3: row[10]
     });
   }
 
@@ -592,7 +608,7 @@ function saveFollowupQuestions(ss, data) {
     return jsonResponse({ success: false, error: 'Ministry ID required' });
   }
 
-  const questions = data.questions || [];
+  const rounds = data.rounds || [];
   const sheet = getOrCreateSheet(ss, FOLLOWUP_QUESTIONS_SHEET_NAME, getFollowupQuestionsHeaders());
 
   // Find ministry name from Ministries sheet
@@ -608,27 +624,25 @@ function saveFollowupQuestions(ss, data) {
     }
   }
 
-  // Build the row: Ministry ID, Ministry Name, Q1-Q10
-  const row = [ministryId, ministryName];
-  for (let i = 0; i < 10; i++) {
-    row.push(questions[i] || '');
-  }
-
-  // Check if row already exists for this ministry
+  // Delete all existing rows for this ministry
   const existingData = sheet.getDataRange().getValues();
-  let rowIndex = -1;
-  for (let i = 1; i < existingData.length; i++) {
+  const rowsToDelete = [];
+  for (let i = existingData.length - 1; i >= 1; i--) {
     if (existingData[i][0] === ministryId) {
-      rowIndex = i + 1; // 1-indexed
-      break;
+      rowsToDelete.push(i + 1); // 1-indexed
     }
   }
+  rowsToDelete.forEach(function(r) { sheet.deleteRow(r); });
 
-  if (rowIndex > 0) {
-    sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
-  } else {
+  // Insert one row per round: Ministry ID, Ministry Name, Round, Q1, Q2, Q3
+  rounds.forEach(function(roundQs, roundIdx) {
+    const roundNum = roundIdx + 1;
+    const row = [ministryId, ministryName, roundNum];
+    for (let q = 0; q < 3; q++) {
+      row.push(roundQs[q] || '');
+    }
     sheet.appendRow(row);
-  }
+  });
 
   return jsonResponse({ success: true });
 }
@@ -644,6 +658,7 @@ function handleSubmitFollowupResponse(ss, data) {
   const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
 
   const answers = data.answers || [];
+  const round = data.round || 1;
   const row = [
     date,
     time,
@@ -651,11 +666,12 @@ function handleSubmitFollowupResponse(ss, data) {
     data.lastName || '',
     data.email || '',
     data.phone || '',
-    data.ministryName || data.ministryId || ''
+    data.ministryName || data.ministryId || '',
+    round
   ];
 
-  // Append up to 10 answers
-  for (let i = 0; i < 10; i++) {
+  // Append up to 3 answers
+  for (let i = 0; i < 3; i++) {
     row.push(answers[i] || '');
   }
 
@@ -682,6 +698,10 @@ function handleStoreApiKey(data) {
   }
   PropertiesService.getScriptProperties().setProperty('CLAUDE_API_KEY', key);
   return jsonResponse({ success: true });
+}
+
+function getStoredApiKey_() {
+  return PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY') || '';
 }
 
 /**
@@ -754,8 +774,47 @@ function handleAiAnalyze(data) {
 /**
  * Call the Claude API server-side.
  */
-function callClaude(apiKey, prompt, maxTokens) {
+/**
+ * AI Parse Signups: extract signup data from an image of a paper sign-up sheet.
+ */
+function handleAiParseSignups(data) {
+  const apiKey = getStoredApiKey_();
+  if (!apiKey) {
+    return jsonResponse({ success: false, error: 'No Claude API key configured. Add one in Settings.' });
+  }
+
+  const imageData = data.imageData;
+  const mediaType = data.mediaType || 'image/jpeg';
+  const defaultMinistry = data.defaultMinistry || '';
+  const ministryNames = data.ministryNames || [];
+
+  if (!imageData) {
+    return jsonResponse({ success: false, error: 'No image data provided' });
+  }
+
+  const prompt = 'Look at this image of a physical sign-up sheet. Extract all signup entries you can find.\n\n' +
+    'For each person, extract:\n' +
+    '- firstName\n- lastName\n- email (if visible)\n- phone (if visible)\n' +
+    '- ministry (if identifiable from the sheet title or context)\n\n' +
+    (defaultMinistry ? 'Default ministry if not identifiable: "' + defaultMinistry + '"\n' : '') +
+    (ministryNames.length > 0 ? 'Known ministry names: ' + ministryNames.join(', ') + '\n' : '') +
+    '\nReturn ONLY a JSON object with this exact structure:\n' +
+    '{"entries": [{"firstName": "", "lastName": "", "email": "", "phone": "", "ministry": ""}]}\n\n' +
+    'If you cannot read certain fields, leave them as empty strings. Do your best to decipher handwriting.';
+
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
+    { type: 'text', text: prompt }
+  ];
+
+  return callClaude(apiKey, content, 4096);
+}
+
+function callClaude(apiKey, promptOrContent, maxTokens) {
   try {
+    // Support both string prompts and structured content arrays
+    const messageContent = typeof promptOrContent === 'string' ? promptOrContent : promptOrContent;
+
     const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post',
       contentType: 'application/json',
@@ -766,7 +825,7 @@ function callClaude(apiKey, prompt, maxTokens) {
       payload: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
         max_tokens: maxTokens || 1024,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: messageContent }]
       }),
       muteHttpExceptions: true
     });

@@ -1817,6 +1817,30 @@
     /* ======================================== */
     /* MANUAL ENTRY TAB                         */
     /* ======================================== */
+    .manual-entry-modes {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid #e8e4de;
+      border-radius: 10px;
+      overflow: hidden;
+      max-width: 320px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: #8B2635;
+      color: white;
+    }
     .manual-entry-form {
       max-width: 500px;
     }
@@ -1841,6 +1865,48 @@
       display: none;
     }
     .manual-entry-success.visible { display: block; }
+    .review-container {
+      margin-top: 20px;
+    }
+    .review-container h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+    .review-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: center;
+    }
+    .review-count {
+      font-size: 14px;
+      color: #666;
+      font-family: 'Inter', sans-serif;
+    }
+    .review-row-remove {
+      background: none;
+      border: none;
+      color: #c53030;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 6px;
+    }
+    .admin-table td input, .admin-table td select {
+      border: 1px solid #e8e4de;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    body.dark .mode-btn { background: #1e1e1e; color: #909090; border-color: #3a3a3a; }
+    body.dark .mode-btn.active { background: #8B2635; color: white; }
+    body.dark .admin-table td input, body.dark .admin-table td select {
+      background: #2a2a2a; color: #e0e0e0; border-color: #3a3a3a;
+    }
 
     /* ======================================== */
     /* FOLLOW-UP QUESTIONNAIRE                  */
@@ -1955,6 +2021,46 @@
       font-family: 'Inter', sans-serif;
     }
     .admin-ministry-card .btn-followup:hover { background: #f0f7ff; }
+    .followup-round {
+      border: 1px solid #e8e4de;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .followup-round-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .followup-round-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      font-family: 'Inter', sans-serif;
+    }
+    .followup-round-link {
+      font-size: 11px;
+      color: #1a5276;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+    }
+    .followup-round-link:hover { text-decoration: underline; }
+    .btn-add-round {
+      background: white;
+      border: 2px dashed #d0d0d0;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: #666;
+      width: 100%;
+    }
+    .btn-add-round:hover { border-color: #8B2635; color: #8B2635; }
+    body.dark .followup-round { border-color: #3a3a3a; }
+    body.dark .followup-round-title { color: #e0e0e0; }
     body.dark .followup-header h2 { color: #e0e0e0; }
     body.dark .followup-header p { color: #909090; }
     body.dark .followup-link-box { background: #2a2a2a; }
@@ -2532,42 +2638,103 @@
 
     <!-- Manual Entry Tab -->
     <div id="admin-tab-manual-entry" class="hidden">
-      <div class="manual-entry-form">
+      <div class="manual-entry-modes">
+        <button class="mode-btn active" data-mode="upload" id="mode-upload-btn">Upload File</button>
+        <button class="mode-btn" data-mode="manual" id="mode-manual-btn">Manual Entry</button>
+      </div>
+
+      <div class="manual-entry-success" id="manual-entry-success">Signup recorded successfully!</div>
+
+      <!-- Upload Mode -->
+      <div id="manual-upload-mode">
         <p style="font-size:14px;color:#666;margin-bottom:16px;font-family:'Inter',sans-serif;">
-          Enter signups from physical sign-up sheets. Data is recorded in the same Signups sheet with source marked as "Manual Entry."
+          Upload a CSV file or a photo of a paper sign-up sheet. AI will extract the signup data for you to review before submitting.
         </p>
-        <div class="manual-entry-success" id="manual-entry-success">Signup recorded successfully!</div>
-        <div class="form">
-          <div class="input-row">
-            <div class="input-group">
-              <label class="label">First Name</label>
-              <input type="text" class="input" id="manual-firstName" placeholder="John">
+        <div class="input-group" style="margin-bottom:12px;">
+          <label class="label">Default Ministry (for entries without one)</label>
+          <select class="select" id="upload-default-ministry">
+            <option value="">Select a ministry...</option>
+          </select>
+        </div>
+        <div class="upload-area" id="manual-upload-area">
+          <div class="upload-area-icon">&#128196;</div>
+          <div class="upload-area-text">Drop a file here or click to select</div>
+          <div class="upload-area-hint">CSV, JPG, PNG, or PDF</div>
+          <input type="file" id="manual-upload-input" accept=".csv,.jpg,.jpeg,.png,.pdf">
+        </div>
+        <div class="upload-filename hidden" id="manual-upload-filename">
+          <span id="manual-upload-fname"></span>
+          <button class="remove-file" id="manual-upload-remove">&times;</button>
+        </div>
+        <div class="analysis-progress hidden" id="manual-parse-progress">
+          <div class="analysis-spinner"></div>
+          <div class="analysis-status-text" id="manual-parse-status">Analyzing your file...</div>
+        </div>
+        <!-- Review table -->
+        <div class="review-container hidden" id="manual-review-container">
+          <h3>Review Parsed Entries</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="manual-review-table">
+              <thead>
+                <tr>
+                  <th style="width:30px;"></th>
+                  <th>First</th>
+                  <th>Last</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Ministry</th>
+                </tr>
+              </thead>
+              <tbody id="manual-review-body"></tbody>
+            </table>
+          </div>
+          <div class="review-actions">
+            <span class="review-count" id="manual-review-count"></span>
+            <div style="flex:1;"></div>
+            <button class="btn-secondary" id="manual-review-clear">Clear</button>
+            <button class="btn" id="manual-review-submit">Submit All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Mode -->
+      <div id="manual-single-mode" class="hidden">
+        <div class="manual-entry-form">
+          <p style="font-size:14px;color:#666;margin-bottom:16px;font-family:'Inter',sans-serif;">
+            Enter a single signup from a physical sign-up sheet.
+          </p>
+          <div class="form">
+            <div class="input-row">
+              <div class="input-group">
+                <label class="label">First Name</label>
+                <input type="text" class="input" id="manual-firstName" placeholder="John">
+              </div>
+              <div class="input-group">
+                <label class="label">Last Name</label>
+                <input type="text" class="input" id="manual-lastName" placeholder="Smith">
+              </div>
             </div>
             <div class="input-group">
-              <label class="label">Last Name</label>
-              <input type="text" class="input" id="manual-lastName" placeholder="Smith">
+              <label class="label">Email</label>
+              <input type="email" class="input" id="manual-email" placeholder="john@example.com">
             </div>
+            <div class="input-group">
+              <label class="label">Phone</label>
+              <input type="tel" class="input" id="manual-phone" placeholder="(555) 555-1234" maxlength="14">
+            </div>
+            <div class="input-group">
+              <label class="label">Ministry</label>
+              <select class="select" id="manual-ministry">
+                <option value="">Select a ministry...</option>
+              </select>
+            </div>
+            <div id="manual-questions"></div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="manual-newParishioner">
+              <label for="manual-newParishioner">New parishioner (wants to join)</label>
+            </div>
+            <button class="btn" id="manual-submit-btn">Record Signup</button>
           </div>
-          <div class="input-group">
-            <label class="label">Email</label>
-            <input type="email" class="input" id="manual-email" placeholder="john@example.com">
-          </div>
-          <div class="input-group">
-            <label class="label">Phone</label>
-            <input type="tel" class="input" id="manual-phone" placeholder="(555) 555-1234" maxlength="14">
-          </div>
-          <div class="input-group">
-            <label class="label">Ministry</label>
-            <select class="select" id="manual-ministry">
-              <option value="">Select a ministry...</option>
-            </select>
-          </div>
-          <div id="manual-questions"></div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="manual-newParishioner">
-            <label for="manual-newParishioner">New parishioner (wants to join)</label>
-          </div>
-          <button class="btn" id="manual-submit-btn">Record Signup</button>
         </div>
       </div>
     </div>
@@ -2699,20 +2866,13 @@
   <div class="edit-modal-content">
     <h3 class="edit-modal-title" id="followup-editor-title">Follow-Up Questions</h3>
     <p style="font-size:13px;color:#666;margin-bottom:12px;font-family:'Inter',sans-serif;">
-      Configure questions that will appear on the follow-up link for this ministry. People who visit the link can fill out the form and their responses will be saved.
+      Configure up to 3 easy-to-answer questions per follow-up round. Add additional rounds for more questions. Each round gets its own shareable link.
     </p>
-    <div class="followup-editor-questions" id="followup-editor-questions"></div>
-    <button class="btn-add-q" id="followup-add-q-btn">+ Add Question</button>
-    <div style="margin-top:20px;">
-      <label class="label">Shareable Follow-Up Link</label>
-      <div class="followup-link-box" id="followup-link-box">
-        <input type="text" id="followup-link-input" readonly>
-        <button class="btn-copy" id="followup-copy-link-btn">Copy</button>
-      </div>
-    </div>
+    <div id="followup-rounds-container"></div>
+    <button class="btn-add-round" id="followup-add-round-btn">+ Add Another Round</button>
     <div class="edit-modal-actions">
       <button class="btn-secondary" id="followup-editor-cancel">Cancel</button>
-      <button class="btn" id="followup-editor-save">Save Questions</button>
+      <button class="btn" id="followup-editor-save">Save All Rounds</button>
     </div>
   </div>
 </div>
@@ -2919,10 +3079,11 @@ var _savedInterests = localStorage.getItem('ministry-fair-interests');
 if (_savedProfile) { try { profile = JSON.parse(_savedProfile); } catch(e) {} }
 if (_savedInterests) { try { interests = JSON.parse(_savedInterests); } catch(e) {} }
 
-// Check URL for ministry param and follow-up param
+// Check URL for ministry param, follow-up param, and round
 const urlParams = new URLSearchParams(window.location.search);
 const ministryParam = urlParams.get('m');
 const followupParam = urlParams.get('followup');
+const followupRoundParam = parseInt(urlParams.get('round')) || 1;
 
 // Fallback ministries
 const FALLBACK_MINISTRIES = [
@@ -5492,23 +5653,312 @@ document.getElementById('my-signups-back').addEventListener('click', function() 
 // ============================================
 // MANUAL ENTRY (Admin Tab)
 // ============================================
+var parsedUploadEntries = [];
+
 function initManualEntryTab() {
-  var select = document.getElementById('manual-ministry');
-  select.innerHTML = '<option value="">Select a ministry...</option>';
-  MINISTRIES.forEach(function(m) {
-    select.innerHTML += '<option value="' + escapeHtml(m.id) + '">' + escapeHtml(m.name) + '</option>';
+  // Populate ministry dropdowns
+  var selects = [document.getElementById('manual-ministry'), document.getElementById('upload-default-ministry')];
+  selects.forEach(function(select) {
+    if (!select) return;
+    select.innerHTML = '<option value="">Select a ministry...</option>';
+    MINISTRIES.forEach(function(m) {
+      select.innerHTML += '<option value="' + escapeHtml(m.id) + '">' + escapeHtml(m.name) + '</option>';
+    });
   });
 
   // Phone formatting
   var manualPhone = document.getElementById('manual-phone');
   manualPhone.removeEventListener('input', manualPhoneFormat);
   manualPhone.addEventListener('input', manualPhoneFormat);
+
+  // Reset upload state
+  document.getElementById('manual-upload-filename').classList.add('hidden');
+  document.getElementById('manual-parse-progress').classList.add('hidden');
+  document.getElementById('manual-review-container').classList.add('hidden');
+  parsedUploadEntries = [];
 }
 
 function manualPhoneFormat(e) {
   e.target.value = formatPhoneNumber(e.target.value);
 }
 
+// Mode toggle
+document.getElementById('mode-upload-btn').addEventListener('click', function() {
+  document.getElementById('mode-upload-btn').classList.add('active');
+  document.getElementById('mode-manual-btn').classList.remove('active');
+  document.getElementById('manual-upload-mode').classList.remove('hidden');
+  document.getElementById('manual-single-mode').classList.add('hidden');
+});
+document.getElementById('mode-manual-btn').addEventListener('click', function() {
+  document.getElementById('mode-manual-btn').classList.add('active');
+  document.getElementById('mode-upload-btn').classList.remove('active');
+  document.getElementById('manual-single-mode').classList.remove('hidden');
+  document.getElementById('manual-upload-mode').classList.add('hidden');
+});
+
+// Upload area interactions
+document.getElementById('manual-upload-area').addEventListener('click', function() {
+  document.getElementById('manual-upload-input').click();
+});
+document.getElementById('manual-upload-area').addEventListener('dragover', function(e) {
+  e.preventDefault();
+  this.classList.add('dragover');
+});
+document.getElementById('manual-upload-area').addEventListener('dragleave', function() {
+  this.classList.remove('dragover');
+});
+document.getElementById('manual-upload-area').addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) {
+    handleManualFileSelect(e.dataTransfer.files[0]);
+  }
+});
+document.getElementById('manual-upload-input').addEventListener('change', function() {
+  if (this.files.length > 0) handleManualFileSelect(this.files[0]);
+});
+document.getElementById('manual-upload-remove').addEventListener('click', function() {
+  document.getElementById('manual-upload-filename').classList.add('hidden');
+  document.getElementById('manual-upload-input').value = '';
+  document.getElementById('manual-review-container').classList.add('hidden');
+  parsedUploadEntries = [];
+});
+
+function handleManualFileSelect(file) {
+  document.getElementById('manual-upload-fname').textContent = file.name;
+  document.getElementById('manual-upload-filename').classList.remove('hidden');
+
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    parseCSVFile(file);
+  } else if (['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
+    parseImageFile(file, ext);
+  } else {
+    alert('Unsupported file type. Please use CSV, JPG, PNG, or PDF.');
+  }
+}
+
+function parseCSVFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+    if (lines.length < 2) {
+      alert('CSV file appears empty or has no data rows.');
+      return;
+    }
+
+    var headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/['"]/g, ''); });
+
+    // Auto-map columns
+    var map = { first: -1, last: -1, email: -1, phone: -1, ministry: -1 };
+    headers.forEach(function(h, i) {
+      if (h.includes('first') && h.includes('name') || h === 'first' || h === 'firstname') map.first = i;
+      else if (h.includes('last') && h.includes('name') || h === 'last' || h === 'lastname') map.last = i;
+      else if (h.includes('email') || h.includes('e-mail')) map.email = i;
+      else if (h.includes('phone') || h.includes('tel') || h.includes('cell') || h.includes('mobile')) map.phone = i;
+      else if (h.includes('ministry') || h.includes('group') || h.includes('interest')) map.ministry = i;
+    });
+    // Fallback: if we have a "name" column, use it for first+last
+    if (map.first === -1) {
+      headers.forEach(function(h, i) {
+        if (h === 'name' || h === 'full name' || h === 'fullname') map.first = i;
+      });
+    }
+
+    var defaultMinistry = document.getElementById('upload-default-ministry').value;
+    var defaultMinistryName = '';
+    if (defaultMinistry) {
+      var dm = MINISTRIES.find(function(m) { return m.id === defaultMinistry; });
+      defaultMinistryName = dm ? dm.name : '';
+    }
+
+    parsedUploadEntries = [];
+    for (var i = 1; i < lines.length; i++) {
+      var cols = lines[i].split(',').map(function(c) { return c.trim().replace(/^["']|["']$/g, ''); });
+      var entry = { firstName: '', lastName: '', email: '', phone: '', ministry: defaultMinistryName };
+
+      if (map.first >= 0) {
+        var nameVal = cols[map.first] || '';
+        if (map.last === -1 && nameVal.includes(' ')) {
+          var parts = nameVal.split(' ');
+          entry.firstName = parts[0];
+          entry.lastName = parts.slice(1).join(' ');
+        } else {
+          entry.firstName = nameVal;
+        }
+      }
+      if (map.last >= 0) entry.lastName = cols[map.last] || '';
+      if (map.email >= 0) entry.email = cols[map.email] || '';
+      if (map.phone >= 0) entry.phone = cols[map.phone] || '';
+      if (map.ministry >= 0 && cols[map.ministry]) entry.ministry = cols[map.ministry];
+
+      if (entry.firstName || entry.lastName) {
+        parsedUploadEntries.push(entry);
+      }
+    }
+
+    renderReviewTable();
+  };
+  reader.readAsText(file);
+}
+
+async function parseImageFile(file, ext) {
+  var progress = document.getElementById('manual-parse-progress');
+  var statusText = document.getElementById('manual-parse-status');
+  progress.classList.remove('hidden');
+  statusText.textContent = 'Reading file...';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var base64Data = e.target.result.split(',')[1];
+    var mediaType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+
+    statusText.textContent = 'AI is extracting signup data...';
+
+    var defaultMinistry = document.getElementById('upload-default-ministry').value;
+    var defaultMinistryName = '';
+    if (defaultMinistry) {
+      var dm = MINISTRIES.find(function(m) { return m.id === defaultMinistry; });
+      defaultMinistryName = dm ? dm.name : '';
+    }
+
+    try {
+      var apiUrl = appConfig.apiUrl;
+      var resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai-parse-signups',
+          imageData: base64Data,
+          mediaType: mediaType,
+          defaultMinistry: defaultMinistryName,
+          ministryNames: MINISTRIES.map(function(m) { return m.name; })
+        })
+      });
+      var result = await resp.json();
+      progress.classList.add('hidden');
+
+      if (result.success && result.result && result.result.entries) {
+        parsedUploadEntries = result.result.entries.map(function(e) {
+          return {
+            firstName: e.firstName || '',
+            lastName: e.lastName || '',
+            email: e.email || '',
+            phone: e.phone || '',
+            ministry: e.ministry || defaultMinistryName
+          };
+        });
+        renderReviewTable();
+      } else {
+        alert('Could not parse the file. Error: ' + (result.error || 'Unknown'));
+      }
+    } catch(err) {
+      progress.classList.add('hidden');
+      alert('Error communicating with AI service: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderReviewTable() {
+  var container = document.getElementById('manual-review-container');
+  container.classList.remove('hidden');
+  var tbody = document.getElementById('manual-review-body');
+
+  // Build ministry options
+  var ministryOpts = '<option value="">--</option>' + MINISTRIES.map(function(m) {
+    return '<option value="' + escapeHtml(m.name) + '">' + escapeHtml(m.name) + '</option>';
+  }).join('');
+
+  tbody.innerHTML = parsedUploadEntries.map(function(entry, idx) {
+    return '<tr data-idx="' + idx + '">' +
+      '<td><button class="review-row-remove" data-idx="' + idx + '">&times;</button></td>' +
+      '<td><input type="text" value="' + escapeHtml(entry.firstName) + '" data-field="firstName"></td>' +
+      '<td><input type="text" value="' + escapeHtml(entry.lastName) + '" data-field="lastName"></td>' +
+      '<td><input type="text" value="' + escapeHtml(entry.email) + '" data-field="email"></td>' +
+      '<td><input type="text" value="' + escapeHtml(entry.phone) + '" data-field="phone"></td>' +
+      '<td><select data-field="ministry">' + ministryOpts.replace('value="' + escapeHtml(entry.ministry) + '"', 'value="' + escapeHtml(entry.ministry) + '" selected') + '</select></td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('manual-review-count').textContent = parsedUploadEntries.length + ' entries';
+
+  // Remove row handlers
+  tbody.querySelectorAll('.review-row-remove').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = btn.closest('tr');
+      row.remove();
+      document.getElementById('manual-review-count').textContent =
+        tbody.querySelectorAll('tr').length + ' entries';
+    });
+  });
+}
+
+document.getElementById('manual-review-clear').addEventListener('click', function() {
+  parsedUploadEntries = [];
+  document.getElementById('manual-review-container').classList.add('hidden');
+  document.getElementById('manual-upload-filename').classList.add('hidden');
+  document.getElementById('manual-upload-input').value = '';
+});
+
+document.getElementById('manual-review-submit').addEventListener('click', async function() {
+  var btn = this;
+  var rows = document.querySelectorAll('#manual-review-body tr');
+  if (rows.length === 0) {
+    alert('No entries to submit.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  var apiUrl = appConfig.apiUrl;
+  var count = 0;
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var firstName = row.querySelector('[data-field="firstName"]').value.trim();
+    var lastName = row.querySelector('[data-field="lastName"]').value.trim();
+    if (!firstName && !lastName) continue;
+
+    var payload = {
+      firstName: firstName,
+      lastName: lastName,
+      email: row.querySelector('[data-field="email"]').value.trim(),
+      phone: row.querySelector('[data-field="phone"]').value.trim(),
+      wantsToJoinParish: false,
+      ministry: row.querySelector('[data-field="ministry"]').value,
+      action: 'Manual Entry'
+    };
+
+    try {
+      if (apiUrl) {
+        await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+      count++;
+    } catch(e) { /* continue with other entries */ }
+  }
+
+  var successEl = document.getElementById('manual-entry-success');
+  successEl.textContent = count + ' signup' + (count !== 1 ? 's' : '') + ' recorded successfully!';
+  successEl.classList.add('visible');
+  setTimeout(function() { successEl.classList.remove('visible'); }, 5000);
+
+  // Clear
+  parsedUploadEntries = [];
+  document.getElementById('manual-review-container').classList.add('hidden');
+  document.getElementById('manual-upload-filename').classList.add('hidden');
+  document.getElementById('manual-upload-input').value = '';
+
+  btn.disabled = false;
+  btn.textContent = 'Submit All';
+});
+
+// Single manual entry form
 document.getElementById('manual-ministry').addEventListener('change', function() {
   var ministryId = this.value;
   var questionsDiv = document.getElementById('manual-questions');
@@ -5557,41 +6007,26 @@ document.getElementById('manual-submit-btn').addEventListener('click', async fun
   var ministryId = document.getElementById('manual-ministry').value;
   var newParishioner = document.getElementById('manual-newParishioner').checked;
 
-  if (!firstName || !lastName) {
-    alert('First and last name are required.');
-    return;
-  }
-  if (!ministryId) {
-    alert('Please select a ministry.');
-    return;
-  }
+  if (!firstName || !lastName) { alert('First and last name are required.'); return; }
+  if (!ministryId) { alert('Please select a ministry.'); return; }
 
   var ministry = MINISTRIES.find(function(m) { return m.id === ministryId; });
   if (!ministry) return;
 
-  // Collect answers
   var answers = {};
   document.querySelectorAll('#manual-questions [data-qid]:not([data-type="checkbox"])').forEach(function(el) {
     answers[el.dataset.qid] = el.value;
   });
   document.querySelectorAll('#manual-questions [data-type="checkbox"]').forEach(function(group) {
-    var qid = group.dataset.qid;
     var checked = [];
-    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
-      checked.push(cb.value);
-    });
-    answers[qid] = checked.join(', ');
+    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) { checked.push(cb.value); });
+    answers[group.dataset.qid] = checked.join(', ');
   });
 
   var questions = ministry.questions || [];
   var payload = {
-    firstName: firstName,
-    lastName: lastName,
-    email: email,
-    phone: phone,
-    wantsToJoinParish: newParishioner,
-    ministry: ministry.name,
-    action: 'Manual Entry',
+    firstName: firstName, lastName: lastName, email: email, phone: phone,
+    wantsToJoinParish: newParishioner, ministry: ministry.name, action: 'Manual Entry',
     q1: questions[0] ? answers[questions[0].id] || '' : '',
     q2: questions[1] ? answers[questions[1].id] || '' : '',
     q3: questions[2] ? answers[questions[2].id] || '' : ''
@@ -5599,25 +6034,14 @@ document.getElementById('manual-submit-btn').addEventListener('click', async fun
 
   btn.disabled = true;
   btn.textContent = 'Recording...';
-
   try {
-    var apiUrl = appConfig.apiUrl;
-    if (apiUrl) {
-      var resp = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      await resp.json();
+    if (appConfig.apiUrl) {
+      await fetch(appConfig.apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     }
-
-    // Show success and reset form
     var successEl = document.getElementById('manual-entry-success');
     successEl.textContent = 'Signup recorded for ' + firstName + ' ' + lastName + ' (' + ministry.name + ')';
     successEl.classList.add('visible');
     setTimeout(function() { successEl.classList.remove('visible'); }, 4000);
-
-    // Reset form fields
     document.getElementById('manual-firstName').value = '';
     document.getElementById('manual-lastName').value = '';
     document.getElementById('manual-email').value = '';
@@ -5625,35 +6049,35 @@ document.getElementById('manual-submit-btn').addEventListener('click', async fun
     document.getElementById('manual-ministry').value = '';
     document.getElementById('manual-newParishioner').checked = false;
     document.getElementById('manual-questions').innerHTML = '';
-  } catch(e) {
-    alert('Error recording signup. Please try again.');
-  }
-
+  } catch(e) { alert('Error recording signup. Please try again.'); }
   btn.disabled = false;
   btn.textContent = 'Record Signup';
 });
 
 // ============================================
-// FOLLOW-UP QUESTIONNAIRE SYSTEM
+// FOLLOW-UP QUESTIONNAIRE SYSTEM (Rounds)
 // ============================================
-var followupQuestions = {}; // Cache: ministryId -> array of question strings
+var followupQuestionsCache = {}; // Cache: ministryId -> { rounds: [[q1,q2,q3], [q1,q2,q3], ...] }
 
-async function loadFollowupQuestions(ministryId) {
-  if (followupQuestions[ministryId]) return followupQuestions[ministryId];
-
-  var apiUrl = appConfig.apiUrl;
-  if (!apiUrl) return [];
-
-  try {
-    var resp = await fetch(apiUrl + '?action=getFollowupQuestions&ministryId=' + encodeURIComponent(ministryId));
-    var data = await resp.json();
-    var qs = data.questions || [];
-    followupQuestions[ministryId] = qs;
-    return qs;
-  } catch(e) {
-    console.error('Error loading follow-up questions:', e);
-    return [];
+async function loadFollowupQuestions(ministryId, round) {
+  var cacheKey = ministryId;
+  if (!followupQuestionsCache[cacheKey]) {
+    var apiUrl = appConfig.apiUrl;
+    if (!apiUrl) return [];
+    try {
+      var resp = await fetch(apiUrl + '?action=getFollowupQuestions&ministryId=' + encodeURIComponent(ministryId));
+      var data = await resp.json();
+      followupQuestionsCache[cacheKey] = data.rounds || [];
+    } catch(e) {
+      console.error('Error loading follow-up questions:', e);
+      return [];
+    }
   }
+  var rounds = followupQuestionsCache[cacheKey];
+  if (round !== undefined) {
+    return rounds[round - 1] || [];
+  }
+  return rounds;
 }
 
 function openFollowupEditor(ministryId) {
@@ -5665,31 +6089,88 @@ function openFollowupEditor(ministryId) {
   modal.dataset.ministryId = ministryId;
   document.getElementById('followup-editor-title').textContent = 'Follow-Up Questions: ' + m.name;
 
-  // Generate the shareable link
-  var baseUrl = window.location.origin + window.location.pathname;
-  var followupUrl = baseUrl + '?followup=' + encodeURIComponent(ministryId);
-  document.getElementById('followup-link-input').value = followupUrl;
-
   // Load existing questions
-  loadFollowupQuestions(ministryId).then(function(qs) {
-    renderFollowupEditorQuestions(qs);
+  delete followupQuestionsCache[ministryId]; // Force reload
+  loadFollowupQuestions(ministryId).then(function(rounds) {
+    renderFollowupRoundsEditor(ministryId, rounds);
   });
 }
 
-function renderFollowupEditorQuestions(questions) {
-  var container = document.getElementById('followup-editor-questions');
+function renderFollowupRoundsEditor(ministryId, rounds) {
+  var container = document.getElementById('followup-rounds-container');
   container.innerHTML = '';
 
-  if (!questions || questions.length === 0) {
-    questions = [];
+  if (!rounds || rounds.length === 0) {
+    rounds = [[]]; // Start with one empty round
   }
 
-  questions.forEach(function(qStr, idx) {
-    addFollowupEditorRow(container, qStr, idx + 1);
+  var baseUrl = window.location.origin + window.location.pathname;
+
+  rounds.forEach(function(roundQs, roundIdx) {
+    var roundNum = roundIdx + 1;
+    var roundDiv = document.createElement('div');
+    roundDiv.className = 'followup-round';
+    roundDiv.dataset.round = roundNum;
+
+    var linkUrl = baseUrl + '?followup=' + encodeURIComponent(ministryId) + (roundNum > 1 ? '&round=' + roundNum : '');
+
+    var headerHtml = '<div class="followup-round-header">' +
+      '<span class="followup-round-title">Round ' + roundNum + '</span>' +
+      '<span class="followup-round-link" data-url="' + escapeHtml(linkUrl) + '" title="Click to copy link">&#128279; Copy Link</span>' +
+    '</div>';
+    roundDiv.innerHTML = headerHtml;
+
+    var questionsContainer = document.createElement('div');
+    questionsContainer.className = 'followup-editor-questions';
+
+    for (var qi = 0; qi < 3; qi++) {
+      addFollowupEditorRow(questionsContainer, roundQs[qi] || '', qi + 1, false);
+    }
+
+    roundDiv.appendChild(questionsContainer);
+
+    // Remove round button (can't remove the first round)
+    if (roundNum > 1) {
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'btn-remove-q';
+      removeBtn.textContent = 'Remove Round ' + roundNum;
+      removeBtn.style.cssText = 'display:block;margin-top:8px;font-size:13px;color:#c53030;background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;';
+      removeBtn.addEventListener('click', function() {
+        roundDiv.remove();
+        renumberRounds();
+      });
+      roundDiv.appendChild(removeBtn);
+    }
+
+    // Copy link handler
+    roundDiv.querySelector('.followup-round-link').addEventListener('click', function() {
+      var url = this.dataset.url;
+      navigator.clipboard.writeText(url).then(function() {
+        alert('Link copied!');
+      });
+    });
+
+    container.appendChild(roundDiv);
   });
 }
 
-function addFollowupEditorRow(container, qStr, num) {
+function renumberRounds() {
+  var container = document.getElementById('followup-rounds-container');
+  var roundDivs = container.querySelectorAll('.followup-round');
+  var baseUrl = window.location.origin + window.location.pathname;
+  var modal = document.getElementById('followup-editor-modal');
+  var ministryId = modal.dataset.ministryId;
+
+  roundDivs.forEach(function(div, idx) {
+    var roundNum = idx + 1;
+    div.dataset.round = roundNum;
+    div.querySelector('.followup-round-title').textContent = 'Round ' + roundNum;
+    var linkUrl = baseUrl + '?followup=' + encodeURIComponent(ministryId) + (roundNum > 1 ? '&round=' + roundNum : '');
+    div.querySelector('.followup-round-link').dataset.url = linkUrl;
+  });
+}
+
+function addFollowupEditorRow(container, qStr, num, removable) {
   var parts = (qStr || 'text|').split('|');
   var type = parts[0] || 'text';
   var label = parts[1] || '';
@@ -5709,45 +6190,53 @@ function addFollowupEditorRow(container, qStr, num) {
     '<div class="input-group">' +
       '<input type="text" class="input followup-q-label" placeholder="Question text" value="' + escapeHtml(label) + '">' +
       '<input type="text" class="input followup-q-options" placeholder="Options (comma-separated)" value="' + escapeHtml(options) + '" style="margin-top:6px;' + (type === 'text' ? 'display:none;' : '') + '">' +
-    '</div>' +
-    '<button class="btn-remove-q followup-remove-q">&times;</button>';
+    '</div>';
 
-  // Show/hide options based on type
   row.querySelector('.followup-q-type').addEventListener('change', function() {
-    var optInput = row.querySelector('.followup-q-options');
-    optInput.style.display = this.value === 'text' ? 'none' : '';
-  });
-
-  row.querySelector('.followup-remove-q').addEventListener('click', function() {
-    row.remove();
-    // Re-number
-    var rows = container.querySelectorAll('.followup-q-row');
-    rows.forEach(function(r, i) {
-      r.querySelector('.followup-q-num').textContent = 'Q' + (i + 1);
-    });
+    row.querySelector('.followup-q-options').style.display = this.value === 'text' ? 'none' : '';
   });
 
   container.appendChild(row);
 }
 
-document.getElementById('followup-add-q-btn').addEventListener('click', function() {
-  var container = document.getElementById('followup-editor-questions');
-  var num = container.querySelectorAll('.followup-q-row').length + 1;
-  if (num > 10) {
-    alert('Maximum 10 follow-up questions.');
-    return;
-  }
-  addFollowupEditorRow(container, '', num);
-});
+document.getElementById('followup-add-round-btn').addEventListener('click', function() {
+  var container = document.getElementById('followup-rounds-container');
+  var existingRounds = container.querySelectorAll('.followup-round').length;
+  var modal = document.getElementById('followup-editor-modal');
+  var ministryId = modal.dataset.ministryId;
+  var baseUrl = window.location.origin + window.location.pathname;
+  var roundNum = existingRounds + 1;
+  var linkUrl = baseUrl + '?followup=' + encodeURIComponent(ministryId) + '&round=' + roundNum;
 
-document.getElementById('followup-copy-link-btn').addEventListener('click', function() {
-  var input = document.getElementById('followup-link-input');
-  input.select();
-  navigator.clipboard.writeText(input.value).then(function() {
-    var btn = document.getElementById('followup-copy-link-btn');
-    btn.textContent = 'Copied!';
-    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+  var roundDiv = document.createElement('div');
+  roundDiv.className = 'followup-round';
+  roundDiv.dataset.round = roundNum;
+  roundDiv.innerHTML = '<div class="followup-round-header">' +
+    '<span class="followup-round-title">Round ' + roundNum + '</span>' +
+    '<span class="followup-round-link" data-url="' + escapeHtml(linkUrl) + '" title="Click to copy link">&#128279; Copy Link</span>' +
+  '</div>';
+
+  var questionsContainer = document.createElement('div');
+  questionsContainer.className = 'followup-editor-questions';
+  for (var qi = 0; qi < 3; qi++) {
+    addFollowupEditorRow(questionsContainer, '', qi + 1, false);
+  }
+  roundDiv.appendChild(questionsContainer);
+
+  var removeBtn = document.createElement('button');
+  removeBtn.textContent = 'Remove Round ' + roundNum;
+  removeBtn.style.cssText = 'display:block;margin-top:8px;font-size:13px;color:#c53030;background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;';
+  removeBtn.addEventListener('click', function() {
+    roundDiv.remove();
+    renumberRounds();
   });
+  roundDiv.appendChild(removeBtn);
+
+  roundDiv.querySelector('.followup-round-link').addEventListener('click', function() {
+    navigator.clipboard.writeText(this.dataset.url).then(function() { alert('Link copied!'); });
+  });
+
+  container.appendChild(roundDiv);
 });
 
 document.getElementById('followup-editor-cancel').addEventListener('click', function() {
@@ -5765,20 +6254,23 @@ document.getElementById('followup-editor-save').addEventListener('click', async 
   btn.disabled = true;
   btn.textContent = 'Saving...';
 
-  // Collect questions from editor
-  var rows = document.querySelectorAll('#followup-editor-questions .followup-q-row');
-  var questions = [];
-  rows.forEach(function(row) {
-    var type = row.querySelector('.followup-q-type').value;
-    var label = row.querySelector('.followup-q-label').value.trim();
-    var options = row.querySelector('.followup-q-options').value.trim();
-    if (label) {
-      var qStr = type + '|' + label;
-      if (type !== 'text' && options) {
-        qStr += '|' + options;
+  // Collect all rounds
+  var roundDivs = document.querySelectorAll('#followup-rounds-container .followup-round');
+  var allRounds = [];
+  roundDivs.forEach(function(roundDiv) {
+    var rows = roundDiv.querySelectorAll('.followup-q-row');
+    var roundQs = [];
+    rows.forEach(function(row) {
+      var type = row.querySelector('.followup-q-type').value;
+      var label = row.querySelector('.followup-q-label').value.trim();
+      var options = row.querySelector('.followup-q-options').value.trim();
+      if (label) {
+        var qStr = type + '|' + label;
+        if (type !== 'text' && options) qStr += '|' + options;
+        roundQs.push(qStr);
       }
-      questions.push(qStr);
-    }
+    });
+    allRounds.push(roundQs);
   });
 
   try {
@@ -5791,12 +6283,12 @@ document.getElementById('followup-editor-save').addEventListener('click', async 
           adminEmail: currentSession ? currentSession.email : '',
           adminAction: 'saveFollowupQuestions',
           ministryId: ministryId,
-          questions: questions
+          rounds: allRounds
         })
       });
       var result = await resp.json();
       if (result.success) {
-        followupQuestions[ministryId] = questions;
+        followupQuestionsCache[ministryId] = allRounds;
         modal.classList.add('hidden');
       } else {
         alert('Error: ' + (result.error || 'Unknown error'));
@@ -5807,31 +6299,33 @@ document.getElementById('followup-editor-save').addEventListener('click', async 
   }
 
   btn.disabled = false;
-  btn.textContent = 'Save Questions';
+  btn.textContent = 'Save All Rounds';
 });
 
 // ============================================
 // FOLLOW-UP PUBLIC FORM
 // ============================================
-async function showFollowupForm(ministryId) {
+var _currentFollowupRound = 1;
+
+async function showFollowupForm(ministryId, round) {
+  round = round || followupRoundParam || 1;
+  _currentFollowupRound = round;
   showView('followup');
   var formCard = document.getElementById('followup-form-card');
   var successCard = document.getElementById('followup-success-card');
   formCard.classList.remove('hidden');
   successCard.classList.add('hidden');
 
-  // Find the ministry
   var ministry = MINISTRIES.find(function(m) { return m.id === ministryId; });
   currentMinistry = ministry || { id: ministryId, name: ministryId, description: '' };
 
-  document.getElementById('followup-ministry-name').textContent = ministry ? ministry.name : ministryId;
+  document.getElementById('followup-ministry-name').textContent = (ministry ? ministry.name : ministryId) + (round > 1 ? ' (Round ' + round + ')' : '');
   if (ministry && ministry.description) {
     document.getElementById('followup-ministry-desc').textContent = ministry.description;
   } else {
     document.getElementById('followup-ministry-desc').textContent = 'Please answer the following questions so we can better serve you.';
   }
 
-  // Pre-fill from saved profile if available
   if (hasSavedProfile()) {
     document.getElementById('followup-firstName').value = profile.firstName || '';
     document.getElementById('followup-lastName').value = profile.lastName || '';
@@ -5839,13 +6333,11 @@ async function showFollowupForm(ministryId) {
     document.getElementById('followup-phone').value = formatPhoneNumber(profile.phone || '');
   }
 
-  // Phone formatting
   var fPhone = document.getElementById('followup-phone');
   fPhone.removeEventListener('input', followupPhoneFormat);
   fPhone.addEventListener('input', followupPhoneFormat);
 
-  // Load follow-up questions
-  var questions = await loadFollowupQuestions(ministryId);
+  var questions = await loadFollowupQuestions(ministryId, round);
   var questionsDiv = document.getElementById('followup-questions');
 
   if (questions && questions.length > 0) {
@@ -5900,23 +6392,18 @@ document.getElementById('followup-submit-btn').addEventListener('click', async f
     return;
   }
 
-  // Collect follow-up answers
   var answers = {};
   document.querySelectorAll('#followup-questions [data-fqid]:not([data-type="checkbox"])').forEach(function(el) {
     answers[el.dataset.fqid] = el.value;
   });
   document.querySelectorAll('#followup-questions [data-type="checkbox"]').forEach(function(group) {
-    var qid = group.dataset.fqid;
     var checked = [];
-    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
-      checked.push(cb.value);
-    });
-    answers[qid] = checked.join(', ');
+    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) { checked.push(cb.value); });
+    answers[group.dataset.fqid] = checked.join(', ');
   });
 
-  // Build answers array (up to 10)
   var answerValues = [];
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 3; i++) {
     answerValues.push(answers['fq' + i] || '');
   }
 
@@ -5929,29 +6416,23 @@ document.getElementById('followup-submit-btn').addEventListener('click', async f
   try {
     var apiUrl = appConfig.apiUrl;
     if (apiUrl) {
-      var resp = await fetch(apiUrl, {
+      await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'submitFollowupResponse',
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          phone: phone,
-          ministryId: ministryId,
-          ministryName: ministryName,
+          firstName: firstName, lastName: lastName, email: email, phone: phone,
+          ministryId: ministryId, ministryName: ministryName,
+          round: _currentFollowupRound,
           answers: answerValues
         })
       });
-      await resp.json();
     }
 
-    // Show success
     document.getElementById('followup-form-card').classList.add('hidden');
     var successCard = document.getElementById('followup-success-card');
     successCard.classList.remove('hidden');
 
-    // Show organizer info if available
     var orgDiv = document.getElementById('followup-organizer-info');
     if (currentMinistry && currentMinistry.organizerName) {
       var contactHtml = '';
