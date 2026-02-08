@@ -89,6 +89,9 @@ This app digitizes the signup process, allowing parishioners to register once an
 | Logout | Clears local data to start fresh (useful for shared devices) |
 | Deep linking | QR codes can link directly to a specific ministry via `?m=` parameter |
 | Audit trail | All signups AND removals logged with timestamps |
+| Manual entry | Admin tab to enter signups from physical paper sign-up sheets |
+| Follow-up questionnaires | Ministry leads configure custom follow-up questions with shareable links |
+| Browser navigation | Back/forward buttons work within the app using History API |
 
 ---
 
@@ -136,6 +139,27 @@ This app digitizes the signup process, allowing parishioners to register once an
 - Automatically populated when user checks "I'd like to join"
 - De-duplicated by email address
 
+**To Google Sheet (Follow-Up Questions tab):**
+
+| Field | Type | Example |
+|-------|------|---------|
+| Ministry ID | Text | music |
+| Ministry Name | Text | Music Ministry |
+| Q1-Q10 | Text | select\|Day availability\|Mon,Tue,Wed,Thu,Fri |
+
+**To Google Sheet (Follow-Up Responses tab):**
+
+| Field | Type | Example |
+|-------|------|---------|
+| Date | Date | 2/8/26 |
+| Time | Time | 3:30 PM |
+| First | Text | Maria |
+| Last | Text | Garcia |
+| Email | Email | maria@email.com |
+| Phone | Phone | (512) 555-1234 |
+| Ministry | Text | Music Ministry |
+| Q1-Q10 | Text | Monday, Wednesday |
+
 ---
 
 ## Business Rules and Logic
@@ -178,6 +202,26 @@ This app digitizes the signup process, allowing parishioners to register once an
 - URL parameter `?m=ministry-id` jumps directly to ministry detail
 - If user not registered, shows registration first, then ministry
 - Invalid ministry ID falls back to ministry list
+
+### Follow-Up Questionnaires
+- URL parameter `?followup=ministry-id` opens a standalone follow-up form
+- Ministry leads (or admins) configure up to 10 custom questions per ministry
+- Questions support text, dropdown, and checkbox types (same format as qualifying questions)
+- Responses saved to dedicated "Follow-Up Responses" sheet
+- Follow-up form does not require prior registration (standalone)
+- Pre-fills contact info from saved profile if available
+- Designed for post-fair outreach: availability, preferences, scheduling, etc.
+
+### Manual Entry (Physical Signup Sheets)
+- Admins can enter signups from paper sheets via the "Manual Entry" tab
+- Same data captured as digital signups: name, email, phone, ministry, questions
+- Recorded with action type "Manual Entry" for audit trail distinction
+- New parishioner flag respected (triggers New Parishioners sheet entry)
+
+### Browser Navigation
+- All view transitions push state to browser history
+- Back/forward buttons navigate between app views (not away from app)
+- Clicking the app title in nav bar returns to ministries list
 
 ---
 
@@ -274,6 +318,7 @@ The following are explicitly NOT included in this version:
 | 1.0 | Jan 2026 | Initial release: registration, browsing, signup |
 | 2.0 | Jan 2026 | Added search, organizer info, phone display |
 | 3.0 | Jan 2026 | Added logout, remove interest, audit trail, phone formatting, organizer search, configurable branding |
+| 4.0 | Feb 2026 | Added physical signup manual entry, follow-up questionnaire links, browser back button support, parishioner nav bar |
 
 ---
 

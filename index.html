@@ -1813,6 +1813,154 @@
     .edit-modal-actions button { flex: 1; }
     body.dark .edit-modal-content { background: #2a2a2a; }
     body.dark .edit-modal-title { color: #e0e0e0; }
+
+    /* ======================================== */
+    /* MANUAL ENTRY TAB                         */
+    /* ======================================== */
+    .manual-entry-form {
+      max-width: 500px;
+    }
+    .manual-entry-form .form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .manual-entry-form .input-row {
+      display: flex;
+      gap: 12px;
+    }
+    .manual-entry-success {
+      background: #f0f9f4;
+      border: 1px solid #b7e4c7;
+      border-radius: 10px;
+      padding: 16px;
+      color: #2d6a4f;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .manual-entry-success.visible { display: block; }
+
+    /* ======================================== */
+    /* FOLLOW-UP QUESTIONNAIRE                  */
+    /* ======================================== */
+    .followup-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .followup-header h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .followup-header p {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .followup-success {
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .followup-success .success-icon {
+      margin-bottom: 20px;
+    }
+    .followup-link-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f5f0e8;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .followup-link-box input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      color: #333;
+      outline: none;
+    }
+    .btn-copy {
+      background: white;
+      border: 1px solid #e8e4de;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-copy:hover { background: #faf8f5; }
+    .followup-editor-questions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .followup-q-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px;
+      background: #faf8f5;
+      border-radius: 10px;
+    }
+    .followup-q-row .input-group { flex: 1; }
+    .followup-q-row .input { font-size: 14px; padding: 10px 12px; }
+    .followup-q-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      padding-top: 10px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-remove-q {
+      background: none;
+      border: none;
+      color: #c53030;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 8px;
+    }
+    .btn-add-q {
+      background: white;
+      border: 2px dashed #d0d0d0;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: #666;
+    }
+    .btn-add-q:hover { border-color: #8B2635; color: #8B2635; }
+    .admin-ministry-card .btn-followup {
+      background: none;
+      border: 1px solid #1a5276;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1a5276;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+    .admin-ministry-card .btn-followup:hover { background: #f0f7ff; }
+    body.dark .followup-header h2 { color: #e0e0e0; }
+    body.dark .followup-header p { color: #909090; }
+    body.dark .followup-link-box { background: #2a2a2a; }
+    body.dark .followup-link-box input { color: #e0e0e0; }
+    body.dark .followup-q-row { background: #2a2a2a; }
+    body.dark .btn-add-q { background: #1e1e1e; border-color: #3a3a3a; color: #909090; }
   </style>
 </head>
 <body>
@@ -1826,7 +1974,7 @@
 
 <!-- TOP NAVIGATION BAR -->
 <nav id="top-nav" class="top-nav hidden">
-  <div class="nav-brand" id="nav-brand-text">Ministry Fair</div>
+  <div class="nav-brand" id="nav-brand-text" style="cursor:pointer;" title="Home">Ministry Fair</div>
   <div class="nav-right">
     <span class="role-badge" id="nav-role-badge"></span>
     <div class="nav-user-info">
@@ -2321,6 +2469,7 @@
       <button class="admin-tab" data-tab="new-parishioners">New Parishioners</button>
       <button class="admin-tab" data-tab="ministries">Ministries</button>
       <button class="admin-tab" data-tab="users">Manage Users</button>
+      <button class="admin-tab" data-tab="manual-entry">Manual Entry</button>
       <button class="admin-tab" data-tab="qr-codes">QR Codes</button>
     </div>
 
@@ -2378,6 +2527,48 @@
         <input type="email" class="input" id="admin-new-user-email" placeholder="email@example.com">
         <input type="text" class="input" id="admin-new-user-name" placeholder="Name" style="max-width: 150px;">
         <button class="btn-sm" id="admin-add-user-btn">Add</button>
+      </div>
+    </div>
+
+    <!-- Manual Entry Tab -->
+    <div id="admin-tab-manual-entry" class="hidden">
+      <div class="manual-entry-form">
+        <p style="font-size:14px;color:#666;margin-bottom:16px;font-family:'Inter',sans-serif;">
+          Enter signups from physical sign-up sheets. Data is recorded in the same Signups sheet with source marked as "Manual Entry."
+        </p>
+        <div class="manual-entry-success" id="manual-entry-success">Signup recorded successfully!</div>
+        <div class="form">
+          <div class="input-row">
+            <div class="input-group">
+              <label class="label">First Name</label>
+              <input type="text" class="input" id="manual-firstName" placeholder="John">
+            </div>
+            <div class="input-group">
+              <label class="label">Last Name</label>
+              <input type="text" class="input" id="manual-lastName" placeholder="Smith">
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="label">Email</label>
+            <input type="email" class="input" id="manual-email" placeholder="john@example.com">
+          </div>
+          <div class="input-group">
+            <label class="label">Phone</label>
+            <input type="tel" class="input" id="manual-phone" placeholder="(555) 555-1234" maxlength="14">
+          </div>
+          <div class="input-group">
+            <label class="label">Ministry</label>
+            <select class="select" id="manual-ministry">
+              <option value="">Select a ministry...</option>
+            </select>
+          </div>
+          <div id="manual-questions"></div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="manual-newParishioner">
+            <label for="manual-newParishioner">New parishioner (wants to join)</label>
+          </div>
+          <button class="btn" id="manual-submit-btn">Record Signup</button>
+        </div>
       </div>
     </div>
 
@@ -2454,6 +2645,74 @@
     <div class="edit-modal-actions">
       <button class="btn-secondary" id="edit-modal-cancel">Cancel</button>
       <button class="btn" id="edit-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP QUESTIONNAIRE VIEW -->
+<div id="view-followup" class="hidden">
+  <header class="header">
+    <h1 class="app-title"></h1>
+    <p>Follow-Up Questionnaire</p>
+  </header>
+  <div class="content">
+    <div class="card" id="followup-form-card">
+      <div class="followup-header">
+        <h2 id="followup-ministry-name"></h2>
+        <p id="followup-ministry-desc">Please answer the following questions so we can better serve you.</p>
+      </div>
+      <div class="form" id="followup-person-fields">
+        <div class="input-row">
+          <div class="input-group">
+            <label class="label">First Name</label>
+            <input type="text" class="input" id="followup-firstName" required placeholder="John">
+          </div>
+          <div class="input-group">
+            <label class="label">Last Name</label>
+            <input type="text" class="input" id="followup-lastName" required placeholder="Smith">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="label">Email</label>
+          <input type="email" class="input" id="followup-email" required placeholder="john@example.com">
+        </div>
+        <div class="input-group">
+          <label class="label">Phone</label>
+          <input type="tel" class="input" id="followup-phone" placeholder="(555) 555-1234" maxlength="14">
+        </div>
+      </div>
+      <div id="followup-questions" style="margin-top:16px;"></div>
+      <button class="btn" id="followup-submit-btn" style="margin-top:20px;">Submit</button>
+    </div>
+    <div class="card followup-success hidden" id="followup-success-card">
+      <div class="success-icon">&#10003;</div>
+      <h2 class="section-title" style="margin-bottom:12px;">Thank You!</h2>
+      <p class="welcome-text">Your responses have been recorded. The ministry lead will be in touch.</p>
+      <div id="followup-organizer-info" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP EDITOR MODAL -->
+<div id="followup-editor-modal" class="edit-modal hidden">
+  <div class="modal-backdrop" id="followup-editor-backdrop"></div>
+  <div class="edit-modal-content">
+    <h3 class="edit-modal-title" id="followup-editor-title">Follow-Up Questions</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:12px;font-family:'Inter',sans-serif;">
+      Configure questions that will appear on the follow-up link for this ministry. People who visit the link can fill out the form and their responses will be saved.
+    </p>
+    <div class="followup-editor-questions" id="followup-editor-questions"></div>
+    <button class="btn-add-q" id="followup-add-q-btn">+ Add Question</button>
+    <div style="margin-top:20px;">
+      <label class="label">Shareable Follow-Up Link</label>
+      <div class="followup-link-box" id="followup-link-box">
+        <input type="text" id="followup-link-input" readonly>
+        <button class="btn-copy" id="followup-copy-link-btn">Copy</button>
+      </div>
+    </div>
+    <div class="edit-modal-actions">
+      <button class="btn-secondary" id="followup-editor-cancel">Cancel</button>
+      <button class="btn" id="followup-editor-save">Save Questions</button>
     </div>
   </div>
 </div>
@@ -2660,9 +2919,10 @@ var _savedInterests = localStorage.getItem('ministry-fair-interests');
 if (_savedProfile) { try { profile = JSON.parse(_savedProfile); } catch(e) {} }
 if (_savedInterests) { try { interests = JSON.parse(_savedInterests); } catch(e) {} }
 
-// Check URL for ministry param
+// Check URL for ministry param and follow-up param
 const urlParams = new URLSearchParams(window.location.search);
 const ministryParam = urlParams.get('m');
+const followupParam = urlParams.get('followup');
 
 // Fallback ministries
 const FALLBACK_MINISTRIES = [
@@ -2682,26 +2942,43 @@ const views = {
   confirmed: document.getElementById('view-confirmed'),
   settings: document.getElementById('view-settings'),
   admin: document.getElementById('view-admin'),
-  mySignups: document.getElementById('view-my-signups')
+  mySignups: document.getElementById('view-my-signups'),
+  followup: document.getElementById('view-followup')
 };
 
+var _historyNavigating = false;
+
 function showView(viewName) {
-  Object.values(views).forEach(v => v.classList.add('hidden'));
-  views[viewName].classList.remove('hidden');
+  Object.values(views).forEach(v => { if (v) v.classList.add('hidden'); });
+  if (views[viewName]) views[viewName].classList.remove('hidden');
   window.scrollTo(0, 0);
 
-  // Show/hide nav bar
+  // Push to browser history (skip if handling back/forward navigation)
+  if (!_historyNavigating) {
+    var stateData = { view: viewName };
+    if (viewName === 'detail' && currentMinistry) {
+      stateData.ministryId = currentMinistry.id;
+    }
+    if (viewName === 'followup' && currentMinistry) {
+      stateData.ministryId = currentMinistry.id;
+    }
+    history.pushState(stateData, '');
+  }
+
+  // Show/hide nav bar - visible for parishioners with saved profiles too
   const nav = document.getElementById('top-nav');
   if (viewName === 'start' || viewName === 'loading' || viewName === 'register') {
     nav.classList.add('hidden');
-  } else if (currentSession) {
+  } else if (currentSession || hasSavedProfile()) {
     updateNavBar();
     nav.classList.remove('hidden');
   }
 
-  // Hide edit modal when switching views
+  // Hide edit modals when switching views
   var editModal = document.getElementById('ministry-edit-modal');
   if (editModal) editModal.classList.add('hidden');
+  var followupModal = document.getElementById('followup-editor-modal');
+  if (followupModal) followupModal.classList.add('hidden');
 
   // Render Google buttons when those views show
   if (viewName === 'register') {
@@ -2711,6 +2988,34 @@ function showView(viewName) {
     renderGoogleButton('g_id_signin_admin', handleAdminSignIn);
   }
 }
+
+// Browser back/forward button support
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.view && views[e.state.view]) {
+    _historyNavigating = true;
+    var v = e.state.view;
+    if (v === 'ministries') {
+      showMinistriesList();
+    } else if (v === 'admin') {
+      showAdminDashboard();
+    } else if (v === 'settings') {
+      showSettingsView();
+    } else if (v === 'mySignups') {
+      showMySignups();
+    } else if (v === 'detail' && e.state.ministryId) {
+      var m = MINISTRIES.find(function(min) { return min.id === e.state.ministryId; });
+      if (m) showMinistryDetail(m);
+      else showMinistriesList();
+    } else if (v === 'followup' && e.state.ministryId) {
+      showFollowupForm(e.state.ministryId);
+    } else if (v === 'confirmed') {
+      showMinistriesList(); // Don't re-show confirmation, go to list
+    } else {
+      showView(v);
+    }
+    _historyNavigating = false;
+  }
+});
 
 // ============================================
 // GOOGLE SIGN-IN
@@ -3073,20 +3378,30 @@ function handleParishionerSignIn(response) {
 // NAV BAR
 // ============================================
 function updateNavBar() {
-  if (!currentSession) return;
-  var role = getUserRole(currentSession.email);
-  document.getElementById('nav-brand-text').textContent = appConfig.appTitle || 'Ministry Fair';
-  document.getElementById('nav-user-name').textContent =
-    currentSession.firstName + ' ' + currentSession.lastName;
-  document.getElementById('nav-user-email').textContent = currentSession.email;
+  var isAdminUser = currentSession && getUserRole(currentSession.email) === 'admin';
 
-  var badge = document.getElementById('nav-role-badge');
-  badge.textContent = role === 'admin' ? 'Admin' : 'Member';
-  badge.className = 'role-badge role-' + role;
+  if (currentSession) {
+    var role = getUserRole(currentSession.email);
+    document.getElementById('nav-brand-text').textContent = appConfig.appTitle || 'Ministry Fair';
+    document.getElementById('nav-user-name').textContent = currentSession.firstName + ' ' + currentSession.lastName;
+    document.getElementById('nav-user-email').textContent = currentSession.email;
+    var badge = document.getElementById('nav-role-badge');
+    badge.textContent = role === 'admin' ? 'Admin' : 'Member';
+    badge.className = 'role-badge role-' + role;
+  } else if (hasSavedProfile()) {
+    document.getElementById('nav-brand-text').textContent = appConfig.appTitle || 'Ministry Fair';
+    document.getElementById('nav-user-name').textContent = profile.firstName + ' ' + profile.lastName;
+    document.getElementById('nav-user-email').textContent = profile.email;
+    var badge = document.getElementById('nav-role-badge');
+    badge.textContent = 'Member';
+    badge.className = 'role-badge role-parishioner';
+  } else {
+    return;
+  }
 
   // Only show settings gear and dashboard for admins
-  document.getElementById('nav-settings-btn').classList.toggle('hidden', role !== 'admin');
-  document.getElementById('nav-dashboard-btn').classList.toggle('hidden', role !== 'admin');
+  document.getElementById('nav-settings-btn').classList.toggle('hidden', !isAdminUser);
+  document.getElementById('nav-dashboard-btn').classList.toggle('hidden', !isAdminUser);
   // Show "My Signups" for everyone who has a profile
   document.getElementById('nav-my-signups-btn').classList.toggle('hidden', !hasSavedProfile());
 }
@@ -3103,15 +3418,38 @@ document.getElementById('nav-settings-btn').addEventListener('click', function()
   showSettingsView();
 });
 
+document.getElementById('nav-brand-text').addEventListener('click', function() {
+  if (hasSavedProfile()) {
+    showMinistriesList();
+  }
+});
+
 document.getElementById('nav-logout-btn').addEventListener('click', function() {
-  if (confirm('Log out of your admin session?')) {
-    currentSession = null;
-    saveSession(null);
-    document.getElementById('top-nav').classList.add('hidden');
-    // If they also had a parishioner profile, keep that flow
-    if (hasSavedProfile()) {
-      showMinistriesList();
+  var isAdminUser = currentSession && getUserRole(currentSession.email) === 'admin';
+  var msg = isAdminUser
+    ? 'Log out of your admin session?'
+    : 'Are you sure you want to log out? Your interest selections on this device will be cleared.';
+  if (confirm(msg)) {
+    if (isAdminUser) {
+      currentSession = null;
+      saveSession(null);
+      document.getElementById('top-nav').classList.add('hidden');
+      if (hasSavedProfile()) {
+        showMinistriesList();
+      } else {
+        showView('register');
+      }
     } else {
+      localStorage.removeItem('ministry-fair-profile');
+      localStorage.removeItem('ministry-fair-interests');
+      profile = { firstName: '', lastName: '', email: '', phone: '', wantsToJoinParish: false };
+      interests = [];
+      currentMinistry = null;
+      currentSession = null;
+      saveSession(null);
+      showAll = false;
+      searchTerm = '';
+      document.getElementById('top-nav').classList.add('hidden');
       showView('register');
     }
   }
@@ -4114,6 +4452,12 @@ async function loadMinistries() {
 // APP INITIALIZATION
 // ============================================
 function initializeApp() {
+  // Follow-up questionnaire link takes priority (works without registration)
+  if (followupParam) {
+    showFollowupForm(followupParam);
+    return;
+  }
+
   if (hasSavedProfile()) {
     // Check if this user is an admin and auto-create session
     if (isAdmin(profile.email) && !currentSession) {
@@ -4624,7 +4968,7 @@ function switchAdminTab(tabName) {
   document.querySelectorAll('.admin-tab').forEach(function(t) {
     t.classList.toggle('active', t.dataset.tab === tabName);
   });
-  ['signups','new-parishioners','ministries','users','qr-codes'].forEach(function(t) {
+  ['signups','new-parishioners','ministries','users','manual-entry','qr-codes'].forEach(function(t) {
     var el = document.getElementById('admin-tab-' + t);
     if (el) el.classList.toggle('hidden', t !== tabName);
   });
@@ -4633,6 +4977,7 @@ function switchAdminTab(tabName) {
   if (tabName === 'new-parishioners') loadAdminNewParishioners();
   if (tabName === 'ministries') renderAdminMinistries();
   if (tabName === 'users') loadAdminUsers();
+  if (tabName === 'manual-entry') initManualEntryTab();
   if (tabName === 'qr-codes') renderQRCodes();
 }
 
@@ -4797,6 +5142,7 @@ function renderAdminMinistries() {
         (m.organizerName ? '<p style="font-size:12px;color:#888;margin-top:4px;">' + escapeHtml(m.organizerName) + '</p>' : '') +
       '</div>' +
       '<div class="admin-ministry-actions">' +
+        '<button class="btn-followup followup-ministry-btn" data-id="' + escapeHtml(m.id) + '" title="Follow-Up Questions">Follow-Up</button>' +
         '<button class="btn-icon edit-ministry-btn" data-id="' + escapeHtml(m.id) + '" title="Edit">&#9998;</button>' +
         '<button class="btn-icon danger delete-ministry-btn" data-id="' + escapeHtml(m.id) + '" title="Delete">&#128465;</button>' +
       '</div>' +
@@ -4814,6 +5160,13 @@ function renderAdminMinistries() {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
       deleteMinistryFromDashboard(btn.dataset.id);
+    });
+  });
+
+  list.querySelectorAll('.followup-ministry-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openFollowupEditor(btn.dataset.id);
     });
   });
 }
@@ -5134,6 +5487,496 @@ function showMySignups() {
 
 document.getElementById('my-signups-back').addEventListener('click', function() {
   showMinistriesList();
+});
+
+// ============================================
+// MANUAL ENTRY (Admin Tab)
+// ============================================
+function initManualEntryTab() {
+  var select = document.getElementById('manual-ministry');
+  select.innerHTML = '<option value="">Select a ministry...</option>';
+  MINISTRIES.forEach(function(m) {
+    select.innerHTML += '<option value="' + escapeHtml(m.id) + '">' + escapeHtml(m.name) + '</option>';
+  });
+
+  // Phone formatting
+  var manualPhone = document.getElementById('manual-phone');
+  manualPhone.removeEventListener('input', manualPhoneFormat);
+  manualPhone.addEventListener('input', manualPhoneFormat);
+}
+
+function manualPhoneFormat(e) {
+  e.target.value = formatPhoneNumber(e.target.value);
+}
+
+document.getElementById('manual-ministry').addEventListener('change', function() {
+  var ministryId = this.value;
+  var questionsDiv = document.getElementById('manual-questions');
+  if (!ministryId) {
+    questionsDiv.innerHTML = '';
+    return;
+  }
+  var ministry = MINISTRIES.find(function(m) { return m.id === ministryId; });
+  if (!ministry || !ministry.questions || ministry.questions.length === 0) {
+    questionsDiv.innerHTML = '';
+    return;
+  }
+  questionsDiv.innerHTML = '<div class="form" style="margin-top:0;">' + ministry.questions.map(function(q) {
+    if (q.type === 'select') {
+      return '<div class="input-group">' +
+        '<label class="label">' + escapeHtml(q.label) + '</label>' +
+        '<select class="select" data-qid="' + escapeHtml(q.id) + '">' +
+          '<option value="">Select...</option>' +
+          q.options.map(function(opt) { return '<option value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</option>'; }).join('') +
+        '</select></div>';
+    } else if (q.type === 'checkbox') {
+      return '<div class="input-group">' +
+        '<label class="label">' + escapeHtml(q.label) + '</label>' +
+        '<div class="checkbox-options" data-qid="' + escapeHtml(q.id) + '" data-type="checkbox">' +
+          q.options.map(function(opt, idx) {
+            return '<div class="checkbox-option">' +
+              '<input type="checkbox" id="mq-' + escapeHtml(q.id) + '-' + idx + '" value="' + escapeHtml(opt) + '">' +
+              '<label for="mq-' + escapeHtml(q.id) + '-' + idx + '">' + escapeHtml(opt) + '</label></div>';
+          }).join('') +
+        '</div></div>';
+    } else {
+      return '<div class="input-group">' +
+        '<label class="label">' + escapeHtml(q.label) + '</label>' +
+        '<input type="text" class="input" data-qid="' + escapeHtml(q.id) + '" placeholder="Answer">' +
+      '</div>';
+    }
+  }).join('') + '</div>';
+});
+
+document.getElementById('manual-submit-btn').addEventListener('click', async function() {
+  var btn = this;
+  var firstName = document.getElementById('manual-firstName').value.trim();
+  var lastName = document.getElementById('manual-lastName').value.trim();
+  var email = document.getElementById('manual-email').value.trim();
+  var phone = document.getElementById('manual-phone').value.trim();
+  var ministryId = document.getElementById('manual-ministry').value;
+  var newParishioner = document.getElementById('manual-newParishioner').checked;
+
+  if (!firstName || !lastName) {
+    alert('First and last name are required.');
+    return;
+  }
+  if (!ministryId) {
+    alert('Please select a ministry.');
+    return;
+  }
+
+  var ministry = MINISTRIES.find(function(m) { return m.id === ministryId; });
+  if (!ministry) return;
+
+  // Collect answers
+  var answers = {};
+  document.querySelectorAll('#manual-questions [data-qid]:not([data-type="checkbox"])').forEach(function(el) {
+    answers[el.dataset.qid] = el.value;
+  });
+  document.querySelectorAll('#manual-questions [data-type="checkbox"]').forEach(function(group) {
+    var qid = group.dataset.qid;
+    var checked = [];
+    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+      checked.push(cb.value);
+    });
+    answers[qid] = checked.join(', ');
+  });
+
+  var questions = ministry.questions || [];
+  var payload = {
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    wantsToJoinParish: newParishioner,
+    ministry: ministry.name,
+    action: 'Manual Entry',
+    q1: questions[0] ? answers[questions[0].id] || '' : '',
+    q2: questions[1] ? answers[questions[1].id] || '' : '',
+    q3: questions[2] ? answers[questions[2].id] || '' : ''
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Recording...';
+
+  try {
+    var apiUrl = appConfig.apiUrl;
+    if (apiUrl) {
+      var resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      await resp.json();
+    }
+
+    // Show success and reset form
+    var successEl = document.getElementById('manual-entry-success');
+    successEl.textContent = 'Signup recorded for ' + firstName + ' ' + lastName + ' (' + ministry.name + ')';
+    successEl.classList.add('visible');
+    setTimeout(function() { successEl.classList.remove('visible'); }, 4000);
+
+    // Reset form fields
+    document.getElementById('manual-firstName').value = '';
+    document.getElementById('manual-lastName').value = '';
+    document.getElementById('manual-email').value = '';
+    document.getElementById('manual-phone').value = '';
+    document.getElementById('manual-ministry').value = '';
+    document.getElementById('manual-newParishioner').checked = false;
+    document.getElementById('manual-questions').innerHTML = '';
+  } catch(e) {
+    alert('Error recording signup. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Record Signup';
+});
+
+// ============================================
+// FOLLOW-UP QUESTIONNAIRE SYSTEM
+// ============================================
+var followupQuestions = {}; // Cache: ministryId -> array of question strings
+
+async function loadFollowupQuestions(ministryId) {
+  if (followupQuestions[ministryId]) return followupQuestions[ministryId];
+
+  var apiUrl = appConfig.apiUrl;
+  if (!apiUrl) return [];
+
+  try {
+    var resp = await fetch(apiUrl + '?action=getFollowupQuestions&ministryId=' + encodeURIComponent(ministryId));
+    var data = await resp.json();
+    var qs = data.questions || [];
+    followupQuestions[ministryId] = qs;
+    return qs;
+  } catch(e) {
+    console.error('Error loading follow-up questions:', e);
+    return [];
+  }
+}
+
+function openFollowupEditor(ministryId) {
+  var m = MINISTRIES.find(function(min) { return min.id === ministryId; });
+  if (!m) return;
+
+  var modal = document.getElementById('followup-editor-modal');
+  modal.classList.remove('hidden');
+  modal.dataset.ministryId = ministryId;
+  document.getElementById('followup-editor-title').textContent = 'Follow-Up Questions: ' + m.name;
+
+  // Generate the shareable link
+  var baseUrl = window.location.origin + window.location.pathname;
+  var followupUrl = baseUrl + '?followup=' + encodeURIComponent(ministryId);
+  document.getElementById('followup-link-input').value = followupUrl;
+
+  // Load existing questions
+  loadFollowupQuestions(ministryId).then(function(qs) {
+    renderFollowupEditorQuestions(qs);
+  });
+}
+
+function renderFollowupEditorQuestions(questions) {
+  var container = document.getElementById('followup-editor-questions');
+  container.innerHTML = '';
+
+  if (!questions || questions.length === 0) {
+    questions = [];
+  }
+
+  questions.forEach(function(qStr, idx) {
+    addFollowupEditorRow(container, qStr, idx + 1);
+  });
+}
+
+function addFollowupEditorRow(container, qStr, num) {
+  var parts = (qStr || 'text|').split('|');
+  var type = parts[0] || 'text';
+  var label = parts[1] || '';
+  var options = parts[2] || '';
+
+  var row = document.createElement('div');
+  row.className = 'followup-q-row';
+  row.innerHTML =
+    '<span class="followup-q-num">Q' + num + '</span>' +
+    '<div class="input-group" style="max-width:100px;">' +
+      '<select class="select followup-q-type" style="font-size:13px;padding:8px;">' +
+        '<option value="text"' + (type === 'text' ? ' selected' : '') + '>Text</option>' +
+        '<option value="select"' + (type === 'select' ? ' selected' : '') + '>Dropdown</option>' +
+        '<option value="checkbox"' + (type === 'checkbox' ? ' selected' : '') + '>Checkbox</option>' +
+      '</select>' +
+    '</div>' +
+    '<div class="input-group">' +
+      '<input type="text" class="input followup-q-label" placeholder="Question text" value="' + escapeHtml(label) + '">' +
+      '<input type="text" class="input followup-q-options" placeholder="Options (comma-separated)" value="' + escapeHtml(options) + '" style="margin-top:6px;' + (type === 'text' ? 'display:none;' : '') + '">' +
+    '</div>' +
+    '<button class="btn-remove-q followup-remove-q">&times;</button>';
+
+  // Show/hide options based on type
+  row.querySelector('.followup-q-type').addEventListener('change', function() {
+    var optInput = row.querySelector('.followup-q-options');
+    optInput.style.display = this.value === 'text' ? 'none' : '';
+  });
+
+  row.querySelector('.followup-remove-q').addEventListener('click', function() {
+    row.remove();
+    // Re-number
+    var rows = container.querySelectorAll('.followup-q-row');
+    rows.forEach(function(r, i) {
+      r.querySelector('.followup-q-num').textContent = 'Q' + (i + 1);
+    });
+  });
+
+  container.appendChild(row);
+}
+
+document.getElementById('followup-add-q-btn').addEventListener('click', function() {
+  var container = document.getElementById('followup-editor-questions');
+  var num = container.querySelectorAll('.followup-q-row').length + 1;
+  if (num > 10) {
+    alert('Maximum 10 follow-up questions.');
+    return;
+  }
+  addFollowupEditorRow(container, '', num);
+});
+
+document.getElementById('followup-copy-link-btn').addEventListener('click', function() {
+  var input = document.getElementById('followup-link-input');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(function() {
+    var btn = document.getElementById('followup-copy-link-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+  });
+});
+
+document.getElementById('followup-editor-cancel').addEventListener('click', function() {
+  document.getElementById('followup-editor-modal').classList.add('hidden');
+});
+
+document.getElementById('followup-editor-backdrop').addEventListener('click', function() {
+  document.getElementById('followup-editor-modal').classList.add('hidden');
+});
+
+document.getElementById('followup-editor-save').addEventListener('click', async function() {
+  var btn = this;
+  var modal = document.getElementById('followup-editor-modal');
+  var ministryId = modal.dataset.ministryId;
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  // Collect questions from editor
+  var rows = document.querySelectorAll('#followup-editor-questions .followup-q-row');
+  var questions = [];
+  rows.forEach(function(row) {
+    var type = row.querySelector('.followup-q-type').value;
+    var label = row.querySelector('.followup-q-label').value.trim();
+    var options = row.querySelector('.followup-q-options').value.trim();
+    if (label) {
+      var qStr = type + '|' + label;
+      if (type !== 'text' && options) {
+        qStr += '|' + options;
+      }
+      questions.push(qStr);
+    }
+  });
+
+  try {
+    var apiUrl = appConfig.apiUrl;
+    if (apiUrl) {
+      var resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminEmail: currentSession ? currentSession.email : '',
+          adminAction: 'saveFollowupQuestions',
+          ministryId: ministryId,
+          questions: questions
+        })
+      });
+      var result = await resp.json();
+      if (result.success) {
+        followupQuestions[ministryId] = questions;
+        modal.classList.add('hidden');
+      } else {
+        alert('Error: ' + (result.error || 'Unknown error'));
+      }
+    }
+  } catch(e) {
+    alert('Network error. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Questions';
+});
+
+// ============================================
+// FOLLOW-UP PUBLIC FORM
+// ============================================
+async function showFollowupForm(ministryId) {
+  showView('followup');
+  var formCard = document.getElementById('followup-form-card');
+  var successCard = document.getElementById('followup-success-card');
+  formCard.classList.remove('hidden');
+  successCard.classList.add('hidden');
+
+  // Find the ministry
+  var ministry = MINISTRIES.find(function(m) { return m.id === ministryId; });
+  currentMinistry = ministry || { id: ministryId, name: ministryId, description: '' };
+
+  document.getElementById('followup-ministry-name').textContent = ministry ? ministry.name : ministryId;
+  if (ministry && ministry.description) {
+    document.getElementById('followup-ministry-desc').textContent = ministry.description;
+  } else {
+    document.getElementById('followup-ministry-desc').textContent = 'Please answer the following questions so we can better serve you.';
+  }
+
+  // Pre-fill from saved profile if available
+  if (hasSavedProfile()) {
+    document.getElementById('followup-firstName').value = profile.firstName || '';
+    document.getElementById('followup-lastName').value = profile.lastName || '';
+    document.getElementById('followup-email').value = profile.email || '';
+    document.getElementById('followup-phone').value = formatPhoneNumber(profile.phone || '');
+  }
+
+  // Phone formatting
+  var fPhone = document.getElementById('followup-phone');
+  fPhone.removeEventListener('input', followupPhoneFormat);
+  fPhone.addEventListener('input', followupPhoneFormat);
+
+  // Load follow-up questions
+  var questions = await loadFollowupQuestions(ministryId);
+  var questionsDiv = document.getElementById('followup-questions');
+
+  if (questions && questions.length > 0) {
+    questionsDiv.innerHTML = '<div class="form">' + questions.map(function(qStr, idx) {
+      var parts = qStr.split('|');
+      var type = parts[0] || 'text';
+      var label = parts[1] || '';
+      var options = parts[2] ? parts[2].split(',').map(function(s) { return s.trim(); }) : [];
+
+      if (type === 'select') {
+        return '<div class="input-group">' +
+          '<label class="label">' + escapeHtml(label) + '</label>' +
+          '<select class="select" data-fqid="fq' + idx + '">' +
+            '<option value="">Select...</option>' +
+            options.map(function(opt) { return '<option value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</option>'; }).join('') +
+          '</select></div>';
+      } else if (type === 'checkbox') {
+        return '<div class="input-group">' +
+          '<label class="label">' + escapeHtml(label) + '</label>' +
+          '<div class="checkbox-options" data-fqid="fq' + idx + '" data-type="checkbox">' +
+            options.map(function(opt, i) {
+              return '<div class="checkbox-option">' +
+                '<input type="checkbox" id="fq' + idx + '-' + i + '" value="' + escapeHtml(opt) + '">' +
+                '<label for="fq' + idx + '-' + i + '">' + escapeHtml(opt) + '</label></div>';
+            }).join('') +
+          '</div></div>';
+      } else {
+        return '<div class="input-group">' +
+          '<label class="label">' + escapeHtml(label) + '</label>' +
+          '<input type="text" class="input" data-fqid="fq' + idx + '" placeholder="Your answer">' +
+        '</div>';
+      }
+    }).join('') + '</div>';
+  } else {
+    questionsDiv.innerHTML = '<p style="text-align:center;color:#666;font-size:14px;font-family:Inter,sans-serif;">No follow-up questions have been configured for this ministry yet.</p>';
+  }
+}
+
+function followupPhoneFormat(e) {
+  e.target.value = formatPhoneNumber(e.target.value);
+}
+
+document.getElementById('followup-submit-btn').addEventListener('click', async function() {
+  var btn = this;
+  var firstName = document.getElementById('followup-firstName').value.trim();
+  var lastName = document.getElementById('followup-lastName').value.trim();
+  var email = document.getElementById('followup-email').value.trim();
+  var phone = document.getElementById('followup-phone').value.trim();
+
+  if (!firstName || !lastName || !email) {
+    alert('First name, last name, and email are required.');
+    return;
+  }
+
+  // Collect follow-up answers
+  var answers = {};
+  document.querySelectorAll('#followup-questions [data-fqid]:not([data-type="checkbox"])').forEach(function(el) {
+    answers[el.dataset.fqid] = el.value;
+  });
+  document.querySelectorAll('#followup-questions [data-type="checkbox"]').forEach(function(group) {
+    var qid = group.dataset.fqid;
+    var checked = [];
+    group.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+      checked.push(cb.value);
+    });
+    answers[qid] = checked.join(', ');
+  });
+
+  // Build answers array (up to 10)
+  var answerValues = [];
+  for (var i = 0; i < 10; i++) {
+    answerValues.push(answers['fq' + i] || '');
+  }
+
+  var ministryId = currentMinistry ? currentMinistry.id : followupParam;
+  var ministryName = currentMinistry ? currentMinistry.name : ministryId;
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    var apiUrl = appConfig.apiUrl;
+    if (apiUrl) {
+      var resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submitFollowupResponse',
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          ministryId: ministryId,
+          ministryName: ministryName,
+          answers: answerValues
+        })
+      });
+      await resp.json();
+    }
+
+    // Show success
+    document.getElementById('followup-form-card').classList.add('hidden');
+    var successCard = document.getElementById('followup-success-card');
+    successCard.classList.remove('hidden');
+
+    // Show organizer info if available
+    var orgDiv = document.getElementById('followup-organizer-info');
+    if (currentMinistry && currentMinistry.organizerName) {
+      var contactHtml = '';
+      if (currentMinistry.organizerEmail && isValidEmail(currentMinistry.organizerEmail)) {
+        contactHtml += '<a href="mailto:' + escapeHtml(currentMinistry.organizerEmail) + '">' + escapeHtml(currentMinistry.organizerEmail) + '</a>';
+      }
+      if (currentMinistry.organizerPhone) {
+        if (contactHtml) contactHtml += ' &middot; ';
+        contactHtml += '<a href="tel:' + escapeHtml(currentMinistry.organizerPhone) + '">' + escapeHtml(formatPhoneNumber(currentMinistry.organizerPhone)) + '</a>';
+      }
+      orgDiv.innerHTML =
+        '<div class="organizer-box">' +
+          '<div class="organizer-title">Ministry Contact</div>' +
+          '<div class="organizer-name">' + escapeHtml(currentMinistry.organizerName) + '</div>' +
+          (contactHtml ? '<div class="organizer-contact">' + contactHtml + '</div>' : '') +
+        '</div>';
+    } else {
+      orgDiv.innerHTML = '';
+    }
+  } catch(e) {
+    alert('Error submitting. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit';
 });
 
 // Hash change routing
