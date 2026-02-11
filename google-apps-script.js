@@ -1,3 +1,21 @@
+// ============================================
+// GOOGLE APPS SCRIPT BACKEND
+// Provider: Google Sheets
+//
+// This is the backend for the Google Sheets provider.
+// For Microsoft 365 / Excel, the frontend uses the
+// Microsoft Graph API directly (see SpreadsheetProviders.microsoft
+// in index.html). This file is only deployed for Google Sheets.
+//
+// Sheet structure:
+// - Ministries: Ministry definitions (name, description, organizer, questions)
+// - App Signups: Audit log of all signup/removal actions
+// - New Parishioners: Deduplicated list of new parishioners
+// - Admins: Admin email list
+// - Follow-Up Questions: Multi-round follow-up question templates
+// - Follow-Up Responses: Follow-up form submissions
+// ============================================
+
 const SIGNUPS_SHEET_NAME = 'App Signups';
 const NEW_PARISHIONERS_SHEET_NAME = 'New Parishioners';
 const MINISTRIES_SHEET_NAME = 'Ministries';

@@ -150,6 +150,21 @@ function createTestDom(options = {}) {
         parseTSV: typeof parseTSV === 'function' ? parseTSV : undefined,
         getApiKey: typeof getApiKey === 'function' ? getApiKey : undefined,
         setApiKey: typeof setApiKey === 'function' ? setApiKey : undefined,
+        // Church registry
+        loadChurchRegistry: typeof loadChurchRegistry === 'function' ? loadChurchRegistry : undefined,
+        saveChurchRegistry: typeof saveChurchRegistry === 'function' ? saveChurchRegistry : undefined,
+        registerChurch: typeof registerChurch === 'function' ? registerChurch : undefined,
+        lookupChurchByDomain: typeof lookupChurchByDomain === 'function' ? lookupChurchByDomain : undefined,
+        isChurchRegistered: typeof isChurchRegistered === 'function' ? isChurchRegistered : undefined,
+        // Spreadsheet providers
+        SpreadsheetProviders: typeof SpreadsheetProviders !== 'undefined' ? SpreadsheetProviders : undefined,
+        getProvider: typeof getProvider === 'function' ? getProvider : undefined,
+        // Platform selection
+        get selectedProvider() { return selectedProvider; },
+        set selectedProvider(v) { selectedProvider = v; },
+        updatePlatformSelection: typeof updatePlatformSelection === 'function' ? updatePlatformSelection : undefined,
+        // Gate
+        processGateSignIn: typeof processGateSignIn === 'function' ? processGateSignIn : undefined,
       };
     `);
   }
