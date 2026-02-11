@@ -2,6 +2,8 @@ const SIGNUPS_SHEET_NAME = 'App Signups';
 const NEW_PARISHIONERS_SHEET_NAME = 'New Parishioners';
 const MINISTRIES_SHEET_NAME = 'Ministries';
 const ADMINS_SHEET_NAME = 'Admins';
+const FOLLOWUP_QUESTIONS_SHEET_NAME = 'Follow-Up Questions';
+const FOLLOWUP_RESPONSES_SHEET_NAME = 'Follow-Up Responses';
 const TIMEZONE = 'America/Chicago'; // Change to your timezone
 
 function doPost(e) {
@@ -29,14 +31,22 @@ function doPost(e) {
     if (action === 'check-api-key') {
       return handleCheckApiKey();
     }
+    if (action === 'ai-parse-signups') {
+      return handleAiParseSignups(data);
+    }
 
-    // ── Signup / Removal actions ──────────────────
+    // ── Follow-up response submission ───────────
+    if (action === 'submitFollowupResponse') {
+      return handleSubmitFollowupResponse(ss, data);
+    }
+
+    // ── Signup / Removal / Manual Entry actions ──
     const signupsSheet = getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
-    
+
     const now = new Date();
     const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
     const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
-    
+
     const row = [
       date,
       time,
@@ -51,11 +61,11 @@ function doPost(e) {
       data.q2 || '',
       data.q3 || ''
     ];
-    
+
     signupsSheet.appendRow(row);
-    
-    // Only add to New Parishioners on signup (not removal)
-    if (action === 'Signup' && data.wantsToJoinParish) {
+
+    // Add to New Parishioners on signup or manual entry (not removal)
+    if ((action === 'Signup' || action === 'Manual Entry') && data.wantsToJoinParish) {
       const newParishionersSheet = getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
       const existingData = newParishionersSheet.getDataRange().getValues();
       const headers = existingData[0] || [];
@@ -104,6 +114,10 @@ function doGet(e) {
         return handleGetNewParishioners(ss, e.parameter.email);
       case 'getAdmins':
         return handleGetAdmins(ss, e.parameter.email);
+      case 'getFollowupQuestions':
+        return handleGetFollowupQuestions(ss, e.parameter.ministryId);
+      case 'getFollowupResponses':
+        return handleGetFollowupResponses(ss, e.parameter.email, e.parameter.ministryId);
       case 'getMinistries':
       default:
         return handleGetMinistries(ss);
@@ -178,8 +192,18 @@ function handleGetMinistries(ss) {
 function handleAdminPost(ss, data) {
   const adminUser = isAdminServer(ss, data.adminEmail);
 
-  const adminOnlyActions = ['addMinistry', 'updateMinistry', 'deleteMinistry', 'addAdmin', 'removeAdmin'];
-  if (adminOnlyActions.includes(data.adminAction) && !adminUser) {
+  const adminOnlyActions = ['addMinistry', 'updateMinistry', 'deleteMinistry', 'addAdmin', 'removeAdmin', 'saveFollowupQuestions'];
+
+  // Allow ministry leaders to save follow-up questions for their own ministries
+  if (data.adminAction === 'saveFollowupQuestions' && !adminUser) {
+    const leaderMinistries = getLeaderMinistries(ss, data.adminEmail);
+    const isLeaderOfMinistry = leaderMinistries.some(m => m.id === data.ministryId);
+    if (!isLeaderOfMinistry) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: 'Unauthorized' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } else if (adminOnlyActions.includes(data.adminAction) && !adminUser) {
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, error: 'Unauthorized' }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -196,6 +220,8 @@ function handleAdminPost(ss, data) {
       return addAdminUser(ss, data);
     case 'removeAdmin':
       return removeAdminUser(ss, data);
+    case 'saveFollowupQuestions':
+      return saveFollowupQuestions(ss, data);
     default:
       return ContentService
         .createTextOutput(JSON.stringify({ success: false, error: 'Unknown admin action' }))
@@ -475,6 +501,188 @@ function handleGetAdmins(ss, email) {
 }
 
 // ============================================
+// FOLLOW-UP QUESTIONNAIRE ENDPOINTS
+// ============================================
+
+function getFollowupQuestionsHeaders() {
+  return ['Ministry ID', 'Ministry Name', 'Round', 'Q1', 'Q2', 'Q3'];
+}
+
+function getFollowupResponsesHeaders() {
+  return ['Date', 'Time', 'First', 'Last', 'Email', 'Phone', 'Ministry', 'Round', 'Q1', 'Q2', 'Q3'];
+}
+
+/**
+ * GET: Return follow-up questions for a specific ministry.
+ * No authentication required (public form).
+ */
+function handleGetFollowupQuestions(ss, ministryId) {
+  if (!ministryId) {
+    return jsonResponse({ rounds: [] });
+  }
+
+  const sheet = ss.getSheetByName(FOLLOWUP_QUESTIONS_SHEET_NAME);
+  if (!sheet) {
+    return jsonResponse({ rounds: [] });
+  }
+
+  const data = sheet.getDataRange().getValues();
+  // Collect all rounds for this ministry, sorted by round number
+  const roundsMap = {};
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === ministryId) {
+      const roundNum = parseInt(data[i][2]) || 1;
+      const questions = [];
+      // Columns D-F (indices 3-5) contain Q1-Q3
+      for (let q = 3; q <= 5; q++) {
+        if (data[i][q]) {
+          questions.push(data[i][q].toString());
+        }
+      }
+      roundsMap[roundNum] = questions;
+    }
+  }
+
+  // Convert to ordered array
+  const rounds = [];
+  const roundNums = Object.keys(roundsMap).map(Number).sort();
+  roundNums.forEach(function(num) {
+    // Ensure rounds array is filled up to this index
+    while (rounds.length < num) {
+      rounds.push([]);
+    }
+    rounds[num - 1] = roundsMap[num];
+  });
+
+  return jsonResponse({ rounds: rounds });
+}
+
+/**
+ * GET: Return follow-up responses for a ministry (admin/leader only).
+ */
+function handleGetFollowupResponses(ss, email, ministryId) {
+  if (!email) {
+    return jsonResponse({ error: 'Unauthorized' });
+  }
+
+  const isAdmin = isAdminServer(ss, email);
+  if (!isAdmin) {
+    const leaderMinistries = getLeaderMinistries(ss, email);
+    if (ministryId) {
+      const isLeader = leaderMinistries.some(m => m.id === ministryId);
+      if (!isLeader) {
+        return jsonResponse({ error: 'Unauthorized' });
+      }
+    } else if (leaderMinistries.length === 0) {
+      return jsonResponse({ error: 'Unauthorized' });
+    }
+  }
+
+  const sheet = ss.getSheetByName(FOLLOWUP_RESPONSES_SHEET_NAME);
+  if (!sheet) {
+    return jsonResponse({ responses: [] });
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const responses = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (ministryId && row[6] !== ministryId) continue;
+    responses.push({
+      date: row[0], time: row[1], firstName: row[2], lastName: row[3],
+      email: row[4], phone: row[5], ministry: row[6], round: row[7],
+      q1: row[8], q2: row[9], q3: row[10]
+    });
+  }
+
+  return jsonResponse({ responses: responses });
+}
+
+/**
+ * POST (admin): Save follow-up questions for a ministry.
+ * Upserts: if the ministry already has questions, update the row; otherwise insert.
+ */
+function saveFollowupQuestions(ss, data) {
+  const ministryId = data.ministryId;
+  if (!ministryId) {
+    return jsonResponse({ success: false, error: 'Ministry ID required' });
+  }
+
+  const rounds = data.rounds || [];
+  const sheet = getOrCreateSheet(ss, FOLLOWUP_QUESTIONS_SHEET_NAME, getFollowupQuestionsHeaders());
+
+  // Find ministry name from Ministries sheet
+  let ministryName = ministryId;
+  const ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+  if (ministriesSheet) {
+    const mData = ministriesSheet.getDataRange().getValues();
+    for (let i = 1; i < mData.length; i++) {
+      if (mData[i][0] === ministryId) {
+        ministryName = mData[i][1] || ministryId;
+        break;
+      }
+    }
+  }
+
+  // Delete all existing rows for this ministry
+  const existingData = sheet.getDataRange().getValues();
+  const rowsToDelete = [];
+  for (let i = existingData.length - 1; i >= 1; i--) {
+    if (existingData[i][0] === ministryId) {
+      rowsToDelete.push(i + 1); // 1-indexed
+    }
+  }
+  rowsToDelete.forEach(function(r) { sheet.deleteRow(r); });
+
+  // Insert one row per round: Ministry ID, Ministry Name, Round, Q1, Q2, Q3
+  rounds.forEach(function(roundQs, roundIdx) {
+    const roundNum = roundIdx + 1;
+    const row = [ministryId, ministryName, roundNum];
+    for (let q = 0; q < 3; q++) {
+      row.push(roundQs[q] || '');
+    }
+    sheet.appendRow(row);
+  });
+
+  return jsonResponse({ success: true });
+}
+
+/**
+ * POST: Submit a follow-up response (public, no auth required).
+ */
+function handleSubmitFollowupResponse(ss, data) {
+  const sheet = getOrCreateSheet(ss, FOLLOWUP_RESPONSES_SHEET_NAME, getFollowupResponsesHeaders());
+
+  const now = new Date();
+  const date = Utilities.formatDate(now, TIMEZONE, "M/d/yy");
+  const time = Utilities.formatDate(now, TIMEZONE, "h:mm a");
+
+  const answers = data.answers || [];
+  const round = data.round || 1;
+  const row = [
+    date,
+    time,
+    data.firstName || '',
+    data.lastName || '',
+    data.email || '',
+    data.phone || '',
+    data.ministryName || data.ministryId || '',
+    round
+  ];
+
+  // Append up to 3 answers
+  for (let i = 0; i < 3; i++) {
+    row.push(answers[i] || '');
+  }
+
+  sheet.appendRow(row);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================
 // AI PROXY - Claude API key stored securely
 // in Script Properties (encrypted at rest by Google)
 // ============================================
@@ -490,6 +698,10 @@ function handleStoreApiKey(data) {
   }
   PropertiesService.getScriptProperties().setProperty('CLAUDE_API_KEY', key);
   return jsonResponse({ success: true });
+}
+
+function getStoredApiKey_() {
+  return PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY') || '';
 }
 
 /**
@@ -562,8 +774,47 @@ function handleAiAnalyze(data) {
 /**
  * Call the Claude API server-side.
  */
-function callClaude(apiKey, prompt, maxTokens) {
+/**
+ * AI Parse Signups: extract signup data from an image of a paper sign-up sheet.
+ */
+function handleAiParseSignups(data) {
+  const apiKey = getStoredApiKey_();
+  if (!apiKey) {
+    return jsonResponse({ success: false, error: 'No Claude API key configured. Add one in Settings.' });
+  }
+
+  const imageData = data.imageData;
+  const mediaType = data.mediaType || 'image/jpeg';
+  const defaultMinistry = data.defaultMinistry || '';
+  const ministryNames = data.ministryNames || [];
+
+  if (!imageData) {
+    return jsonResponse({ success: false, error: 'No image data provided' });
+  }
+
+  const prompt = 'Look at this image of a physical sign-up sheet. Extract all signup entries you can find.\n\n' +
+    'For each person, extract:\n' +
+    '- firstName\n- lastName\n- email (if visible)\n- phone (if visible)\n' +
+    '- ministry (if identifiable from the sheet title or context)\n\n' +
+    (defaultMinistry ? 'Default ministry if not identifiable: "' + defaultMinistry + '"\n' : '') +
+    (ministryNames.length > 0 ? 'Known ministry names: ' + ministryNames.join(', ') + '\n' : '') +
+    '\nReturn ONLY a JSON object with this exact structure:\n' +
+    '{"entries": [{"firstName": "", "lastName": "", "email": "", "phone": "", "ministry": ""}]}\n\n' +
+    'If you cannot read certain fields, leave them as empty strings. Do your best to decipher handwriting.';
+
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
+    { type: 'text', text: prompt }
+  ];
+
+  return callClaude(apiKey, content, 4096);
+}
+
+function callClaude(apiKey, promptOrContent, maxTokens) {
   try {
+    // Support both string prompts and structured content arrays
+    const messageContent = typeof promptOrContent === 'string' ? promptOrContent : promptOrContent;
+
     const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post',
       contentType: 'application/json',
@@ -574,7 +825,7 @@ function callClaude(apiKey, prompt, maxTokens) {
       payload: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
         max_tokens: maxTokens || 1024,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: messageContent }]
       }),
       muteHttpExceptions: true
     });
@@ -764,6 +1015,8 @@ function testSetup() {
   getOrCreateSheet(ss, SIGNUPS_SHEET_NAME, getSignupsHeaders());
   getOrCreateSheet(ss, NEW_PARISHIONERS_SHEET_NAME, getNewParishionersHeaders());
   getOrCreateSheet(ss, ADMINS_SHEET_NAME, getAdminsHeaders());
+  getOrCreateSheet(ss, FOLLOWUP_QUESTIONS_SHEET_NAME, getFollowupQuestionsHeaders());
+  getOrCreateSheet(ss, FOLLOWUP_RESPONSES_SHEET_NAME, getFollowupResponsesHeaders());
   
   let ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
   if (!ministriesSheet) {
