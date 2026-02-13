@@ -928,6 +928,46 @@
       color: #2b6cb0;
       border: 1px solid #bee3f8;
     }
+    .sheet-tab-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 2px solid #e8e4de;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: border-color 0.2s, background 0.2s;
+      width: 100%;
+      text-align: left;
+    }
+    .sheet-tab-btn:hover {
+      border-color: var(--primary);
+      background: #faf8f5;
+    }
+    .sheet-tab-btn.selected {
+      border-color: var(--primary);
+      background: #fdf2f3;
+    }
+    .sheet-tab-btn .tab-name {
+      font-weight: 600;
+      color: #333;
+    }
+    .sheet-tab-btn .tab-meta {
+      font-size: 12px;
+      color: #888;
+    }
+    .sheet-tab-btn .tab-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: #f0f9f4;
+      color: #2d6a4f;
+      font-weight: 600;
+    }
     .admin-list {
       margin-top: 16px;
     }
@@ -2331,8 +2371,13 @@
             <label class="label">Apps Script API URL</label>
             <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
-          <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Test Connection</button>
+          <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Scan &amp; Connect</button>
           <div id="connection-status"></div>
+          <!-- Sheet tab picker (hidden until scan results arrive) -->
+          <div id="sheet-tab-picker" class="hidden" style="margin-top: 16px;">
+            <div id="sheet-tab-list"></div>
+            <div id="sheet-tab-preview" style="margin-top: 12px;"></div>
+          </div>
         </div>
         <div class="wizard-nav">
           <button class="btn-secondary" id="step3-back">&larr; Back</button>
@@ -2613,6 +2658,22 @@
     <div class="role-picker-options" id="role-picker-options">
       <!-- Populated dynamically -->
     </div>
+  </div>
+</div>
+
+<!-- MISSING INFO PROMPT MODAL -->
+<div id="missing-info-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content" style="max-width: 380px;">
+    <h3 class="modal-title">Complete Your Profile</h3>
+    <p class="modal-text" style="margin-bottom: 12px;">We're missing some info for your account. Please fill in what you can.</p>
+    <form class="form" id="missing-info-form">
+      <div id="missing-info-fields"></div>
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button type="button" class="btn-secondary" style="flex: 1;" onclick="document.getElementById('missing-info-modal').classList.add('hidden')">Skip for Now</button>
+        <button type="submit" class="btn" style="flex: 1;">Save</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -3687,6 +3748,7 @@ function handleRoleSelection(role, userData) {
     saveSession(currentSession);
     loadMinistries().then(function() {
       showAdminDashboard();
+      checkMissingInfo(userData.email);
     });
   } else if (role === 'leader') {
     // Sign in as ministry lead
@@ -3700,11 +3762,112 @@ function handleRoleSelection(role, userData) {
     saveSession(currentSession);
     loadMinistries().then(function() {
       showAdminDashboard();
+      checkMissingInfo(userData.email);
     });
   } else {
     // Parishioner
     continueAsParishioner(userData.firstName, userData.lastName, userData.email, userData.picture);
   }
+}
+
+// Check if a ministry lead/admin is missing profile info (e.g. phone number)
+// and prompt them to fill it in
+function checkMissingInfo(email) {
+  if (!MINISTRIES.length) return;
+  var normalizedEmail = email.toLowerCase();
+
+  // Find ministries this person leads
+  var ledMinistries = MINISTRIES.filter(function(m) {
+    return m.organizerEmail && m.organizerEmail.toLowerCase() === normalizedEmail;
+  });
+
+  if (ledMinistries.length === 0) return;
+
+  // Check what's missing
+  var missingFields = [];
+  var firstMinistry = ledMinistries[0];
+
+  if (!firstMinistry.organizerPhone) {
+    missingFields.push({
+      key: 'phone',
+      label: 'Cell Phone',
+      type: 'tel',
+      placeholder: '(555) 555-1234',
+      maxlength: 14
+    });
+  }
+  if (!firstMinistry.organizerName) {
+    missingFields.push({
+      key: 'name',
+      label: 'Your Name',
+      type: 'text',
+      placeholder: 'Jane Smith'
+    });
+  }
+
+  if (missingFields.length === 0) return;
+
+  // Build the form fields
+  var container = document.getElementById('missing-info-fields');
+  container.innerHTML = '';
+
+  missingFields.forEach(function(field) {
+    var group = document.createElement('div');
+    group.className = 'input-group';
+    group.innerHTML =
+      '<label class="label">' + field.label + '</label>' +
+      '<input type="' + field.type + '" class="input" id="missing-' + field.key + '"' +
+      ' placeholder="' + field.placeholder + '"' +
+      (field.maxlength ? ' maxlength="' + field.maxlength + '"' : '') + '>';
+    container.appendChild(group);
+  });
+
+  // Phone formatting
+  var phoneInput = document.getElementById('missing-phone');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+      e.target.value = formatPhoneNumber(e.target.value);
+    });
+  }
+
+  // Handle form submit
+  var form = document.getElementById('missing-info-form');
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    var updates = {};
+
+    var phoneVal = document.getElementById('missing-phone');
+    if (phoneVal && phoneVal.value.trim()) updates.organizerPhone = phoneVal.value.trim();
+
+    var nameVal = document.getElementById('missing-name');
+    if (nameVal && nameVal.value.trim()) updates.organizerName = nameVal.value.trim();
+
+    // Update each ministry this person leads via the API
+    if (Object.keys(updates).length > 0 && appConfig.apiUrl) {
+      ledMinistries.forEach(function(ministry) {
+        var payload = {
+          adminAction: 'updateMinistry',
+          adminEmail: email,
+          ministryId: ministry.id,
+          name: ministry.name,
+          description: ministry.description,
+          icon: ministry.icon,
+          organizerName: updates.organizerName || ministry.organizerName || '',
+          organizerEmail: ministry.organizerEmail || '',
+          organizerPhone: updates.organizerPhone || ministry.organizerPhone || ''
+        };
+        fetch(appConfig.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      });
+    }
+
+    document.getElementById('missing-info-modal').classList.add('hidden');
+  };
+
+  document.getElementById('missing-info-modal').classList.remove('hidden');
 }
 
 // Continue with normal parishioner registration flow
@@ -4310,36 +4473,147 @@ document.getElementById('download-formatted-btn').addEventListener('click', func
 });
 
 // Test connection
+var selectedSheetTab = null; // track which tab the admin picked
+
 document.getElementById('test-connection-btn').addEventListener('click', async function() {
   var url = document.getElementById('setup-api-url').value.trim();
   var statusDiv = document.getElementById('connection-status');
+  var pickerDiv = document.getElementById('sheet-tab-picker');
 
   if (!url) {
     statusDiv.innerHTML = '<div class="connection-status error">Please enter an API URL first.</div>';
+    pickerDiv.classList.add('hidden');
     return;
   }
 
-  statusDiv.innerHTML = '<div class="connection-status testing">Testing connection...</div>';
+  statusDiv.innerHTML = '<div class="connection-status testing">Scanning your spreadsheet tabs...</div>';
+  pickerDiv.classList.add('hidden');
 
   try {
+    // Step 1: Scan all tabs in the sheet
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+    var scanUrl = url + (url.includes('?') ? '&' : '?') + 'action=scanSheets';
+    var response = await fetch(scanUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    var scanData = await response.json();
+
+    if (scanData.error) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(scanData.error) + '</div>';
+      return;
+    }
+
+    if (!scanData.sheets || scanData.sheets.length === 0) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; No data sheets found. Make sure your spreadsheet has at least one tab with ministry data.</div>';
+      return;
+    }
+
+    // Step 2: Show the best candidate and let admin confirm or pick another
+    var best = scanData.sheets[0];
+    selectedSheetTab = best.name;
+
+    statusDiv.innerHTML =
+      '<div class="connection-status success">&#10003; Connected! Found <strong>' + scanData.sheets.length +
+      '</strong> tab' + (scanData.sheets.length === 1 ? '' : 's') + ' with data. ' +
+      'Best match: <strong>' + escapeHtml(best.name) + '</strong> (' + best.rowCount + ' rows).</div>';
+
+    // Render tab picker
+    pickerDiv.classList.remove('hidden');
+    renderSheetTabPicker(scanData.sheets, url);
+
+  } catch(err) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+    pickerDiv.classList.add('hidden');
+  }
+});
+
+// Render the list of sheet tabs for the admin to choose from
+function renderSheetTabPicker(sheets, apiUrl) {
+  var listDiv = document.getElementById('sheet-tab-list');
+  var previewDiv = document.getElementById('sheet-tab-preview');
+
+  listDiv.innerHTML = '<p style="font-size: 13px; color: #666; margin-bottom: 8px; font-family: \'Inter\', sans-serif;">' +
+    'Which tab has your ministry list? Pick one and we\'ll pull it in.</p>';
+
+  sheets.forEach(function(sheet, idx) {
+    var btn = document.createElement('button');
+    btn.className = 'sheet-tab-btn' + (idx === 0 ? ' selected' : '');
+    btn.innerHTML =
+      '<div>' +
+        '<span class="tab-name">' + escapeHtml(sheet.name) + '</span> ' +
+        '<span class="tab-meta">' + sheet.rowCount + ' rows &middot; ' + sheet.colCount + ' columns</span>' +
+      '</div>' +
+      (idx === 0 ? '<span class="tab-badge">Best match</span>' : '');
+
+    btn.addEventListener('click', function() {
+      selectedSheetTab = sheet.name;
+      listDiv.querySelectorAll('.sheet-tab-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      renderSheetPreview(sheet);
+      loadFromTab(apiUrl, sheet.name);
+    });
+
+    listDiv.appendChild(btn);
+  });
+
+  // Auto-show preview of best match and load its ministries
+  renderSheetPreview(sheets[0]);
+  loadFromTab(apiUrl, sheets[0].name);
+}
+
+// Show a preview of the selected tab's data
+function renderSheetPreview(sheet) {
+  var previewDiv = document.getElementById('sheet-tab-preview');
+  if (!sheet.preview || sheet.preview.length === 0) {
+    previewDiv.innerHTML = '<p style="font-size: 13px; color: #888;">No preview available.</p>';
+    return;
+  }
+
+  var html = '<p style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; font-family: \'Inter\', sans-serif;">Preview:</p>';
+  html += '<div class="data-preview-scroll"><table class="sheet-preview"><thead><tr>';
+  sheet.headers.forEach(function(h) {
+    html += '<th>' + escapeHtml(h || '(empty)') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  sheet.preview.forEach(function(row) {
+    html += '<tr>';
+    row.forEach(function(cell) {
+      html += '<td>' + escapeHtml(cell) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  if (sheet.matchedFields && sheet.matchedFields.length > 0) {
+    html += '<p style="font-size: 12px; color: #2d6a4f; margin-top: 6px; font-family: \'Inter\', sans-serif;">' +
+      '&#10003; Detected fields: ' + sheet.matchedFields.join(', ') + '</p>';
+  }
+
+  previewDiv.innerHTML = html;
+}
+
+// Load ministries from a specific tab to verify the count
+async function loadFromTab(apiUrl, tabName) {
+  var statusDiv = document.getElementById('connection-status');
+  try {
+    var fetchUrl = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 'action=getMinistries&sheet=' + encodeURIComponent(tabName);
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var response = await fetch(url, { signal: controller.signal });
+    var response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await response.json();
 
     if (data.ministries) {
       var count = data.ministries.length;
-      statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '.</div>';
-    } else if (data.error) {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(data.error) + '</div>';
-    } else {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Unexpected response. Make sure you deployed the correct Apps Script.</div>';
+      statusDiv.innerHTML =
+        '<div class="connection-status success">&#10003; Using tab <strong>' + escapeHtml(tabName) +
+        '</strong> &mdash; found <strong>' + count + '</strong> ministr' + (count === 1 ? 'y' : 'ies') +
+        '.' + (count === 0 ? ' Try picking a different tab below.' : '') + '</div>';
     }
   } catch(err) {
-    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+    // Silently fail — the tab picker is still usable
   }
-});
+}
 
 // Step 4: Admin management
 function renderAdminList() {
@@ -4469,6 +4743,7 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  if (selectedSheetTab) appConfig.ministriesSheetTab = selectedSheetTab;
   var enteredKey = document.getElementById('setup-api-key').value || '';
   setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
@@ -4507,8 +4782,73 @@ document.getElementById('launch-btn').addEventListener('click', function() {
 
   // Apply config and load the app
   applyConfig();
-  loadMinistries();
+  loadMinistries().then(function() {
+    // After loading, check for ministry leads and offer to notify them
+    showLeadInviteSummary();
+  });
 });
+
+// After setup, show a summary of ministry leads who should be invited to sign in
+function showLeadInviteSummary() {
+  if (!MINISTRIES.length) return;
+
+  var leads = [];
+  var seen = {};
+  MINISTRIES.forEach(function(m) {
+    if (m.organizerEmail && !seen[m.organizerEmail.toLowerCase()]) {
+      seen[m.organizerEmail.toLowerCase()] = true;
+      leads.push({
+        name: m.organizerName || '(no name)',
+        email: m.organizerEmail,
+        phone: m.organizerPhone || '',
+        ministry: m.name
+      });
+    }
+  });
+
+  if (leads.length === 0) return;
+
+  // Build a mailto link for bulk invitation
+  var siteUrl = window.location.origin + window.location.pathname;
+  var orgName = appConfig.organizationName || 'our organization';
+  var subject = encodeURIComponent('You\'re invited to ' + (appConfig.appTitle || 'Ministry Fair'));
+  var body = encodeURIComponent(
+    'Hi,\n\n' +
+    'You\'ve been listed as a ministry lead at ' + orgName + '. ' +
+    'Please sign in to review your ministry and complete your profile:\n\n' +
+    siteUrl + '\n\n' +
+    'Thank you!'
+  );
+  var emailList = leads.map(function(l) { return l.email; }).join(',');
+
+  var html =
+    '<div class="connection-status success" style="flex-direction: column; align-items: flex-start; margin-top: 16px;">' +
+    '<h4 style="margin: 0 0 8px 0; font-size: 15px;">&#128233; Ministry Leads Found</h4>' +
+    '<p style="font-size: 13px; color: #555; margin: 0 0 10px 0;">' +
+    'We found <strong>' + leads.length + '</strong> ministry lead' + (leads.length === 1 ? '' : 's') +
+    ' in your data. Encourage them to sign in so they can manage their ministry and complete their profile.</p>' +
+    '<div style="max-height: 150px; overflow-y: auto; width: 100%; margin-bottom: 10px;">';
+
+  leads.forEach(function(lead) {
+    html += '<div style="font-size: 13px; padding: 4px 0; border-bottom: 1px solid #e8e4de;">' +
+      '<strong>' + escapeHtml(lead.name) + '</strong> &mdash; ' +
+      escapeHtml(lead.email) +
+      (lead.phone ? ' &middot; ' + escapeHtml(lead.phone) : ' <span style="color: #c53030;">(no phone)</span>') +
+      ' <span style="color: #888;">(' + escapeHtml(lead.ministry) + ')</span>' +
+      '</div>';
+  });
+
+  html += '</div>' +
+    '<a href="mailto:' + emailList + '?subject=' + subject + '&body=' + body + '" ' +
+    'class="btn-secondary" style="font-size: 13px; padding: 8px 16px; text-decoration: none; display: inline-block;">&#9993; Email All Leads</a>' +
+    '</div>';
+
+  // Insert into the admin dashboard or show as a banner
+  var statusDiv = document.getElementById('connection-status');
+  if (statusDiv) {
+    statusDiv.insertAdjacentHTML('afterend', html);
+  }
+}
 
 // ============================================
 // SETTINGS VIEW
@@ -4768,7 +5108,11 @@ async function loadMinistries() {
   try {
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var response = await fetch(apiUrl, { signal: controller.signal });
+    var fetchUrl = apiUrl;
+    if (appConfig.ministriesSheetTab) {
+      fetchUrl += (apiUrl.includes('?') ? '&' : '?') + 'action=getMinistries&sheet=' + encodeURIComponent(appConfig.ministriesSheetTab);
+    }
+    var response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await response.json();
     if (data.ministries && data.ministries.length > 0) {
@@ -4824,6 +5168,11 @@ function initializeApp() {
       }
     } else {
       showMinistriesList();
+    }
+
+    // Prompt ministry leads for missing info (e.g. phone) on first visit
+    if (currentSession && isMinistryLead(currentSession.email)) {
+      checkMissingInfo(currentSession.email);
     }
   } else {
     showView('register');
@@ -4924,18 +5273,27 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
   };
   localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
 
-  // Check if admin
-  if (isAdmin(profile.email) && !currentSession) {
-    currentSession = {
-      email: profile.email,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      picture: '',
-      role: 'admin'
-    };
-    saveSession(currentSession);
+  // Check roles — same logic as Google sign-in
+  var email = profile.email;
+  var domain = getDomain(email);
+  var roles = ['parishioner'];
+  if (isAdmin(email)) roles.push('admin');
+  if (isMinistryLead(email)) roles.push('leader');
+  if (!appConfig.setupComplete && emailMatchesSiteDomain(email) && !isConsumerDomain(domain)) {
+    roles.push('setup_admin');
   }
 
+  if (roles.length > 1) {
+    showRolePicker(roles, {
+      email: email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      picture: photoUrl
+    });
+    return;
+  }
+
+  // Just a parishioner — continue
   if (ministryParam) {
     currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
     if (currentMinistry) {

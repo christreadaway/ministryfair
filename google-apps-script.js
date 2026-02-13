@@ -106,6 +106,11 @@ function doGet(e) {
         return handleVerifyAdmin(ss, e.parameter.email);
       case 'verifyUser':
         return handleVerifyUser(ss, e.parameter.email);
+      case 'scanSheets':
+        return handleScanSheets(ss);
+      case 'getMinistries':
+        var sheetName = e.parameter.sheet || MINISTRIES_SHEET_NAME;
+        return handleGetMinistries(ss, sheetName);
       case 'getSignups':
         return handleGetSignups(ss, e.parameter.email);
       case 'getLeaderSignups':
@@ -118,9 +123,8 @@ function doGet(e) {
         return handleGetFollowupQuestions(ss, e.parameter.ministryId);
       case 'getFollowupResponses':
         return handleGetFollowupResponses(ss, e.parameter.email, e.parameter.ministryId);
-      case 'getMinistries':
       default:
-        return handleGetMinistries(ss);
+        return handleGetMinistries(ss, MINISTRIES_SHEET_NAME);
     }
   } catch (error) {
     return ContentService
@@ -129,8 +133,8 @@ function doGet(e) {
   }
 }
 
-function handleGetMinistries(ss) {
-  const ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+function handleGetMinistries(ss, sheetName) {
+  const ministriesSheet = ss.getSheetByName(sheetName || MINISTRIES_SHEET_NAME);
 
   if (!ministriesSheet) {
     return ContentService
@@ -182,6 +186,118 @@ function handleGetMinistries(ss) {
 
   return ContentService
     .createTextOutput(JSON.stringify({ ministries: ministries }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================
+// SHEET SCANNING — find best ministry list tab
+// ============================================
+
+/**
+ * Scans all tabs in the spreadsheet, scores each for how likely it is to
+ * contain a ministry list, and returns them ranked best-first.
+ */
+function handleScanSheets(ss) {
+  var sheets = ss.getSheets();
+  var candidates = [];
+
+  // These are app-managed tabs — skip them
+  var appTabs = [SIGNUPS_SHEET_NAME, NEW_PARISHIONERS_SHEET_NAME,
+    ADMINS_SHEET_NAME, FOLLOWUP_QUESTIONS_SHEET_NAME,
+    FOLLOWUP_RESPONSES_SHEET_NAME];
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    var name = sheet.getName();
+    if (appTabs.indexOf(name) >= 0) continue;
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) continue; // needs header + at least 1 row
+
+    // Read header row and first few data rows
+    var headerRange = sheet.getRange(1, 1, 1, lastCol);
+    var headers = headerRange.getValues()[0].map(function(h) {
+      return (h || '').toString().toLowerCase().trim();
+    });
+
+    var rowCount = lastRow - 1; // exclude header
+    var sampleSize = Math.min(rowCount, 5);
+    var sampleData = sheet.getRange(2, 1, sampleSize, lastCol).getValues();
+
+    // Score this sheet
+    var score = 0;
+    var matchedFields = [];
+
+    // Check header keywords
+    var headerKeywords = {
+      name: ['name', 'ministry', 'ministry name', 'group', 'group name', 'organization', 'team'],
+      description: ['description', 'desc', 'about', 'details', 'summary', 'what we do', 'purpose', 'mission'],
+      contact: ['contact', 'organizer', 'leader', 'lead', 'coordinator', 'chair', 'head', 'director'],
+      email: ['email', 'e-mail', 'contact email', 'organizer email', 'leader email'],
+      phone: ['phone', 'telephone', 'cell', 'mobile', 'contact phone', 'number'],
+      icon: ['icon', 'emoji', 'symbol'],
+      id: ['id', 'slug', 'key', 'code']
+    };
+
+    for (var field in headerKeywords) {
+      var keywords = headerKeywords[field];
+      for (var h = 0; h < headers.length; h++) {
+        if (keywords.indexOf(headers[h]) >= 0 || keywords.some(function(kw) { return headers[h].indexOf(kw) >= 0; })) {
+          score += (field === 'name' ? 20 : field === 'description' ? 15 : 5);
+          matchedFields.push(field);
+          break;
+        }
+      }
+    }
+
+    // Bonus for having a good number of rows (more rows = more likely the master list)
+    if (rowCount >= 5) score += 10;
+    if (rowCount >= 10) score += 10;
+    if (rowCount >= 20) score += 5;
+
+    // Bonus if tab name itself sounds ministry-related
+    var nameLower = name.toLowerCase();
+    var tabKeywords = ['ministr', 'group', 'organization', 'team', 'committee', 'list', 'master', 'all'];
+    for (var t = 0; t < tabKeywords.length; t++) {
+      if (nameLower.indexOf(tabKeywords[t]) >= 0) {
+        score += 10;
+        break;
+      }
+    }
+
+    // Exact match for our expected tab name gets a big bonus
+    if (name === MINISTRIES_SHEET_NAME) score += 30;
+
+    // Build sample preview (first 3 rows, first 5 cols)
+    var previewCols = Math.min(lastCol, 5);
+    var previewHeaders = headers.slice(0, previewCols);
+    var previewRows = [];
+    for (var r = 0; r < Math.min(sampleData.length, 3); r++) {
+      previewRows.push(sampleData[r].slice(0, previewCols).map(function(v) {
+        return (v || '').toString().substring(0, 60);
+      }));
+    }
+
+    candidates.push({
+      name: name,
+      rowCount: rowCount,
+      colCount: lastCol,
+      score: score,
+      matchedFields: matchedFields,
+      headers: previewHeaders,
+      preview: previewRows
+    });
+  }
+
+  // Sort by score descending
+  candidates.sort(function(a, b) { return b.score - a.score; });
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      sheets: candidates,
+      recommended: candidates.length > 0 ? candidates[0].name : null
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
