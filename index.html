@@ -3820,6 +3820,16 @@ function handleAdminSignIn(response) {
     picture: payload.picture || ''
   };
 
+  // Save session so wizard sign-in persists across reloads
+  currentSession = {
+    email: setupAdminData.email,
+    firstName: setupAdminData.firstName,
+    lastName: setupAdminData.lastName,
+    picture: setupAdminData.picture,
+    role: 'setup_admin'
+  };
+  saveSession(currentSession);
+
   // Show signed-in state
   document.getElementById('admin-signed-in').classList.remove('hidden');
   document.getElementById('admin-setup-initials').textContent =
@@ -4210,6 +4220,8 @@ function formatPhoneNumber(value) {
 // ============================================
 function showWizardStep(step) {
   wizardStep = step;
+  // Persist wizard step so reloads resume where the admin left off
+  try { localStorage.setItem('mf-wizard-step', step); } catch(e) {}
 
   // Restore API key from sessionStorage into the input field
   if (step === 1) {
@@ -4687,6 +4699,7 @@ var selectedSheetTab = null; // track which tab the admin picked
 
 document.getElementById('test-connection-btn').addEventListener('click', async function() {
   var url = document.getElementById('setup-api-url').value.trim();
+  var sheetUrl = document.getElementById('setup-sheet-url').value.trim();
   var statusDiv = document.getElementById('connection-status');
   var pickerDiv = document.getElementById('sheet-tab-picker');
 
@@ -4700,13 +4713,36 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
   pickerDiv.classList.add('hidden');
 
   try {
-    // Step 1: Scan all tabs in the sheet
+    // Step 1: Scan all tabs in the sheet (pass spreadsheet URL as fallback for standalone scripts)
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 20000);
     var scanUrl = url + (url.includes('?') ? '&' : '?') + 'action=scanSheets';
+    if (sheetUrl) scanUrl += '&sheetUrl=' + encodeURIComponent(sheetUrl);
     var response = await fetch(scanUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
-    var scanData = await response.json();
+
+    var responseText = await response.text();
+    var scanData;
+    try {
+      scanData = JSON.parse(responseText);
+    } catch(parseErr) {
+      // GAS returned HTML (auth page, error page, etc.)
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; The API returned an invalid response (not JSON). ' +
+        'Make sure your Apps Script is deployed as a Web App with <strong>"Execute as: Me"</strong> and <strong>"Who has access: Anyone"</strong>. ' +
+        'Also check that you copied the <strong>Web app URL</strong> (ends in /exec), not the deployment ID.</div>';
+      return;
+    }
+
+    // Detect if the GAS returned a getMinistries response instead of a scanSheets response
+    // (means the deployed script is outdated and doesn't have the scanSheets action)
+    if (scanData.ministries !== undefined || scanData.format !== undefined) {
+      statusDiv.innerHTML = '<div class="connection-status error" style="line-height:1.6;">&#10007; Your Apps Script needs to be updated. ' +
+        'The deployed version doesn\'t support sheet scanning yet.<br><br>' +
+        '<strong>To fix:</strong> Open your Google Sheet &rarr; Extensions &rarr; Apps Script &rarr; ' +
+        'replace all the code with the latest <code>google-apps-script.js</code> &rarr; ' +
+        'Deploy &rarr; Manage deployments &rarr; pencil icon &rarr; Version: "New version" &rarr; Deploy.</div>';
+      return;
+    }
 
     if (scanData.error) {
       statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(scanData.error) + '</div>';
@@ -4714,7 +4750,7 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
     }
 
     if (!scanData.sheets || scanData.sheets.length === 0) {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; No data sheets found. Make sure your spreadsheet has at least one tab with ministry data.</div>';
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; No data sheets found. Make sure your spreadsheet has at least one tab with ministry data (at least a header row and one data row).</div>';
       return;
     }
 
@@ -4732,7 +4768,11 @@ document.getElementById('test-connection-btn').addEventListener('click', async f
     renderSheetTabPicker(scanData.sheets, url);
 
   } catch(err) {
-    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+    if (err.name === 'AbortError') {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Connection timed out. The API URL may be incorrect, or Google Apps Script is still starting up. Try again in a few seconds.</div>';
+    } else {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again. (' + escapeHtml(err.message) + ')</div>';
+    }
     pickerDiv.classList.add('hidden');
   }
 });
@@ -4999,6 +5039,9 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.hostingMode = appConfig.hostingMode || 'self'; // defaults to self-hosted
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
+
+  // Clean up wizard state
+  try { localStorage.removeItem('mf-wizard-step'); } catch(e) {}
 
   // Create admin session
   if (setupAdminData) {
@@ -5471,9 +5514,9 @@ function boot() {
   // ── Setup not complete: always show the setup wizard ──
   if (!appConfig.setupComplete) {
     showView('start');
-    showWizardStep(1);
 
-    // If already signed in as admin, pre-fill the wizard with their info
+    // Resume wizard step if admin already signed in
+    var savedWizardStep = 1;
     if (currentSession && (currentSession.role === 'admin' || currentSession.role === 'setup_admin')) {
       setupAdminData = {
         email: currentSession.email,
@@ -5489,7 +5532,36 @@ function boot() {
       document.getElementById('admin-setup-email').textContent = currentSession.email;
       document.getElementById('step1-next').disabled = false;
       runDomainDetection(currentSession.email);
+
+      // Restore the wizard step the admin was on (at least step 1 since they signed in)
+      try {
+        var stored = parseInt(localStorage.getItem('mf-wizard-step'));
+        if (stored >= 1 && stored <= 5) savedWizardStep = stored;
+      } catch(e) {}
+
+      // Pre-fill wizard form fields from config
+      if (appConfig.apiUrl) {
+        var apiInput = document.getElementById('setup-api-url');
+        if (apiInput && !apiInput.value) apiInput.value = appConfig.apiUrl;
+      }
+      if (appConfig.spreadsheetUrl) {
+        var sheetInput = document.getElementById('setup-sheet-url');
+        if (sheetInput && !sheetInput.value) sheetInput.value = appConfig.spreadsheetUrl;
+      }
+      if (appConfig.organizationName) {
+        var orgInput = document.getElementById('setup-org-name');
+        if (orgInput && !orgInput.value) orgInput.value = appConfig.organizationName;
+      }
+      if (appConfig.appTitle) {
+        var titleInput = document.getElementById('setup-app-title');
+        if (titleInput && !titleInput.value) titleInput.value = appConfig.appTitle;
+      }
+      if (appConfig.tagline) {
+        var tagInput = document.getElementById('setup-tagline');
+        if (tagInput && !tagInput.value) tagInput.value = appConfig.tagline;
+      }
     }
+    showWizardStep(savedWizardStep);
     return;
   }
 
