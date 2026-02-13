@@ -1674,6 +1674,59 @@
       padding: 10px 14px;
       font-size: 14px;
     }
+    .enrich-item {
+      border: 1px solid #e8e4de;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: white;
+    }
+    .enrich-item-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .enrich-item-header input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+    .enrich-item-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: #333;
+    }
+    .enrich-item-match {
+      font-size: 12px;
+      color: #2d6a4f;
+      background: #f0f9f4;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .enrich-item-new {
+      font-size: 12px;
+      color: #c53030;
+      background: #fff5f5;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .enrich-field {
+      font-size: 13px;
+      color: #555;
+      padding: 4px 0;
+      line-height: 1.5;
+    }
+    .enrich-field-label {
+      font-weight: 600;
+      color: #333;
+      margin-right: 4px;
+    }
+    .enrich-field-new {
+      background: #f0f9f4;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
     .btn-export {
       background: white;
       color: #1a5276;
@@ -2733,7 +2786,52 @@
     <div id="admin-tab-ministries" class="hidden">
       <div class="admin-toolbar">
         <button class="btn-sm" id="add-ministry-btn">+ Add Ministry</button>
+        <button class="btn-sm" id="enrich-booklet-btn" style="margin-left: 8px;">&#128214; Import Booklet</button>
+        <button class="btn-sm" id="enrich-spreadsheet-btn" style="margin-left: 8px;">&#128196; Add Spreadsheet</button>
       </div>
+
+      <!-- Enrichment Panel (hidden by default) -->
+      <div id="enrich-panel" class="hidden" style="margin-bottom: 20px;">
+        <div class="card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="section-title" style="font-size: 16px; margin: 0;" id="enrich-panel-title">Import Ministry Booklet</h3>
+            <button class="remove-file" id="enrich-panel-close" style="font-size: 20px;">&times;</button>
+          </div>
+          <p class="welcome-text" id="enrich-panel-desc" style="font-size: 13px; margin: 8px 0 16px 0;">
+            Upload a ministry booklet (PDF) or document. AI will extract descriptions, meeting times, contacts, and more to enrich your existing ministry data.
+          </p>
+
+          <!-- File upload area -->
+          <div id="enrich-upload-area" class="upload-area" style="padding: 20px;">
+            <div class="upload-area-icon">&#128203;</div>
+            <div class="upload-area-text" id="enrich-upload-text">Drop your file here, or click to browse</div>
+            <div class="upload-area-hint" id="enrich-upload-hint">PDF, Word, or image files</div>
+            <input type="file" id="enrich-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.csv,.tsv,.xlsx,.xls,.txt">
+          </div>
+          <div id="enrich-filename" class="upload-filename hidden">
+            <span>&#128196;</span>
+            <span id="enrich-filename-text"></span>
+            <button class="remove-file" id="enrich-remove-file-btn">&times;</button>
+          </div>
+
+          <!-- Progress -->
+          <div id="enrich-progress" class="analysis-progress hidden">
+            <div class="analysis-spinner"></div>
+            <div class="analysis-status-text" id="enrich-status-text">Analyzing with AI...</div>
+          </div>
+
+          <!-- Results preview -->
+          <div id="enrich-results" class="hidden" style="margin-top: 16px;">
+            <div id="enrich-summary"></div>
+            <div id="enrich-items" style="max-height: 400px; overflow-y: auto; margin-top: 12px;"></div>
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
+              <button class="btn-secondary" id="enrich-cancel-btn" style="flex: 1;">Cancel</button>
+              <button class="btn" id="enrich-apply-btn" style="flex: 1;">Apply Selected Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="admin-ministries-list"></div>
     </div>
 
@@ -5872,6 +5970,368 @@ function renderAdminMinistries() {
     });
   });
 }
+
+// ============================================
+// ENRICH MINISTRIES (Booklet + Spreadsheet)
+// ============================================
+var enrichSourceType = null; // 'booklet' or 'spreadsheet'
+var enrichResults = null;    // parsed AI results
+
+document.getElementById('enrich-booklet-btn').addEventListener('click', function() {
+  enrichSourceType = 'booklet';
+  document.getElementById('enrich-panel-title').textContent = 'Import Ministry Booklet';
+  document.getElementById('enrich-panel-desc').textContent =
+    'Upload a ministry booklet (PDF) or document. AI will extract descriptions, meeting times, contacts, and more to enrich your existing ministry data.';
+  document.getElementById('enrich-upload-hint').textContent = 'PDF or image files';
+  document.getElementById('enrich-file-input').accept = '.pdf,.jpg,.jpeg,.png';
+  resetEnrichPanel();
+  document.getElementById('enrich-panel').classList.remove('hidden');
+});
+
+document.getElementById('enrich-spreadsheet-btn').addEventListener('click', function() {
+  enrichSourceType = 'spreadsheet';
+  document.getElementById('enrich-panel-title').textContent = 'Add Supplementary Spreadsheet';
+  document.getElementById('enrich-panel-desc').textContent =
+    'Upload an additional spreadsheet with extra details like meeting times, locations, requirements, etc. AI will match it to your existing ministries and pull in the new data.';
+  document.getElementById('enrich-upload-hint').textContent = 'CSV, Excel, or any spreadsheet format';
+  document.getElementById('enrich-file-input').accept = '.csv,.tsv,.xlsx,.xls,.txt';
+  resetEnrichPanel();
+  document.getElementById('enrich-panel').classList.remove('hidden');
+});
+
+document.getElementById('enrich-panel-close').addEventListener('click', function() {
+  document.getElementById('enrich-panel').classList.add('hidden');
+});
+
+function resetEnrichPanel() {
+  document.getElementById('enrich-upload-area').classList.remove('hidden');
+  document.getElementById('enrich-filename').classList.add('hidden');
+  document.getElementById('enrich-progress').classList.add('hidden');
+  document.getElementById('enrich-results').classList.add('hidden');
+  document.getElementById('enrich-file-input').value = '';
+  enrichResults = null;
+}
+
+// File upload for enrichment
+(function() {
+  var area = document.getElementById('enrich-upload-area');
+  var fileInput = document.getElementById('enrich-file-input');
+
+  area.addEventListener('click', function() { fileInput.click(); });
+  area.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    area.classList.add('dragover');
+  });
+  area.addEventListener('dragleave', function() { area.classList.remove('dragover'); });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault();
+    area.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleEnrichFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) handleEnrichFile(fileInput.files[0]);
+  });
+  document.getElementById('enrich-remove-file-btn').addEventListener('click', resetEnrichPanel);
+})();
+
+async function handleEnrichFile(file) {
+  document.getElementById('enrich-upload-area').classList.add('hidden');
+  document.getElementById('enrich-filename').classList.remove('hidden');
+  document.getElementById('enrich-filename-text').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+
+  var ext = file.name.split('.').pop().toLowerCase();
+  var isBooklet = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+  var isSpreadsheet = ['csv', 'tsv', 'xlsx', 'xls', 'txt'].includes(ext);
+
+  if (isBooklet) {
+    enrichSourceType = 'booklet';
+    await analyzeBooklet(file, ext);
+  } else if (isSpreadsheet) {
+    enrichSourceType = 'spreadsheet';
+    await analyzeEnrichSpreadsheet(file);
+  } else {
+    alert('Unsupported file type.');
+    resetEnrichPanel();
+  }
+}
+
+async function analyzeBooklet(file, ext) {
+  var progress = document.getElementById('enrich-progress');
+  var statusText = document.getElementById('enrich-status-text');
+  progress.classList.remove('hidden');
+  statusText.textContent = 'Reading booklet with AI... This may take a moment.';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var base64Data = e.target.result.split(',')[1];
+    var mediaType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+
+    var existingMinistries = MINISTRIES.map(function(m) {
+      return { id: m.id, name: m.name, description: m.description || '' };
+    });
+
+    try {
+      var resp = await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai-enrich',
+          sourceType: 'booklet',
+          fileData: base64Data,
+          mediaType: mediaType,
+          existingMinistries: existingMinistries
+        })
+      });
+      var result = await resp.json();
+      progress.classList.add('hidden');
+
+      if (result.success && result.result) {
+        enrichResults = result.result;
+        renderEnrichResults(enrichResults);
+      } else {
+        document.getElementById('enrich-results').classList.remove('hidden');
+        document.getElementById('enrich-summary').innerHTML =
+          '<div class="mapping-summary warn"><h4>Analysis Error</h4><p>' +
+          escapeHtml(result.error || 'Could not analyze the booklet.') + '</p></div>';
+      }
+    } catch(err) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Error</h4><p>' + escapeHtml(err.message) + '</p></div>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeEnrichSpreadsheet(file) {
+  var progress = document.getElementById('enrich-progress');
+  var statusText = document.getElementById('enrich-status-text');
+  progress.classList.remove('hidden');
+  statusText.textContent = 'Reading spreadsheet with AI...';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var text = e.target.result;
+    var parsed;
+    if (file.name.endsWith('.tsv') || file.name.endsWith('.txt')) {
+      parsed = parseTSV(text);
+    } else {
+      parsed = parseCSV(text);
+      if (parsed.length > 0 && parsed[0].length === 1 && parsed[0][0].includes('\t')) {
+        parsed = parseTSV(text);
+      }
+    }
+
+    if (parsed.length < 2) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Not enough data</h4><p>Need at least a header row and one data row.</p></div>';
+      return;
+    }
+
+    var headers = parsed[0];
+    var rows = parsed.slice(1, 20); // sample up to 20 rows
+    var sampleText = 'HEADERS: ' + JSON.stringify(headers) + '\n\nROWS:\n';
+    rows.forEach(function(row, i) {
+      sampleText += 'Row ' + (i + 1) + ': ' + JSON.stringify(row) + '\n';
+    });
+
+    var existingMinistries = MINISTRIES.map(function(m) {
+      return { id: m.id, name: m.name, description: m.description || '' };
+    });
+
+    try {
+      var resp = await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai-enrich',
+          sourceType: 'spreadsheet',
+          sampleData: sampleText,
+          existingMinistries: existingMinistries
+        })
+      });
+      var result = await resp.json();
+      progress.classList.add('hidden');
+
+      if (result.success && result.result) {
+        enrichResults = result.result;
+        renderEnrichResults(enrichResults);
+      } else {
+        document.getElementById('enrich-results').classList.remove('hidden');
+        document.getElementById('enrich-summary').innerHTML =
+          '<div class="mapping-summary warn"><h4>Analysis Error</h4><p>' +
+          escapeHtml(result.error || 'Could not analyze the spreadsheet.') + '</p></div>';
+      }
+    } catch(err) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Error</h4><p>' + escapeHtml(err.message) + '</p></div>';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderEnrichResults(data) {
+  var resultsDiv = document.getElementById('enrich-results');
+  var summaryDiv = document.getElementById('enrich-summary');
+  var itemsDiv = document.getElementById('enrich-items');
+  resultsDiv.classList.remove('hidden');
+
+  var enrichments = data.enrichments || [];
+  var newMinistries = data.newMinistries || [];
+  var summary = data.summary || '';
+
+  summaryDiv.innerHTML =
+    '<div class="mapping-summary ' + (enrichments.length > 0 ? 'good' : 'warn') + '">' +
+    '<h4>' + (enrichments.length > 0 ? '&#10003; ' : '&#9888; ') + 'Analysis Complete</h4>' +
+    '<p>' + escapeHtml(summary) + '</p>' +
+    '<p style="margin-top: 6px; font-size: 13px;">' +
+    '<strong>' + enrichments.length + '</strong> enrichment' + (enrichments.length !== 1 ? 's' : '') + ' found' +
+    (newMinistries.length > 0 ? ', <strong>' + newMinistries.length + '</strong> new ministr' + (newMinistries.length !== 1 ? 'ies' : 'y') + ' discovered' : '') +
+    '</p></div>';
+
+  var html = '';
+  enrichments.forEach(function(item, idx) {
+    var isMatched = item.existingId || item.existingName;
+    var displayName = item.bookletName || item.sheetName || item.existingName || 'Unknown';
+
+    html += '<div class="enrich-item">';
+    html += '<div class="enrich-item-header">';
+    html += '<input type="checkbox" checked id="enrich-check-' + idx + '" data-enrich-idx="' + idx + '">';
+    html += '<span class="enrich-item-name">' + escapeHtml(displayName) + '</span>';
+    if (isMatched) {
+      html += '<span class="enrich-item-match">Matches: ' + escapeHtml(item.existingName || item.existingId) + '</span>';
+    } else {
+      html += '<span class="enrich-item-new">New Ministry</span>';
+    }
+    html += '</div>';
+
+    // Show each enrichment field
+    var fields = [
+      { key: 'description', label: 'Description' },
+      { key: 'meetingTime', label: 'Meeting Time' },
+      { key: 'location', label: 'Location' },
+      { key: 'requirements', label: 'Requirements' },
+      { key: 'contactName', label: 'Contact' },
+      { key: 'contactEmail', label: 'Email' },
+      { key: 'contactPhone', label: 'Phone' },
+      { key: 'organizerName', label: 'Organizer' },
+      { key: 'organizerEmail', label: 'Email' },
+      { key: 'organizerPhone', label: 'Phone' },
+      { key: 'additionalNotes', label: 'Notes' }
+    ];
+
+    fields.forEach(function(f) {
+      if (item[f.key]) {
+        html += '<div class="enrich-field"><span class="enrich-field-label">' + f.label + ':</span> ' +
+          '<span class="enrich-field-new">' + escapeHtml(item[f.key]) + '</span></div>';
+      }
+    });
+
+    html += '</div>';
+  });
+
+  // Show new ministries that don't match existing ones
+  if (newMinistries.length > 0) {
+    html += '<div style="margin-top: 16px; padding: 12px; background: #fff5f5; border-radius: 10px; border: 1px solid #feb2b2;">';
+    html += '<p style="font-size: 14px; font-weight: 600; color: #c53030; margin-bottom: 8px;">New Ministries Not Yet in Your List:</p>';
+    newMinistries.forEach(function(name) {
+      html += '<div style="font-size: 13px; color: #555; padding: 2px 0;">&bull; ' + escapeHtml(name) + '</div>';
+    });
+    html += '<p style="font-size: 12px; color: #888; margin-top: 8px;">You can add these manually from the "+ Add Ministry" button.</p>';
+    html += '</div>';
+  }
+
+  itemsDiv.innerHTML = html;
+}
+
+// Apply selected enrichments
+document.getElementById('enrich-apply-btn').addEventListener('click', async function() {
+  if (!enrichResults || !enrichResults.enrichments) return;
+
+  var btn = document.getElementById('enrich-apply-btn');
+  btn.disabled = true;
+  btn.textContent = 'Applying...';
+
+  var enrichments = enrichResults.enrichments;
+  var applied = 0;
+
+  for (var i = 0; i < enrichments.length; i++) {
+    var checkbox = document.getElementById('enrich-check-' + i);
+    if (!checkbox || !checkbox.checked) continue;
+
+    var item = enrichments[i];
+    if (!item.existingId && !item.existingName) continue; // skip new ministries
+
+    // Find the matching existing ministry
+    var ministry = null;
+    if (item.existingId) {
+      ministry = MINISTRIES.find(function(m) { return m.id === item.existingId; });
+    }
+    if (!ministry && item.existingName) {
+      ministry = MINISTRIES.find(function(m) {
+        return m.name.toLowerCase() === item.existingName.toLowerCase();
+      });
+    }
+    if (!ministry) continue;
+
+    // Build update payload — merge new data with existing
+    var enrichedDesc = item.description || '';
+    var notes = [];
+    if (item.meetingTime) notes.push('Meeting: ' + item.meetingTime);
+    if (item.location) notes.push('Location: ' + item.location);
+    if (item.requirements) notes.push('Requirements: ' + item.requirements);
+    if (item.additionalNotes) notes.push(item.additionalNotes);
+
+    // Append notes to description if there are any
+    var newDescription = ministry.description || '';
+    if (enrichedDesc && enrichedDesc.length > (newDescription.length || 0)) {
+      newDescription = enrichedDesc;
+    }
+    if (notes.length > 0) {
+      newDescription += (newDescription ? '\n\n' : '') + notes.join('\n');
+    }
+
+    var payload = {
+      adminAction: 'updateMinistry',
+      adminEmail: currentSession ? currentSession.email : '',
+      id: ministry.id,
+      name: ministry.name,
+      description: newDescription,
+      icon: ministry.icon || '',
+      organizerName: item.contactName || item.organizerName || ministry.organizerName || '',
+      organizerEmail: item.contactEmail || item.organizerEmail || ministry.organizerEmail || '',
+      organizerPhone: item.contactPhone || item.organizerPhone || ministry.organizerPhone || ''
+    };
+
+    try {
+      await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      applied++;
+    } catch(err) {
+      console.error('Error updating ministry:', ministry.id, err);
+    }
+  }
+
+  // Reload ministries and close
+  await loadMinistries();
+  renderAdminMinistries();
+  document.getElementById('enrich-panel').classList.add('hidden');
+  btn.disabled = false;
+  btn.textContent = 'Apply Selected Changes';
+  alert('Updated ' + applied + ' ministr' + (applied === 1 ? 'y' : 'ies') + ' with enriched data.');
+});
+
+document.getElementById('enrich-cancel-btn').addEventListener('click', function() {
+  document.getElementById('enrich-panel').classList.add('hidden');
+});
 
 document.getElementById('add-ministry-btn').addEventListener('click', function() {
   openMinistryEditor(null);

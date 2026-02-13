@@ -34,6 +34,9 @@ function doPost(e) {
     if (action === 'ai-parse-signups') {
       return handleAiParseSignups(data);
     }
+    if (action === 'ai-enrich') {
+      return handleAiEnrich(data);
+    }
 
     // ── Follow-up response submission ───────────
     if (action === 'submitFollowupResponse') {
@@ -924,6 +927,107 @@ function handleAiParseSignups(data) {
   ];
 
   return callClaude(apiKey, content, 4096);
+}
+
+/**
+ * AI Enrich: analyze a ministry booklet (PDF/image) or additional spreadsheet
+ * and extract data that can enrich existing ministry records.
+ *
+ * Client sends:
+ *   { action: 'ai-enrich', sourceType: 'booklet'|'spreadsheet',
+ *     fileData: base64, mediaType: 'application/pdf'|...,
+ *     existingMinistries: [{id, name, description, ...}],
+ *     sampleData: '...' (for spreadsheets) }
+ */
+function handleAiEnrich(data) {
+  const apiKey = getStoredApiKey_();
+  if (!apiKey) {
+    return jsonResponse({ success: false, error: 'No Claude API key configured. Add one in Settings.' });
+  }
+
+  var existingMinistries = data.existingMinistries || [];
+  var ministryList = existingMinistries.map(function(m) {
+    return '- ' + m.name + (m.description ? ' (' + m.description.substring(0, 60) + '...)' : '');
+  }).join('\n');
+
+  if (data.sourceType === 'booklet') {
+    // PDF/image booklet enrichment
+    var fileData = data.fileData;
+    var mediaType = data.mediaType || 'application/pdf';
+    if (!fileData) return jsonResponse({ success: false, error: 'No file data provided' });
+
+    var prompt = 'I have a ministry booklet or document from a church/parish. I also have an existing list of ministries in our database.\n\n' +
+      'EXISTING MINISTRIES:\n' + ministryList + '\n\n' +
+      'Please analyze this document and extract enrichment data for each ministry you can identify. For each ministry:\n' +
+      '1. Match it to an existing ministry by name (fuzzy matching is OK — "Lectors" matches "Lector Ministry")\n' +
+      '2. Extract any new information: richer description, meeting times/schedule, location, requirements, who to contact, mission statement, activities, etc.\n\n' +
+      'Also identify any ministries in the booklet that are NOT in our existing list.\n\n' +
+      'Return ONLY a JSON object with this structure:\n' +
+      '{\n' +
+      '  "enrichments": [\n' +
+      '    {\n' +
+      '      "existingId": "ministry-id or null if new",\n' +
+      '      "existingName": "matched ministry name or null",\n' +
+      '      "bookletName": "name as it appears in the booklet",\n' +
+      '      "description": "enriched description (longer/better than existing)",\n' +
+      '      "meetingTime": "if mentioned",\n' +
+      '      "location": "if mentioned",\n' +
+      '      "requirements": "if mentioned",\n' +
+      '      "contactName": "if mentioned",\n' +
+      '      "contactEmail": "if mentioned",\n' +
+      '      "contactPhone": "if mentioned",\n' +
+      '      "additionalNotes": "any other useful info"\n' +
+      '    }\n' +
+      '  ],\n' +
+      '  "newMinistries": ["names of ministries in booklet but not in existing list"],\n' +
+      '  "summary": "brief human-readable summary of what was found"\n' +
+      '}';
+
+    var content = [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileData } },
+      { type: 'text', text: prompt }
+    ];
+
+    return callClaude(apiKey, content, 4096);
+  }
+
+  if (data.sourceType === 'spreadsheet') {
+    // Additional spreadsheet enrichment
+    var sampleData = data.sampleData || '';
+    if (!sampleData) return jsonResponse({ success: false, error: 'No spreadsheet data provided' });
+
+    var prompt = 'I have a supplementary spreadsheet with additional information about church/parish ministries. I also have existing ministry records.\n\n' +
+      'EXISTING MINISTRIES:\n' + ministryList + '\n\n' +
+      'SUPPLEMENTARY SPREADSHEET DATA:\n' + sampleData + '\n\n' +
+      'Analyze this spreadsheet and:\n' +
+      '1. Match each row to an existing ministry by name (fuzzy matching OK)\n' +
+      '2. Identify what new/additional data each row provides beyond what we already have\n' +
+      '3. Map the columns to useful fields\n\n' +
+      'Return ONLY a JSON object with this structure:\n' +
+      '{\n' +
+      '  "enrichments": [\n' +
+      '    {\n' +
+      '      "existingId": "ministry-id or null if new",\n' +
+      '      "existingName": "matched ministry name or null",\n' +
+      '      "sheetName": "name as it appears in the spreadsheet",\n' +
+      '      "description": "enriched/updated description if available",\n' +
+      '      "organizerName": "if available",\n' +
+      '      "organizerEmail": "if available",\n' +
+      '      "organizerPhone": "if available",\n' +
+      '      "meetingTime": "if available",\n' +
+      '      "location": "if available",\n' +
+      '      "additionalNotes": "any other useful info from this row"\n' +
+      '    }\n' +
+      '  ],\n' +
+      '  "newMinistries": ["names of ministries in sheet but not in existing list"],\n' +
+      '  "columnMapping": {"columnName": "whatItMapsTo"},\n' +
+      '  "summary": "brief human-readable summary of what was found"\n' +
+      '}';
+
+    return callClaude(apiKey, prompt, 4096);
+  }
+
+  return jsonResponse({ success: false, error: 'Unknown sourceType: ' + data.sourceType });
 }
 
 function callClaude(apiKey, promptOrContent, maxTokens) {
