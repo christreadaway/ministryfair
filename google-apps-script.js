@@ -34,6 +34,9 @@ function doPost(e) {
     if (action === 'ai-parse-signups') {
       return handleAiParseSignups(data);
     }
+    if (action === 'ai-enrich') {
+      return handleAiEnrich(data);
+    }
 
     // ── Follow-up response submission ───────────
     if (action === 'submitFollowupResponse') {
@@ -106,6 +109,11 @@ function doGet(e) {
         return handleVerifyAdmin(ss, e.parameter.email);
       case 'verifyUser':
         return handleVerifyUser(ss, e.parameter.email);
+      case 'scanSheets':
+        return handleScanSheets(ss);
+      case 'getMinistries':
+        var sheetName = e.parameter.sheet || MINISTRIES_SHEET_NAME;
+        return handleGetMinistries(ss, sheetName);
       case 'getSignups':
         return handleGetSignups(ss, e.parameter.email);
       case 'getLeaderSignups':
@@ -118,9 +126,8 @@ function doGet(e) {
         return handleGetFollowupQuestions(ss, e.parameter.ministryId);
       case 'getFollowupResponses':
         return handleGetFollowupResponses(ss, e.parameter.email, e.parameter.ministryId);
-      case 'getMinistries':
       default:
-        return handleGetMinistries(ss);
+        return handleGetMinistries(ss, MINISTRIES_SHEET_NAME);
     }
   } catch (error) {
     return ContentService
@@ -129,8 +136,8 @@ function doGet(e) {
   }
 }
 
-function handleGetMinistries(ss) {
-  const ministriesSheet = ss.getSheetByName(MINISTRIES_SHEET_NAME);
+function handleGetMinistries(ss, sheetName) {
+  const ministriesSheet = ss.getSheetByName(sheetName || MINISTRIES_SHEET_NAME);
 
   if (!ministriesSheet) {
     return ContentService
@@ -182,6 +189,118 @@ function handleGetMinistries(ss) {
 
   return ContentService
     .createTextOutput(JSON.stringify({ ministries: ministries }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================
+// SHEET SCANNING — find best ministry list tab
+// ============================================
+
+/**
+ * Scans all tabs in the spreadsheet, scores each for how likely it is to
+ * contain a ministry list, and returns them ranked best-first.
+ */
+function handleScanSheets(ss) {
+  var sheets = ss.getSheets();
+  var candidates = [];
+
+  // These are app-managed tabs — skip them
+  var appTabs = [SIGNUPS_SHEET_NAME, NEW_PARISHIONERS_SHEET_NAME,
+    ADMINS_SHEET_NAME, FOLLOWUP_QUESTIONS_SHEET_NAME,
+    FOLLOWUP_RESPONSES_SHEET_NAME];
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    var name = sheet.getName();
+    if (appTabs.indexOf(name) >= 0) continue;
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) continue; // needs header + at least 1 row
+
+    // Read header row and first few data rows
+    var headerRange = sheet.getRange(1, 1, 1, lastCol);
+    var headers = headerRange.getValues()[0].map(function(h) {
+      return (h || '').toString().toLowerCase().trim();
+    });
+
+    var rowCount = lastRow - 1; // exclude header
+    var sampleSize = Math.min(rowCount, 5);
+    var sampleData = sheet.getRange(2, 1, sampleSize, lastCol).getValues();
+
+    // Score this sheet
+    var score = 0;
+    var matchedFields = [];
+
+    // Check header keywords
+    var headerKeywords = {
+      name: ['name', 'ministry', 'ministry name', 'group', 'group name', 'organization', 'team'],
+      description: ['description', 'desc', 'about', 'details', 'summary', 'what we do', 'purpose', 'mission'],
+      contact: ['contact', 'organizer', 'leader', 'lead', 'coordinator', 'chair', 'head', 'director'],
+      email: ['email', 'e-mail', 'contact email', 'organizer email', 'leader email'],
+      phone: ['phone', 'telephone', 'cell', 'mobile', 'contact phone', 'number'],
+      icon: ['icon', 'emoji', 'symbol'],
+      id: ['id', 'slug', 'key', 'code']
+    };
+
+    for (var field in headerKeywords) {
+      var keywords = headerKeywords[field];
+      for (var h = 0; h < headers.length; h++) {
+        if (keywords.indexOf(headers[h]) >= 0 || keywords.some(function(kw) { return headers[h].indexOf(kw) >= 0; })) {
+          score += (field === 'name' ? 20 : field === 'description' ? 15 : 5);
+          matchedFields.push(field);
+          break;
+        }
+      }
+    }
+
+    // Bonus for having a good number of rows (more rows = more likely the master list)
+    if (rowCount >= 5) score += 10;
+    if (rowCount >= 10) score += 10;
+    if (rowCount >= 20) score += 5;
+
+    // Bonus if tab name itself sounds ministry-related
+    var nameLower = name.toLowerCase();
+    var tabKeywords = ['ministr', 'group', 'organization', 'team', 'committee', 'list', 'master', 'all'];
+    for (var t = 0; t < tabKeywords.length; t++) {
+      if (nameLower.indexOf(tabKeywords[t]) >= 0) {
+        score += 10;
+        break;
+      }
+    }
+
+    // Exact match for our expected tab name gets a big bonus
+    if (name === MINISTRIES_SHEET_NAME) score += 30;
+
+    // Build sample preview (first 3 rows, first 5 cols)
+    var previewCols = Math.min(lastCol, 5);
+    var previewHeaders = headers.slice(0, previewCols);
+    var previewRows = [];
+    for (var r = 0; r < Math.min(sampleData.length, 3); r++) {
+      previewRows.push(sampleData[r].slice(0, previewCols).map(function(v) {
+        return (v || '').toString().substring(0, 60);
+      }));
+    }
+
+    candidates.push({
+      name: name,
+      rowCount: rowCount,
+      colCount: lastCol,
+      score: score,
+      matchedFields: matchedFields,
+      headers: previewHeaders,
+      preview: previewRows
+    });
+  }
+
+  // Sort by score descending
+  candidates.sort(function(a, b) { return b.score - a.score; });
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      sheets: candidates,
+      recommended: candidates.length > 0 ? candidates[0].name : null
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -808,6 +927,107 @@ function handleAiParseSignups(data) {
   ];
 
   return callClaude(apiKey, content, 4096);
+}
+
+/**
+ * AI Enrich: analyze a ministry booklet (PDF/image) or additional spreadsheet
+ * and extract data that can enrich existing ministry records.
+ *
+ * Client sends:
+ *   { action: 'ai-enrich', sourceType: 'booklet'|'spreadsheet',
+ *     fileData: base64, mediaType: 'application/pdf'|...,
+ *     existingMinistries: [{id, name, description, ...}],
+ *     sampleData: '...' (for spreadsheets) }
+ */
+function handleAiEnrich(data) {
+  const apiKey = getStoredApiKey_();
+  if (!apiKey) {
+    return jsonResponse({ success: false, error: 'No Claude API key configured. Add one in Settings.' });
+  }
+
+  var existingMinistries = data.existingMinistries || [];
+  var ministryList = existingMinistries.map(function(m) {
+    return '- ' + m.name + (m.description ? ' (' + m.description.substring(0, 60) + '...)' : '');
+  }).join('\n');
+
+  if (data.sourceType === 'booklet') {
+    // PDF/image booklet enrichment
+    var fileData = data.fileData;
+    var mediaType = data.mediaType || 'application/pdf';
+    if (!fileData) return jsonResponse({ success: false, error: 'No file data provided' });
+
+    var prompt = 'I have a ministry booklet or document from a church/parish. I also have an existing list of ministries in our database.\n\n' +
+      'EXISTING MINISTRIES:\n' + ministryList + '\n\n' +
+      'Please analyze this document and extract enrichment data for each ministry you can identify. For each ministry:\n' +
+      '1. Match it to an existing ministry by name (fuzzy matching is OK — "Lectors" matches "Lector Ministry")\n' +
+      '2. Extract any new information: richer description, meeting times/schedule, location, requirements, who to contact, mission statement, activities, etc.\n\n' +
+      'Also identify any ministries in the booklet that are NOT in our existing list.\n\n' +
+      'Return ONLY a JSON object with this structure:\n' +
+      '{\n' +
+      '  "enrichments": [\n' +
+      '    {\n' +
+      '      "existingId": "ministry-id or null if new",\n' +
+      '      "existingName": "matched ministry name or null",\n' +
+      '      "bookletName": "name as it appears in the booklet",\n' +
+      '      "description": "enriched description (longer/better than existing)",\n' +
+      '      "meetingTime": "if mentioned",\n' +
+      '      "location": "if mentioned",\n' +
+      '      "requirements": "if mentioned",\n' +
+      '      "contactName": "if mentioned",\n' +
+      '      "contactEmail": "if mentioned",\n' +
+      '      "contactPhone": "if mentioned",\n' +
+      '      "additionalNotes": "any other useful info"\n' +
+      '    }\n' +
+      '  ],\n' +
+      '  "newMinistries": ["names of ministries in booklet but not in existing list"],\n' +
+      '  "summary": "brief human-readable summary of what was found"\n' +
+      '}';
+
+    var content = [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: fileData } },
+      { type: 'text', text: prompt }
+    ];
+
+    return callClaude(apiKey, content, 4096);
+  }
+
+  if (data.sourceType === 'spreadsheet') {
+    // Additional spreadsheet enrichment
+    var sampleData = data.sampleData || '';
+    if (!sampleData) return jsonResponse({ success: false, error: 'No spreadsheet data provided' });
+
+    var prompt = 'I have a supplementary spreadsheet with additional information about church/parish ministries. I also have existing ministry records.\n\n' +
+      'EXISTING MINISTRIES:\n' + ministryList + '\n\n' +
+      'SUPPLEMENTARY SPREADSHEET DATA:\n' + sampleData + '\n\n' +
+      'Analyze this spreadsheet and:\n' +
+      '1. Match each row to an existing ministry by name (fuzzy matching OK)\n' +
+      '2. Identify what new/additional data each row provides beyond what we already have\n' +
+      '3. Map the columns to useful fields\n\n' +
+      'Return ONLY a JSON object with this structure:\n' +
+      '{\n' +
+      '  "enrichments": [\n' +
+      '    {\n' +
+      '      "existingId": "ministry-id or null if new",\n' +
+      '      "existingName": "matched ministry name or null",\n' +
+      '      "sheetName": "name as it appears in the spreadsheet",\n' +
+      '      "description": "enriched/updated description if available",\n' +
+      '      "organizerName": "if available",\n' +
+      '      "organizerEmail": "if available",\n' +
+      '      "organizerPhone": "if available",\n' +
+      '      "meetingTime": "if available",\n' +
+      '      "location": "if available",\n' +
+      '      "additionalNotes": "any other useful info from this row"\n' +
+      '    }\n' +
+      '  ],\n' +
+      '  "newMinistries": ["names of ministries in sheet but not in existing list"],\n' +
+      '  "columnMapping": {"columnName": "whatItMapsTo"},\n' +
+      '  "summary": "brief human-readable summary of what was found"\n' +
+      '}';
+
+    return callClaude(apiKey, prompt, 4096);
+  }
+
+  return jsonResponse({ success: false, error: 'Unknown sourceType: ' + data.sourceType });
 }
 
 function callClaude(apiKey, promptOrContent, maxTokens) {

@@ -928,6 +928,46 @@
       color: #2b6cb0;
       border: 1px solid #bee3f8;
     }
+    .sheet-tab-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 2px solid #e8e4de;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: border-color 0.2s, background 0.2s;
+      width: 100%;
+      text-align: left;
+    }
+    .sheet-tab-btn:hover {
+      border-color: var(--primary);
+      background: #faf8f5;
+    }
+    .sheet-tab-btn.selected {
+      border-color: var(--primary);
+      background: #fdf2f3;
+    }
+    .sheet-tab-btn .tab-name {
+      font-weight: 600;
+      color: #333;
+    }
+    .sheet-tab-btn .tab-meta {
+      font-size: 12px;
+      color: #888;
+    }
+    .sheet-tab-btn .tab-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: #f0f9f4;
+      color: #2d6a4f;
+      font-weight: 600;
+    }
     .admin-list {
       margin-top: 16px;
     }
@@ -1634,6 +1674,59 @@
       padding: 10px 14px;
       font-size: 14px;
     }
+    .enrich-item {
+      border: 1px solid #e8e4de;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: white;
+    }
+    .enrich-item-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .enrich-item-header input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+    .enrich-item-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: #333;
+    }
+    .enrich-item-match {
+      font-size: 12px;
+      color: #2d6a4f;
+      background: #f0f9f4;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .enrich-item-new {
+      font-size: 12px;
+      color: #c53030;
+      background: #fff5f5;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .enrich-field {
+      font-size: 13px;
+      color: #555;
+      padding: 4px 0;
+      line-height: 1.5;
+    }
+    .enrich-field-label {
+      font-weight: 600;
+      color: #333;
+      margin-right: 4px;
+    }
+    .enrich-field-new {
+      background: #f0f9f4;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
     .btn-export {
       background: white;
       color: #1a5276;
@@ -2244,6 +2337,35 @@
     <!-- STEP 3: Upload & Analyze Spreadsheet -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
+        <!-- ─── HOSTING MODE CHOICE (hidden for now — defaults to self-hosted) ─── -->
+        <!--
+        FUTURE: Uncomment this block to offer hosted vs self-hosted choice.
+        When enabled, selecting "hosted" hides the GAS setup instructions
+        and shows a simpler flow backed by a hosted API.
+
+        <div id="hosting-choice" style="margin-bottom: 24px;">
+          <h2 class="section-title">How do you want to run this?</h2>
+          <p class="welcome-text">Choose how your Ministry Fair stores its data.</p>
+          <div class="role-picker-options">
+            <button class="role-picker-btn" id="hosting-choice-self" onclick="selectHostingMode('self')">
+              <div class="role-picker-icon">&#128736;</div>
+              <div>
+                <div class="role-picker-label">Self-Hosted (Free)</div>
+                <div class="role-picker-desc">You set up a Google Sheet &amp; Apps Script. Your data stays in your own Google account. Free forever.</div>
+              </div>
+            </button>
+            <button class="role-picker-btn" id="hosting-choice-hosted" onclick="selectHostingMode('hosted')">
+              <div class="role-picker-icon">&#9729;</div>
+              <div>
+                <div class="role-picker-label">Hosted ($X/month)</div>
+                <div class="role-picker-desc">We handle everything. No Google Sheet setup needed &mdash; just sign in and go. Includes backups and support.</div>
+              </div>
+            </button>
+          </div>
+        </div>
+        -->
+        <!-- ─── END HOSTING MODE CHOICE ─── -->
+
         <h2 class="section-title">Upload Your Ministry List</h2>
         <p class="welcome-text">
           Upload a spreadsheet with your ministries. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
@@ -2297,29 +2419,96 @@
           </div>
         </div>
 
-        <!-- Connect section (shown after analysis or if skipping upload) -->
+        <!-- Connect section -->
         <div style="margin-top: 24px;">
+          <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">&#128187;</span>
+            <div style="font-size: 13px; color: #5d4037; font-family: 'Inter', sans-serif;">
+              <strong>Best done on a desktop or laptop.</strong> The next steps involve Google Sheets and Apps Script, which are much easier to work with on a full-size screen.
+            </div>
+          </div>
+
+          <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Connect to Google Sheets</h3>
+          <p style="font-size: 13px; color: #666; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
+            This app uses a Google Sheet as its database. You'll set up a Sheet and add a small script that lets the app read and write data. Don't worry &mdash; we'll walk you through it.
+          </p>
+
           <div class="setup-step">
             <span class="step-number">1</span>
             <div class="setup-step-content">
-              <div class="setup-step-title">Import into Google Sheets</div>
-              <div class="setup-step-desc">Create a new Google Sheet. If you downloaded the formatted file above, use File &rarr; Import to bring it in. Otherwise, paste your ministry data directly.</div>
+              <div class="setup-step-title">Create or open a Google Sheet</div>
+              <div class="setup-step-desc">Go to <a href="https://sheets.new" target="_blank" style="color: #8B2635; font-weight: 600;">sheets.new</a> to create a blank sheet, or open an existing one that has your ministry data. If you downloaded the formatted file above, you can import it via <strong>File &rarr; Import</strong>.</div>
             </div>
           </div>
           <div class="setup-step">
             <span class="step-number">2</span>
             <div class="setup-step-content">
               <div class="setup-step-title">Add the backend script</div>
-              <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code, paste the contents of <strong>google-apps-script.js</strong> (included with this app), and click Save.</div>
+              <div class="setup-step-desc">In your Google Sheet, click <strong>Extensions &rarr; Apps Script</strong>. This opens a code editor. We need to paste a small script there.</div>
             </div>
           </div>
           <div class="setup-step">
             <span class="step-number">3</span>
             <div class="setup-step-content">
-              <div class="setup-step-title">Deploy as a Web App</div>
-              <div class="setup-step-desc">In Apps Script, click <strong>Deploy &rarr; New deployment</strong>. Set type to "Web app", execute as "Me", access "Anyone". Click Deploy and copy the URL.</div>
+              <div class="setup-step-title">Deploy it as a Web App</div>
+              <div class="setup-step-desc">After pasting the script, you'll deploy it so this app can talk to your Sheet. You'll get a URL to paste below.</div>
             </div>
           </div>
+
+          <!-- Expandable detailed help -->
+          <details style="margin-top: 16px; border: 1px solid #e8e4de; border-radius: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: #8B2635; font-family: 'Inter', sans-serif; background: #fdf8f8; user-select: none;">
+              &#9432; Show me detailed step-by-step instructions
+            </summary>
+            <div style="padding: 16px; font-size: 13px; line-height: 1.8; color: #444; font-family: 'Inter', sans-serif;">
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 1: Create your Google Sheet</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>Go to <a href="https://sheets.new" target="_blank" style="color: #8B2635;">sheets.new</a> &mdash; this creates a brand-new spreadsheet.</li>
+                <li>Give it a name like <strong>"Ministry Fair Data"</strong> (click "Untitled spreadsheet" at the top left).</li>
+                <li><strong>If you have existing ministry data:</strong> You can paste it into Sheet1, or use <strong>File &rarr; Import</strong> to bring in a CSV/Excel file. The app will auto-detect your columns.</li>
+                <li><strong>If you're starting fresh:</strong> The script will create the proper sheets automatically when you first connect.</li>
+                <li>Copy the URL from your browser's address bar &mdash; you'll need it below.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 2: Add the Apps Script</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>In your Google Sheet, click <strong>Extensions</strong> in the menu bar at the top.</li>
+                <li>Click <strong>Apps Script</strong>. A new tab will open with a code editor.</li>
+                <li>You'll see some default code like <code>function myFunction() {}</code> &mdash; <strong>select all of it and delete it</strong> (Ctrl+A then Delete).</li>
+                <li>Open the file <strong>google-apps-script.js</strong> that came with this app (it's in the same folder as the app). Copy its entire contents.</li>
+                <li>Paste everything into the Apps Script editor (Ctrl+V).</li>
+                <li>Click the <strong>Save</strong> button (floppy disk icon) or press <strong>Ctrl+S</strong>.</li>
+                <li>You can rename the project from "Untitled project" to something like <strong>"Ministry Fair Backend"</strong> if you like.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 3: Deploy as a Web App</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>In the Apps Script editor, click the blue <strong>Deploy</strong> button in the top right.</li>
+                <li>Select <strong>New deployment</strong>.</li>
+                <li>Next to "Select type", click the <strong>gear icon</strong> (&#9881;) and choose <strong>Web app</strong>.</li>
+                <li>Fill in these settings:
+                  <ul style="margin: 4px 0 4px 16px;">
+                    <li><strong>Description:</strong> anything you like (e.g., "Ministry Fair")</li>
+                    <li><strong>Execute as:</strong> <strong>Me</strong> (your Google account)</li>
+                    <li><strong>Who has access:</strong> <strong>Anyone</strong></li>
+                  </ul>
+                </li>
+                <li>Click <strong>Deploy</strong>.</li>
+                <li>Google may ask you to <strong>authorize</strong> the script. Click <strong>Authorize access</strong>, choose your account, and if you see a "Google hasn't verified this app" warning, click <strong>Advanced</strong> &rarr; <strong>Go to Ministry Fair Backend (unsafe)</strong>. This is safe &mdash; it's your own script.</li>
+                <li>After deploying, you'll see a <strong>Web app URL</strong> that starts with <code>https://script.google.com/macros/s/...</code></li>
+                <li><strong>Copy this URL</strong> and paste it into the "Apps Script API URL" field below.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Troubleshooting</h4>
+              <ul style="margin: 0 0 0 20px; padding: 0;">
+                <li><strong>"I don't see Extensions in the menu"</strong> &mdash; Make sure you're in Google Sheets (not Docs or Drive). The Extensions menu is in the top menu bar.</li>
+                <li><strong>"The authorization screen looks scary"</strong> &mdash; This is normal for custom scripts. Google shows this warning for any unverified script. Since you wrote (pasted) it yourself, it's safe.</li>
+                <li><strong>"I get a 'Script function not found' error"</strong> &mdash; Make sure you deleted the old default code before pasting. The script should start with <code>const SIGNUPS_SHEET_NAME = ...</code></li>
+                <li><strong>"The URL doesn't work"</strong> &mdash; Make sure you copied the <strong>Web app URL</strong> (not the deployment ID). It should end in <code>/exec</code>.</li>
+                <li><strong>"I need to update the script later"</strong> &mdash; Go to Extensions &rarr; Apps Script, make your changes, then Deploy &rarr; Manage deployments &rarr; click the pencil icon &rarr; set Version to "New version" &rarr; Deploy.</li>
+              </ul>
+            </div>
+          </details>
         </div>
 
         <div class="form" style="margin-top: 20px;">
@@ -2331,8 +2520,13 @@
             <label class="label">Apps Script API URL</label>
             <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
-          <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Test Connection</button>
+          <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Scan &amp; Connect</button>
           <div id="connection-status"></div>
+          <!-- Sheet tab picker (hidden until scan results arrive) -->
+          <div id="sheet-tab-picker" class="hidden" style="margin-top: 16px;">
+            <div id="sheet-tab-list"></div>
+            <div id="sheet-tab-preview" style="margin-top: 12px;"></div>
+          </div>
         </div>
         <div class="wizard-nav">
           <button class="btn-secondary" id="step3-back">&larr; Back</button>
@@ -2616,6 +2810,22 @@
   </div>
 </div>
 
+<!-- MISSING INFO PROMPT MODAL -->
+<div id="missing-info-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content" style="max-width: 380px;">
+    <h3 class="modal-title">Complete Your Profile</h3>
+    <p class="modal-text" style="margin-bottom: 12px;">We're missing some info for your account. Please fill in what you can.</p>
+    <form class="form" id="missing-info-form">
+      <div id="missing-info-fields"></div>
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button type="button" class="btn-secondary" style="flex: 1;" onclick="document.getElementById('missing-info-modal').classList.add('hidden')">Skip for Now</button>
+        <button type="submit" class="btn" style="flex: 1;">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ======================================== -->
 <!-- ADMIN DASHBOARD VIEW                    -->
 <!-- ======================================== -->
@@ -2672,7 +2882,53 @@
     <div id="admin-tab-ministries" class="hidden">
       <div class="admin-toolbar">
         <button class="btn-sm" id="add-ministry-btn">+ Add Ministry</button>
+        <button class="btn-sm" id="enrich-booklet-btn" style="margin-left: 8px;">&#128214; Import Booklet</button>
+        <button class="btn-sm" id="enrich-spreadsheet-btn" style="margin-left: 8px;">&#128196; Add Spreadsheet</button>
+        <button class="btn-sm" id="generate-icons-btn" style="margin-left: 8px;">&#127912; Generate Icons</button>
       </div>
+
+      <!-- Enrichment Panel (hidden by default) -->
+      <div id="enrich-panel" class="hidden" style="margin-bottom: 20px;">
+        <div class="card" style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="section-title" style="font-size: 16px; margin: 0;" id="enrich-panel-title">Import Ministry Booklet</h3>
+            <button class="remove-file" id="enrich-panel-close" style="font-size: 20px;">&times;</button>
+          </div>
+          <p class="welcome-text" id="enrich-panel-desc" style="font-size: 13px; margin: 8px 0 16px 0;">
+            Upload a ministry booklet (PDF) or document. AI will extract descriptions, meeting times, contacts, and more to enrich your existing ministry data.
+          </p>
+
+          <!-- File upload area -->
+          <div id="enrich-upload-area" class="upload-area" style="padding: 20px;">
+            <div class="upload-area-icon">&#128203;</div>
+            <div class="upload-area-text" id="enrich-upload-text">Drop your file here, or click to browse</div>
+            <div class="upload-area-hint" id="enrich-upload-hint">PDF, Word, or image files</div>
+            <input type="file" id="enrich-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.csv,.tsv,.xlsx,.xls,.txt">
+          </div>
+          <div id="enrich-filename" class="upload-filename hidden">
+            <span>&#128196;</span>
+            <span id="enrich-filename-text"></span>
+            <button class="remove-file" id="enrich-remove-file-btn">&times;</button>
+          </div>
+
+          <!-- Progress -->
+          <div id="enrich-progress" class="analysis-progress hidden">
+            <div class="analysis-spinner"></div>
+            <div class="analysis-status-text" id="enrich-status-text">Analyzing with AI...</div>
+          </div>
+
+          <!-- Results preview -->
+          <div id="enrich-results" class="hidden" style="margin-top: 16px;">
+            <div id="enrich-summary"></div>
+            <div id="enrich-items" style="max-height: 400px; overflow-y: auto; margin-top: 12px;"></div>
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
+              <button class="btn-secondary" id="enrich-cancel-btn" style="flex: 1;">Cancel</button>
+              <button class="btn" id="enrich-apply-btn" style="flex: 1;">Apply Selected Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="admin-ministries-list"></div>
     </div>
 
@@ -2964,7 +3220,14 @@ const DEFAULT_CONFIG = {
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-  setupComplete: false
+  setupComplete: false,
+  // ── Hosting mode ──────────────────────────────
+  // 'self'   = Free tier: user sets up their own Google Sheet + Apps Script
+  // 'hosted' = Paid tier: we provide the backend, no GAS setup needed
+  hostingMode: 'self',
+  // hostedApiUrl: '',      // FUTURE: URL of hosted backend for paid tier
+  // subscriptionId: '',    // FUTURE: Stripe/payment subscription ID
+  // subscriptionStatus: '' // FUTURE: 'active', 'trial', 'expired'
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -3687,6 +3950,7 @@ function handleRoleSelection(role, userData) {
     saveSession(currentSession);
     loadMinistries().then(function() {
       showAdminDashboard();
+      checkMissingInfo(userData.email);
     });
   } else if (role === 'leader') {
     // Sign in as ministry lead
@@ -3700,11 +3964,112 @@ function handleRoleSelection(role, userData) {
     saveSession(currentSession);
     loadMinistries().then(function() {
       showAdminDashboard();
+      checkMissingInfo(userData.email);
     });
   } else {
     // Parishioner
     continueAsParishioner(userData.firstName, userData.lastName, userData.email, userData.picture);
   }
+}
+
+// Check if a ministry lead/admin is missing profile info (e.g. phone number)
+// and prompt them to fill it in
+function checkMissingInfo(email) {
+  if (!MINISTRIES.length) return;
+  var normalizedEmail = email.toLowerCase();
+
+  // Find ministries this person leads
+  var ledMinistries = MINISTRIES.filter(function(m) {
+    return m.organizerEmail && m.organizerEmail.toLowerCase() === normalizedEmail;
+  });
+
+  if (ledMinistries.length === 0) return;
+
+  // Check what's missing
+  var missingFields = [];
+  var firstMinistry = ledMinistries[0];
+
+  if (!firstMinistry.organizerPhone) {
+    missingFields.push({
+      key: 'phone',
+      label: 'Cell Phone',
+      type: 'tel',
+      placeholder: '(555) 555-1234',
+      maxlength: 14
+    });
+  }
+  if (!firstMinistry.organizerName) {
+    missingFields.push({
+      key: 'name',
+      label: 'Your Name',
+      type: 'text',
+      placeholder: 'Jane Smith'
+    });
+  }
+
+  if (missingFields.length === 0) return;
+
+  // Build the form fields
+  var container = document.getElementById('missing-info-fields');
+  container.innerHTML = '';
+
+  missingFields.forEach(function(field) {
+    var group = document.createElement('div');
+    group.className = 'input-group';
+    group.innerHTML =
+      '<label class="label">' + field.label + '</label>' +
+      '<input type="' + field.type + '" class="input" id="missing-' + field.key + '"' +
+      ' placeholder="' + field.placeholder + '"' +
+      (field.maxlength ? ' maxlength="' + field.maxlength + '"' : '') + '>';
+    container.appendChild(group);
+  });
+
+  // Phone formatting
+  var phoneInput = document.getElementById('missing-phone');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+      e.target.value = formatPhoneNumber(e.target.value);
+    });
+  }
+
+  // Handle form submit
+  var form = document.getElementById('missing-info-form');
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    var updates = {};
+
+    var phoneVal = document.getElementById('missing-phone');
+    if (phoneVal && phoneVal.value.trim()) updates.organizerPhone = phoneVal.value.trim();
+
+    var nameVal = document.getElementById('missing-name');
+    if (nameVal && nameVal.value.trim()) updates.organizerName = nameVal.value.trim();
+
+    // Update each ministry this person leads via the API
+    if (Object.keys(updates).length > 0 && appConfig.apiUrl) {
+      ledMinistries.forEach(function(ministry) {
+        var payload = {
+          adminAction: 'updateMinistry',
+          adminEmail: email,
+          ministryId: ministry.id,
+          name: ministry.name,
+          description: ministry.description,
+          icon: ministry.icon,
+          organizerName: updates.organizerName || ministry.organizerName || '',
+          organizerEmail: ministry.organizerEmail || '',
+          organizerPhone: updates.organizerPhone || ministry.organizerPhone || ''
+        };
+        fetch(appConfig.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      });
+    }
+
+    document.getElementById('missing-info-modal').classList.add('hidden');
+  };
+
+  document.getElementById('missing-info-modal').classList.remove('hidden');
 }
 
 // Continue with normal parishioner registration flow
@@ -4310,36 +4675,147 @@ document.getElementById('download-formatted-btn').addEventListener('click', func
 });
 
 // Test connection
+var selectedSheetTab = null; // track which tab the admin picked
+
 document.getElementById('test-connection-btn').addEventListener('click', async function() {
   var url = document.getElementById('setup-api-url').value.trim();
   var statusDiv = document.getElementById('connection-status');
+  var pickerDiv = document.getElementById('sheet-tab-picker');
 
   if (!url) {
     statusDiv.innerHTML = '<div class="connection-status error">Please enter an API URL first.</div>';
+    pickerDiv.classList.add('hidden');
     return;
   }
 
-  statusDiv.innerHTML = '<div class="connection-status testing">Testing connection...</div>';
+  statusDiv.innerHTML = '<div class="connection-status testing">Scanning your spreadsheet tabs...</div>';
+  pickerDiv.classList.add('hidden');
 
   try {
+    // Step 1: Scan all tabs in the sheet
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+    var scanUrl = url + (url.includes('?') ? '&' : '?') + 'action=scanSheets';
+    var response = await fetch(scanUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    var scanData = await response.json();
+
+    if (scanData.error) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(scanData.error) + '</div>';
+      return;
+    }
+
+    if (!scanData.sheets || scanData.sheets.length === 0) {
+      statusDiv.innerHTML = '<div class="connection-status error">&#10007; No data sheets found. Make sure your spreadsheet has at least one tab with ministry data.</div>';
+      return;
+    }
+
+    // Step 2: Show the best candidate and let admin confirm or pick another
+    var best = scanData.sheets[0];
+    selectedSheetTab = best.name;
+
+    statusDiv.innerHTML =
+      '<div class="connection-status success">&#10003; Connected! Found <strong>' + scanData.sheets.length +
+      '</strong> tab' + (scanData.sheets.length === 1 ? '' : 's') + ' with data. ' +
+      'Best match: <strong>' + escapeHtml(best.name) + '</strong> (' + best.rowCount + ' rows).</div>';
+
+    // Render tab picker
+    pickerDiv.classList.remove('hidden');
+    renderSheetTabPicker(scanData.sheets, url);
+
+  } catch(err) {
+    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+    pickerDiv.classList.add('hidden');
+  }
+});
+
+// Render the list of sheet tabs for the admin to choose from
+function renderSheetTabPicker(sheets, apiUrl) {
+  var listDiv = document.getElementById('sheet-tab-list');
+  var previewDiv = document.getElementById('sheet-tab-preview');
+
+  listDiv.innerHTML = '<p style="font-size: 13px; color: #666; margin-bottom: 8px; font-family: \'Inter\', sans-serif;">' +
+    'Which tab has your ministry list? Pick one and we\'ll pull it in.</p>';
+
+  sheets.forEach(function(sheet, idx) {
+    var btn = document.createElement('button');
+    btn.className = 'sheet-tab-btn' + (idx === 0 ? ' selected' : '');
+    btn.innerHTML =
+      '<div>' +
+        '<span class="tab-name">' + escapeHtml(sheet.name) + '</span> ' +
+        '<span class="tab-meta">' + sheet.rowCount + ' rows &middot; ' + sheet.colCount + ' columns</span>' +
+      '</div>' +
+      (idx === 0 ? '<span class="tab-badge">Best match</span>' : '');
+
+    btn.addEventListener('click', function() {
+      selectedSheetTab = sheet.name;
+      listDiv.querySelectorAll('.sheet-tab-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      renderSheetPreview(sheet);
+      loadFromTab(apiUrl, sheet.name);
+    });
+
+    listDiv.appendChild(btn);
+  });
+
+  // Auto-show preview of best match and load its ministries
+  renderSheetPreview(sheets[0]);
+  loadFromTab(apiUrl, sheets[0].name);
+}
+
+// Show a preview of the selected tab's data
+function renderSheetPreview(sheet) {
+  var previewDiv = document.getElementById('sheet-tab-preview');
+  if (!sheet.preview || sheet.preview.length === 0) {
+    previewDiv.innerHTML = '<p style="font-size: 13px; color: #888;">No preview available.</p>';
+    return;
+  }
+
+  var html = '<p style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; font-family: \'Inter\', sans-serif;">Preview:</p>';
+  html += '<div class="data-preview-scroll"><table class="sheet-preview"><thead><tr>';
+  sheet.headers.forEach(function(h) {
+    html += '<th>' + escapeHtml(h || '(empty)') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  sheet.preview.forEach(function(row) {
+    html += '<tr>';
+    row.forEach(function(cell) {
+      html += '<td>' + escapeHtml(cell) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  if (sheet.matchedFields && sheet.matchedFields.length > 0) {
+    html += '<p style="font-size: 12px; color: #2d6a4f; margin-top: 6px; font-family: \'Inter\', sans-serif;">' +
+      '&#10003; Detected fields: ' + sheet.matchedFields.join(', ') + '</p>';
+  }
+
+  previewDiv.innerHTML = html;
+}
+
+// Load ministries from a specific tab to verify the count
+async function loadFromTab(apiUrl, tabName) {
+  var statusDiv = document.getElementById('connection-status');
+  try {
+    var fetchUrl = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 'action=getMinistries&sheet=' + encodeURIComponent(tabName);
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var response = await fetch(url, { signal: controller.signal });
+    var response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await response.json();
 
     if (data.ministries) {
       var count = data.ministries.length;
-      statusDiv.innerHTML = '<div class="connection-status success">&#10003; Connected! Found ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '.</div>';
-    } else if (data.error) {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Error: ' + escapeHtml(data.error) + '</div>';
-    } else {
-      statusDiv.innerHTML = '<div class="connection-status error">&#10007; Unexpected response. Make sure you deployed the correct Apps Script.</div>';
+      statusDiv.innerHTML =
+        '<div class="connection-status success">&#10003; Using tab <strong>' + escapeHtml(tabName) +
+        '</strong> &mdash; found <strong>' + count + '</strong> ministr' + (count === 1 ? 'y' : 'ies') +
+        '.' + (count === 0 ? ' Try picking a different tab below.' : '') + '</div>';
     }
   } catch(err) {
-    statusDiv.innerHTML = '<div class="connection-status error">&#10007; Could not connect. Check the URL and try again.</div>';
+    // Silently fail — the tab picker is still usable
   }
-});
+}
 
 // Step 4: Admin management
 function renderAdminList() {
@@ -4433,6 +4909,42 @@ function renderSummary() {
     '<div class="summary-row"><span class="summary-label">Admins</span><span class="summary-value">' + adminCount + '</span></div>';
 }
 
+// ── Hosting mode scaffolding ──────────────────────────────
+// FUTURE: Uncomment and wire up when hosted tier is ready.
+//
+// function selectHostingMode(mode) {
+//   appConfig.hostingMode = mode;
+//   var selfSection = document.getElementById('self-hosted-setup');   // the GAS instructions
+//   var hostedSection = document.getElementById('hosted-setup');       // simpler hosted flow
+//
+//   document.querySelectorAll('#hosting-choice .role-picker-btn').forEach(function(btn) {
+//     btn.classList.remove('selected');
+//   });
+//   document.getElementById('hosting-choice-' + mode).classList.add('selected');
+//
+//   if (mode === 'hosted') {
+//     // Hide GAS setup, show hosted onboarding
+//     if (selfSection) selfSection.classList.add('hidden');
+//     if (hostedSection) hostedSection.classList.remove('hidden');
+//     // FUTURE: Initialize Stripe checkout or show pricing
+//     // showHostedOnboarding();
+//   } else {
+//     // Show GAS setup, hide hosted
+//     if (selfSection) selfSection.classList.remove('hidden');
+//     if (hostedSection) hostedSection.classList.add('hidden');
+//   }
+// }
+//
+// function showHostedOnboarding() {
+//   // FUTURE: This function would:
+//   // 1. Create a hosted instance via your backend API
+//   // 2. Show Stripe payment form or trial activation
+//   // 3. On success, set appConfig.apiUrl to the hosted API endpoint
+//   // 4. Set appConfig.subscriptionId and appConfig.subscriptionStatus
+//   // 5. Skip the GAS setup entirely — go straight to "Scan & Connect"
+// }
+// ── End hosting mode scaffolding ─────────────────────────
+
 // Wizard navigation
 document.getElementById('step1-next').addEventListener('click', function() { showWizardStep(2); });
 document.getElementById('step2-back').addEventListener('click', function() { showWizardStep(1); });
@@ -4446,16 +4958,18 @@ document.getElementById('step5-back').addEventListener('click', function() { sho
 // Launch!
 document.getElementById('launch-btn').addEventListener('click', function() {
   // ──────────────────────────────────────────────
-  // FUTURE: Payment step hook
-  // Uncomment and implement when ready to add billing:
+  // FUTURE: Hosted tier payment gate
   //
-  // if (!appConfig.paymentComplete) {
+  // if (appConfig.hostingMode === 'hosted' && !appConfig.subscriptionStatus) {
   //   showPaymentStep({
   //     organizationName: document.getElementById('setup-org-name').value,
   //     adminEmail: setupAdminData ? setupAdminData.email : '',
   //     detectedOrg: detectedOrg,
-  //     onComplete: function() {
-  //       appConfig.paymentComplete = true;
+  //     onComplete: function(subscription) {
+  //       appConfig.subscriptionId = subscription.id;
+  //       appConfig.subscriptionStatus = 'active';
+  //       appConfig.apiUrl = subscription.hostedApiUrl;
+  //       saveAppConfig(appConfig);
   //       // continue with launch below
   //     }
   //   });
@@ -4469,10 +4983,12 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
   appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
   appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  if (selectedSheetTab) appConfig.ministriesSheetTab = selectedSheetTab;
   var enteredKey = document.getElementById('setup-api-key').value || '';
   setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
   appConfig.detectedOrg = detectedOrg || null;
+  appConfig.hostingMode = appConfig.hostingMode || 'self'; // defaults to self-hosted
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
 
@@ -4507,8 +5023,75 @@ document.getElementById('launch-btn').addEventListener('click', function() {
 
   // Apply config and load the app
   applyConfig();
-  loadMinistries();
+  loadMinistries().then(function() {
+    // After loading, auto-assign icons to ministries that need them
+    autoAssignIconsIfNeeded();
+    // Check for ministry leads and offer to notify them
+    showLeadInviteSummary();
+  });
 });
+
+// After setup, show a summary of ministry leads who should be invited to sign in
+function showLeadInviteSummary() {
+  if (!MINISTRIES.length) return;
+
+  var leads = [];
+  var seen = {};
+  MINISTRIES.forEach(function(m) {
+    if (m.organizerEmail && !seen[m.organizerEmail.toLowerCase()]) {
+      seen[m.organizerEmail.toLowerCase()] = true;
+      leads.push({
+        name: m.organizerName || '(no name)',
+        email: m.organizerEmail,
+        phone: m.organizerPhone || '',
+        ministry: m.name
+      });
+    }
+  });
+
+  if (leads.length === 0) return;
+
+  // Build a mailto link for bulk invitation
+  var siteUrl = window.location.origin + window.location.pathname;
+  var orgName = appConfig.organizationName || 'our organization';
+  var subject = encodeURIComponent('You\'re invited to ' + (appConfig.appTitle || 'Ministry Fair'));
+  var body = encodeURIComponent(
+    'Hi,\n\n' +
+    'You\'ve been listed as a ministry lead at ' + orgName + '. ' +
+    'Please sign in to review your ministry and complete your profile:\n\n' +
+    siteUrl + '\n\n' +
+    'Thank you!'
+  );
+  var emailList = leads.map(function(l) { return l.email; }).join(',');
+
+  var html =
+    '<div class="connection-status success" style="flex-direction: column; align-items: flex-start; margin-top: 16px;">' +
+    '<h4 style="margin: 0 0 8px 0; font-size: 15px;">&#128233; Ministry Leads Found</h4>' +
+    '<p style="font-size: 13px; color: #555; margin: 0 0 10px 0;">' +
+    'We found <strong>' + leads.length + '</strong> ministry lead' + (leads.length === 1 ? '' : 's') +
+    ' in your data. Encourage them to sign in so they can manage their ministry and complete their profile.</p>' +
+    '<div style="max-height: 150px; overflow-y: auto; width: 100%; margin-bottom: 10px;">';
+
+  leads.forEach(function(lead) {
+    html += '<div style="font-size: 13px; padding: 4px 0; border-bottom: 1px solid #e8e4de;">' +
+      '<strong>' + escapeHtml(lead.name) + '</strong> &mdash; ' +
+      escapeHtml(lead.email) +
+      (lead.phone ? ' &middot; ' + escapeHtml(lead.phone) : ' <span style="color: #c53030;">(no phone)</span>') +
+      ' <span style="color: #888;">(' + escapeHtml(lead.ministry) + ')</span>' +
+      '</div>';
+  });
+
+  html += '</div>' +
+    '<a href="mailto:' + emailList + '?subject=' + subject + '&body=' + body + '" ' +
+    'class="btn-secondary" style="font-size: 13px; padding: 8px 16px; text-decoration: none; display: inline-block;">&#9993; Email All Leads</a>' +
+    '</div>';
+
+  // Insert into the admin dashboard or show as a banner
+  var statusDiv = document.getElementById('connection-status');
+  if (statusDiv) {
+    statusDiv.insertAdjacentHTML('afterend', html);
+  }
+}
 
 // ============================================
 // SETTINGS VIEW
@@ -4768,7 +5351,11 @@ async function loadMinistries() {
   try {
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var response = await fetch(apiUrl, { signal: controller.signal });
+    var fetchUrl = apiUrl;
+    if (appConfig.ministriesSheetTab) {
+      fetchUrl += (apiUrl.includes('?') ? '&' : '?') + 'action=getMinistries&sheet=' + encodeURIComponent(appConfig.ministriesSheetTab);
+    }
+    var response = await fetch(fetchUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await response.json();
     if (data.ministries && data.ministries.length > 0) {
@@ -4824,6 +5411,11 @@ function initializeApp() {
       }
     } else {
       showMinistriesList();
+    }
+
+    // Prompt ministry leads for missing info (e.g. phone) on first visit
+    if (currentSession && isMinistryLead(currentSession.email)) {
+      checkMissingInfo(currentSession.email);
     }
   } else {
     showView('register');
@@ -4924,18 +5516,27 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
   };
   localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
 
-  // Check if admin
-  if (isAdmin(profile.email) && !currentSession) {
-    currentSession = {
-      email: profile.email,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      picture: '',
-      role: 'admin'
-    };
-    saveSession(currentSession);
+  // Check roles — same logic as Google sign-in
+  var email = profile.email;
+  var domain = getDomain(email);
+  var roles = ['parishioner'];
+  if (isAdmin(email)) roles.push('admin');
+  if (isMinistryLead(email)) roles.push('leader');
+  if (!appConfig.setupComplete && emailMatchesSiteDomain(email) && !isConsumerDomain(domain)) {
+    roles.push('setup_admin');
   }
 
+  if (roles.length > 1) {
+    showRolePicker(roles, {
+      email: email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      picture: photoUrl
+    });
+    return;
+  }
+
+  // Just a parishioner — continue
   if (ministryParam) {
     currentMinistry = MINISTRIES.find(function(m) { return m.id === ministryParam; });
     if (currentMinistry) {
@@ -5514,6 +6115,508 @@ function renderAdminMinistries() {
     });
   });
 }
+
+// ============================================
+// AUTO-ASSIGN MINISTRY ICONS
+// ============================================
+
+// Assign emoji icons to ministries that have the default 📋 or no icon
+async function autoAssignIcons(ministriesToUpdate) {
+  if (!ministriesToUpdate || ministriesToUpdate.length === 0) return;
+  if (!appConfig.apiUrl) return;
+
+  var ministryList = ministriesToUpdate.map(function(m) {
+    return { id: m.id, name: m.name, description: (m.description || '').substring(0, 100) };
+  });
+
+  var prompt = 'I need you to assign a single appropriate emoji icon to each of these church/parish ministries. ' +
+    'Choose emojis that visually represent what each ministry does. Be creative but appropriate — no obscene or offensive emojis.\n\n' +
+    'Guidelines:\n' +
+    '- Music/choir → 🎵 or 🎶\n' +
+    '- Youth → 🌟 or 👦\n' +
+    '- Prayer → 🙏\n' +
+    '- Food/meals → 🍞 or 🥘\n' +
+    '- Hospitality/greeting → 🤝 or 👋\n' +
+    '- Teaching/education → 📖 or 🎓\n' +
+    '- Service/outreach → 💛 or 🤲\n' +
+    '- Liturgy/altar → ⛪ or 🕯️\n' +
+    '- Technology/media → 💻 or 📡\n' +
+    '- Maintenance/facilities → 🔧 or 🏗️\n' +
+    '- Finance → 💰\n' +
+    '- Health/wellness → ❤️ or 🏥\n' +
+    'Use your judgment for other types.\n\n' +
+    'MINISTRIES:\n' +
+    JSON.stringify(ministryList) + '\n\n' +
+    'Return ONLY a JSON object mapping ministry id to a single emoji character:\n' +
+    '{"ministry-id": "🎵", "another-id": "🙏"}\n' +
+    'No markdown, no explanation — just the JSON.';
+
+  try {
+    var resp = await fetch(appConfig.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ai-analyze', sampleData: 'icons', prompt: prompt })
+    });
+    var result = await resp.json();
+
+    if (result.success && result.result) {
+      var iconMap = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
+      return iconMap;
+    }
+  } catch(err) {
+    console.error('Icon generation error:', err);
+  }
+  return null;
+}
+
+// Apply generated icons to ministries via the API
+async function applyIcons(iconMap) {
+  if (!iconMap) return 0;
+  var count = 0;
+
+  for (var i = 0; i < MINISTRIES.length; i++) {
+    var m = MINISTRIES[i];
+    var newIcon = iconMap[m.id];
+    if (!newIcon) continue;
+
+    // Only update if the ministry has the default icon or no icon
+    if (m.icon && m.icon !== '📋' && m.icon !== '&#128203;') continue;
+
+    try {
+      await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminAction: 'updateMinistry',
+          adminEmail: currentSession ? currentSession.email : '',
+          id: m.id,
+          name: m.name,
+          description: m.description || '',
+          icon: newIcon,
+          organizerName: m.organizerName || '',
+          organizerEmail: m.organizerEmail || '',
+          organizerPhone: m.organizerPhone || ''
+        })
+      });
+      m.icon = newIcon; // update local state immediately
+      count++;
+    } catch(err) {
+      console.error('Error updating icon for', m.id, err);
+    }
+  }
+  return count;
+}
+
+// Button handler: generate icons for all ministries with default icon
+document.getElementById('generate-icons-btn').addEventListener('click', async function() {
+  var btn = document.getElementById('generate-icons-btn');
+  var needsIcons = MINISTRIES.filter(function(m) {
+    return !m.icon || m.icon === '📋' || m.icon === '&#128203;';
+  });
+
+  if (needsIcons.length === 0) {
+    alert('All ministries already have custom icons!');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  var iconMap = await autoAssignIcons(needsIcons);
+  if (iconMap) {
+    var count = await applyIcons(iconMap);
+    await loadMinistries();
+    renderAdminMinistries();
+    alert('Assigned icons to ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '!');
+  } else {
+    alert('Could not generate icons. Check that your Claude API key is configured.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🎨 Generate Icons';
+});
+
+// Auto-assign icons after initial ministry import (runs once after first load with default icons)
+async function autoAssignIconsIfNeeded() {
+  var needsIcons = MINISTRIES.filter(function(m) {
+    return !m.icon || m.icon === '📋' || m.icon === '&#128203;';
+  });
+
+  // Only auto-run if most ministries need icons (looks like a fresh import)
+  if (needsIcons.length >= 3 && needsIcons.length >= MINISTRIES.length * 0.5) {
+    var iconMap = await autoAssignIcons(needsIcons);
+    if (iconMap) {
+      await applyIcons(iconMap);
+      await loadMinistries();
+      // Re-render if we're on the admin dashboard
+      if (!document.getElementById('view-admin').classList.contains('hidden')) {
+        renderAdminMinistries();
+      }
+    }
+  }
+}
+
+// ============================================
+// ENRICH MINISTRIES (Booklet + Spreadsheet)
+// ============================================
+var enrichSourceType = null; // 'booklet' or 'spreadsheet'
+var enrichResults = null;    // parsed AI results
+
+document.getElementById('enrich-booklet-btn').addEventListener('click', function() {
+  enrichSourceType = 'booklet';
+  document.getElementById('enrich-panel-title').textContent = 'Import Ministry Booklet';
+  document.getElementById('enrich-panel-desc').textContent =
+    'Upload a ministry booklet (PDF) or document. AI will extract descriptions, meeting times, contacts, and more to enrich your existing ministry data.';
+  document.getElementById('enrich-upload-hint').textContent = 'PDF or image files';
+  document.getElementById('enrich-file-input').accept = '.pdf,.jpg,.jpeg,.png';
+  resetEnrichPanel();
+  document.getElementById('enrich-panel').classList.remove('hidden');
+});
+
+document.getElementById('enrich-spreadsheet-btn').addEventListener('click', function() {
+  enrichSourceType = 'spreadsheet';
+  document.getElementById('enrich-panel-title').textContent = 'Add Supplementary Spreadsheet';
+  document.getElementById('enrich-panel-desc').textContent =
+    'Upload an additional spreadsheet with extra details like meeting times, locations, requirements, etc. AI will match it to your existing ministries and pull in the new data.';
+  document.getElementById('enrich-upload-hint').textContent = 'CSV, Excel, or any spreadsheet format';
+  document.getElementById('enrich-file-input').accept = '.csv,.tsv,.xlsx,.xls,.txt';
+  resetEnrichPanel();
+  document.getElementById('enrich-panel').classList.remove('hidden');
+});
+
+document.getElementById('enrich-panel-close').addEventListener('click', function() {
+  document.getElementById('enrich-panel').classList.add('hidden');
+});
+
+function resetEnrichPanel() {
+  document.getElementById('enrich-upload-area').classList.remove('hidden');
+  document.getElementById('enrich-filename').classList.add('hidden');
+  document.getElementById('enrich-progress').classList.add('hidden');
+  document.getElementById('enrich-results').classList.add('hidden');
+  document.getElementById('enrich-file-input').value = '';
+  enrichResults = null;
+}
+
+// File upload for enrichment
+(function() {
+  var area = document.getElementById('enrich-upload-area');
+  var fileInput = document.getElementById('enrich-file-input');
+
+  area.addEventListener('click', function() { fileInput.click(); });
+  area.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    area.classList.add('dragover');
+  });
+  area.addEventListener('dragleave', function() { area.classList.remove('dragover'); });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault();
+    area.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleEnrichFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) handleEnrichFile(fileInput.files[0]);
+  });
+  document.getElementById('enrich-remove-file-btn').addEventListener('click', resetEnrichPanel);
+})();
+
+async function handleEnrichFile(file) {
+  document.getElementById('enrich-upload-area').classList.add('hidden');
+  document.getElementById('enrich-filename').classList.remove('hidden');
+  document.getElementById('enrich-filename-text').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+
+  var ext = file.name.split('.').pop().toLowerCase();
+  var isBooklet = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+  var isSpreadsheet = ['csv', 'tsv', 'xlsx', 'xls', 'txt'].includes(ext);
+
+  if (isBooklet) {
+    enrichSourceType = 'booklet';
+    await analyzeBooklet(file, ext);
+  } else if (isSpreadsheet) {
+    enrichSourceType = 'spreadsheet';
+    await analyzeEnrichSpreadsheet(file);
+  } else {
+    alert('Unsupported file type.');
+    resetEnrichPanel();
+  }
+}
+
+async function analyzeBooklet(file, ext) {
+  var progress = document.getElementById('enrich-progress');
+  var statusText = document.getElementById('enrich-status-text');
+  progress.classList.remove('hidden');
+  statusText.textContent = 'Reading booklet with AI... This may take a moment.';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var base64Data = e.target.result.split(',')[1];
+    var mediaType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+
+    var existingMinistries = MINISTRIES.map(function(m) {
+      return { id: m.id, name: m.name, description: m.description || '' };
+    });
+
+    try {
+      var resp = await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai-enrich',
+          sourceType: 'booklet',
+          fileData: base64Data,
+          mediaType: mediaType,
+          existingMinistries: existingMinistries
+        })
+      });
+      var result = await resp.json();
+      progress.classList.add('hidden');
+
+      if (result.success && result.result) {
+        enrichResults = result.result;
+        renderEnrichResults(enrichResults);
+      } else {
+        document.getElementById('enrich-results').classList.remove('hidden');
+        document.getElementById('enrich-summary').innerHTML =
+          '<div class="mapping-summary warn"><h4>Analysis Error</h4><p>' +
+          escapeHtml(result.error || 'Could not analyze the booklet.') + '</p></div>';
+      }
+    } catch(err) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Error</h4><p>' + escapeHtml(err.message) + '</p></div>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeEnrichSpreadsheet(file) {
+  var progress = document.getElementById('enrich-progress');
+  var statusText = document.getElementById('enrich-status-text');
+  progress.classList.remove('hidden');
+  statusText.textContent = 'Reading spreadsheet with AI...';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var text = e.target.result;
+    var parsed;
+    if (file.name.endsWith('.tsv') || file.name.endsWith('.txt')) {
+      parsed = parseTSV(text);
+    } else {
+      parsed = parseCSV(text);
+      if (parsed.length > 0 && parsed[0].length === 1 && parsed[0][0].includes('\t')) {
+        parsed = parseTSV(text);
+      }
+    }
+
+    if (parsed.length < 2) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Not enough data</h4><p>Need at least a header row and one data row.</p></div>';
+      return;
+    }
+
+    var headers = parsed[0];
+    var rows = parsed.slice(1, 20); // sample up to 20 rows
+    var sampleText = 'HEADERS: ' + JSON.stringify(headers) + '\n\nROWS:\n';
+    rows.forEach(function(row, i) {
+      sampleText += 'Row ' + (i + 1) + ': ' + JSON.stringify(row) + '\n';
+    });
+
+    var existingMinistries = MINISTRIES.map(function(m) {
+      return { id: m.id, name: m.name, description: m.description || '' };
+    });
+
+    try {
+      var resp = await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai-enrich',
+          sourceType: 'spreadsheet',
+          sampleData: sampleText,
+          existingMinistries: existingMinistries
+        })
+      });
+      var result = await resp.json();
+      progress.classList.add('hidden');
+
+      if (result.success && result.result) {
+        enrichResults = result.result;
+        renderEnrichResults(enrichResults);
+      } else {
+        document.getElementById('enrich-results').classList.remove('hidden');
+        document.getElementById('enrich-summary').innerHTML =
+          '<div class="mapping-summary warn"><h4>Analysis Error</h4><p>' +
+          escapeHtml(result.error || 'Could not analyze the spreadsheet.') + '</p></div>';
+      }
+    } catch(err) {
+      progress.classList.add('hidden');
+      document.getElementById('enrich-results').classList.remove('hidden');
+      document.getElementById('enrich-summary').innerHTML =
+        '<div class="mapping-summary warn"><h4>Error</h4><p>' + escapeHtml(err.message) + '</p></div>';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderEnrichResults(data) {
+  var resultsDiv = document.getElementById('enrich-results');
+  var summaryDiv = document.getElementById('enrich-summary');
+  var itemsDiv = document.getElementById('enrich-items');
+  resultsDiv.classList.remove('hidden');
+
+  var enrichments = data.enrichments || [];
+  var newMinistries = data.newMinistries || [];
+  var summary = data.summary || '';
+
+  summaryDiv.innerHTML =
+    '<div class="mapping-summary ' + (enrichments.length > 0 ? 'good' : 'warn') + '">' +
+    '<h4>' + (enrichments.length > 0 ? '&#10003; ' : '&#9888; ') + 'Analysis Complete</h4>' +
+    '<p>' + escapeHtml(summary) + '</p>' +
+    '<p style="margin-top: 6px; font-size: 13px;">' +
+    '<strong>' + enrichments.length + '</strong> enrichment' + (enrichments.length !== 1 ? 's' : '') + ' found' +
+    (newMinistries.length > 0 ? ', <strong>' + newMinistries.length + '</strong> new ministr' + (newMinistries.length !== 1 ? 'ies' : 'y') + ' discovered' : '') +
+    '</p></div>';
+
+  var html = '';
+  enrichments.forEach(function(item, idx) {
+    var isMatched = item.existingId || item.existingName;
+    var displayName = item.bookletName || item.sheetName || item.existingName || 'Unknown';
+
+    html += '<div class="enrich-item">';
+    html += '<div class="enrich-item-header">';
+    html += '<input type="checkbox" checked id="enrich-check-' + idx + '" data-enrich-idx="' + idx + '">';
+    html += '<span class="enrich-item-name">' + escapeHtml(displayName) + '</span>';
+    if (isMatched) {
+      html += '<span class="enrich-item-match">Matches: ' + escapeHtml(item.existingName || item.existingId) + '</span>';
+    } else {
+      html += '<span class="enrich-item-new">New Ministry</span>';
+    }
+    html += '</div>';
+
+    // Show each enrichment field
+    var fields = [
+      { key: 'description', label: 'Description' },
+      { key: 'meetingTime', label: 'Meeting Time' },
+      { key: 'location', label: 'Location' },
+      { key: 'requirements', label: 'Requirements' },
+      { key: 'contactName', label: 'Contact' },
+      { key: 'contactEmail', label: 'Email' },
+      { key: 'contactPhone', label: 'Phone' },
+      { key: 'organizerName', label: 'Organizer' },
+      { key: 'organizerEmail', label: 'Email' },
+      { key: 'organizerPhone', label: 'Phone' },
+      { key: 'additionalNotes', label: 'Notes' }
+    ];
+
+    fields.forEach(function(f) {
+      if (item[f.key]) {
+        html += '<div class="enrich-field"><span class="enrich-field-label">' + f.label + ':</span> ' +
+          '<span class="enrich-field-new">' + escapeHtml(item[f.key]) + '</span></div>';
+      }
+    });
+
+    html += '</div>';
+  });
+
+  // Show new ministries that don't match existing ones
+  if (newMinistries.length > 0) {
+    html += '<div style="margin-top: 16px; padding: 12px; background: #fff5f5; border-radius: 10px; border: 1px solid #feb2b2;">';
+    html += '<p style="font-size: 14px; font-weight: 600; color: #c53030; margin-bottom: 8px;">New Ministries Not Yet in Your List:</p>';
+    newMinistries.forEach(function(name) {
+      html += '<div style="font-size: 13px; color: #555; padding: 2px 0;">&bull; ' + escapeHtml(name) + '</div>';
+    });
+    html += '<p style="font-size: 12px; color: #888; margin-top: 8px;">You can add these manually from the "+ Add Ministry" button.</p>';
+    html += '</div>';
+  }
+
+  itemsDiv.innerHTML = html;
+}
+
+// Apply selected enrichments
+document.getElementById('enrich-apply-btn').addEventListener('click', async function() {
+  if (!enrichResults || !enrichResults.enrichments) return;
+
+  var btn = document.getElementById('enrich-apply-btn');
+  btn.disabled = true;
+  btn.textContent = 'Applying...';
+
+  var enrichments = enrichResults.enrichments;
+  var applied = 0;
+
+  for (var i = 0; i < enrichments.length; i++) {
+    var checkbox = document.getElementById('enrich-check-' + i);
+    if (!checkbox || !checkbox.checked) continue;
+
+    var item = enrichments[i];
+    if (!item.existingId && !item.existingName) continue; // skip new ministries
+
+    // Find the matching existing ministry
+    var ministry = null;
+    if (item.existingId) {
+      ministry = MINISTRIES.find(function(m) { return m.id === item.existingId; });
+    }
+    if (!ministry && item.existingName) {
+      ministry = MINISTRIES.find(function(m) {
+        return m.name.toLowerCase() === item.existingName.toLowerCase();
+      });
+    }
+    if (!ministry) continue;
+
+    // Build update payload — merge new data with existing
+    var enrichedDesc = item.description || '';
+    var notes = [];
+    if (item.meetingTime) notes.push('Meeting: ' + item.meetingTime);
+    if (item.location) notes.push('Location: ' + item.location);
+    if (item.requirements) notes.push('Requirements: ' + item.requirements);
+    if (item.additionalNotes) notes.push(item.additionalNotes);
+
+    // Append notes to description if there are any
+    var newDescription = ministry.description || '';
+    if (enrichedDesc && enrichedDesc.length > (newDescription.length || 0)) {
+      newDescription = enrichedDesc;
+    }
+    if (notes.length > 0) {
+      newDescription += (newDescription ? '\n\n' : '') + notes.join('\n');
+    }
+
+    var payload = {
+      adminAction: 'updateMinistry',
+      adminEmail: currentSession ? currentSession.email : '',
+      id: ministry.id,
+      name: ministry.name,
+      description: newDescription,
+      icon: ministry.icon || '',
+      organizerName: item.contactName || item.organizerName || ministry.organizerName || '',
+      organizerEmail: item.contactEmail || item.organizerEmail || ministry.organizerEmail || '',
+      organizerPhone: item.contactPhone || item.organizerPhone || ministry.organizerPhone || ''
+    };
+
+    try {
+      await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      applied++;
+    } catch(err) {
+      console.error('Error updating ministry:', ministry.id, err);
+    }
+  }
+
+  // Reload ministries and close
+  await loadMinistries();
+  renderAdminMinistries();
+  document.getElementById('enrich-panel').classList.add('hidden');
+  btn.disabled = false;
+  btn.textContent = 'Apply Selected Changes';
+  alert('Updated ' + applied + ' ministr' + (applied === 1 ? 'y' : 'ies') + ' with enriched data.');
+});
+
+document.getElementById('enrich-cancel-btn').addEventListener('click', function() {
+  document.getElementById('enrich-panel').classList.add('hidden');
+});
 
 document.getElementById('add-ministry-btn').addEventListener('click', function() {
   openMinistryEditor(null);
