@@ -2337,6 +2337,35 @@
     <!-- STEP 3: Upload & Analyze Spreadsheet -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
+        <!-- ─── HOSTING MODE CHOICE (hidden for now — defaults to self-hosted) ─── -->
+        <!--
+        FUTURE: Uncomment this block to offer hosted vs self-hosted choice.
+        When enabled, selecting "hosted" hides the GAS setup instructions
+        and shows a simpler flow backed by a hosted API.
+
+        <div id="hosting-choice" style="margin-bottom: 24px;">
+          <h2 class="section-title">How do you want to run this?</h2>
+          <p class="welcome-text">Choose how your Ministry Fair stores its data.</p>
+          <div class="role-picker-options">
+            <button class="role-picker-btn" id="hosting-choice-self" onclick="selectHostingMode('self')">
+              <div class="role-picker-icon">&#128736;</div>
+              <div>
+                <div class="role-picker-label">Self-Hosted (Free)</div>
+                <div class="role-picker-desc">You set up a Google Sheet &amp; Apps Script. Your data stays in your own Google account. Free forever.</div>
+              </div>
+            </button>
+            <button class="role-picker-btn" id="hosting-choice-hosted" onclick="selectHostingMode('hosted')">
+              <div class="role-picker-icon">&#9729;</div>
+              <div>
+                <div class="role-picker-label">Hosted ($X/month)</div>
+                <div class="role-picker-desc">We handle everything. No Google Sheet setup needed &mdash; just sign in and go. Includes backups and support.</div>
+              </div>
+            </button>
+          </div>
+        </div>
+        -->
+        <!-- ─── END HOSTING MODE CHOICE ─── -->
+
         <h2 class="section-title">Upload Your Ministry List</h2>
         <p class="welcome-text">
           Upload a spreadsheet with your ministries. It doesn't need to be in any special format &mdash; we'll use AI to read it and figure out what's what.
@@ -3191,7 +3220,14 @@ const DEFAULT_CONFIG = {
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-  setupComplete: false
+  setupComplete: false,
+  // ── Hosting mode ──────────────────────────────
+  // 'self'   = Free tier: user sets up their own Google Sheet + Apps Script
+  // 'hosted' = Paid tier: we provide the backend, no GAS setup needed
+  hostingMode: 'self',
+  // hostedApiUrl: '',      // FUTURE: URL of hosted backend for paid tier
+  // subscriptionId: '',    // FUTURE: Stripe/payment subscription ID
+  // subscriptionStatus: '' // FUTURE: 'active', 'trial', 'expired'
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -4873,6 +4909,42 @@ function renderSummary() {
     '<div class="summary-row"><span class="summary-label">Admins</span><span class="summary-value">' + adminCount + '</span></div>';
 }
 
+// ── Hosting mode scaffolding ──────────────────────────────
+// FUTURE: Uncomment and wire up when hosted tier is ready.
+//
+// function selectHostingMode(mode) {
+//   appConfig.hostingMode = mode;
+//   var selfSection = document.getElementById('self-hosted-setup');   // the GAS instructions
+//   var hostedSection = document.getElementById('hosted-setup');       // simpler hosted flow
+//
+//   document.querySelectorAll('#hosting-choice .role-picker-btn').forEach(function(btn) {
+//     btn.classList.remove('selected');
+//   });
+//   document.getElementById('hosting-choice-' + mode).classList.add('selected');
+//
+//   if (mode === 'hosted') {
+//     // Hide GAS setup, show hosted onboarding
+//     if (selfSection) selfSection.classList.add('hidden');
+//     if (hostedSection) hostedSection.classList.remove('hidden');
+//     // FUTURE: Initialize Stripe checkout or show pricing
+//     // showHostedOnboarding();
+//   } else {
+//     // Show GAS setup, hide hosted
+//     if (selfSection) selfSection.classList.remove('hidden');
+//     if (hostedSection) hostedSection.classList.add('hidden');
+//   }
+// }
+//
+// function showHostedOnboarding() {
+//   // FUTURE: This function would:
+//   // 1. Create a hosted instance via your backend API
+//   // 2. Show Stripe payment form or trial activation
+//   // 3. On success, set appConfig.apiUrl to the hosted API endpoint
+//   // 4. Set appConfig.subscriptionId and appConfig.subscriptionStatus
+//   // 5. Skip the GAS setup entirely — go straight to "Scan & Connect"
+// }
+// ── End hosting mode scaffolding ─────────────────────────
+
 // Wizard navigation
 document.getElementById('step1-next').addEventListener('click', function() { showWizardStep(2); });
 document.getElementById('step2-back').addEventListener('click', function() { showWizardStep(1); });
@@ -4886,16 +4958,18 @@ document.getElementById('step5-back').addEventListener('click', function() { sho
 // Launch!
 document.getElementById('launch-btn').addEventListener('click', function() {
   // ──────────────────────────────────────────────
-  // FUTURE: Payment step hook
-  // Uncomment and implement when ready to add billing:
+  // FUTURE: Hosted tier payment gate
   //
-  // if (!appConfig.paymentComplete) {
+  // if (appConfig.hostingMode === 'hosted' && !appConfig.subscriptionStatus) {
   //   showPaymentStep({
   //     organizationName: document.getElementById('setup-org-name').value,
   //     adminEmail: setupAdminData ? setupAdminData.email : '',
   //     detectedOrg: detectedOrg,
-  //     onComplete: function() {
-  //       appConfig.paymentComplete = true;
+  //     onComplete: function(subscription) {
+  //       appConfig.subscriptionId = subscription.id;
+  //       appConfig.subscriptionStatus = 'active';
+  //       appConfig.apiUrl = subscription.hostedApiUrl;
+  //       saveAppConfig(appConfig);
   //       // continue with launch below
   //     }
   //   });
@@ -4914,6 +4988,7 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
   appConfig.detectedOrg = detectedOrg || null;
+  appConfig.hostingMode = appConfig.hostingMode || 'self'; // defaults to self-hosted
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
 
