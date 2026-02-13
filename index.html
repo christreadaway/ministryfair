@@ -2709,7 +2709,15 @@
       <div class="google-signin-section">
         <div id="g_id_signin"></div>
       </div>
-      <div class="divider">or fill in manually</div>
+      <div class="divider">or sign in with email</div>
+      <!-- Quick email sign-in for returning users / ministry leads -->
+      <form class="form" id="email-signin-form" style="margin-bottom: 16px;">
+        <div class="input-group">
+          <input type="email" class="input" id="email-signin-input" required autocomplete="email" placeholder="your@email.com" style="text-align: center;">
+        </div>
+        <button type="submit" class="btn-secondary" style="width: 100%;">Sign In &rarr;</button>
+      </form>
+      <div class="divider">new here? register below</div>
       <form class="form" id="register-form">
         <div class="input-row">
           <div class="input-group">
@@ -3216,7 +3224,7 @@ const DEFAULT_CONFIG = {
   appTitle: 'Ministry Fair',
   tagline: 'Find your place to serve',
   apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
-  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/146WY3S0WTMl_uLpufjU0z6zKtX2svKhxtu4G8w8VVHk/edit',
+  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1ize-jKdf70YY6fy9yxbnXvlDzSIPRJ2daT8SAQ1-ktE/edit',
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
@@ -5503,6 +5511,58 @@ if (phoneInput) {
 }
 
 // Register form
+// Email-only sign-in for returning users, admins, and ministry leads
+document.getElementById('email-signin-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var email = document.getElementById('email-signin-input').value.trim().toLowerCase();
+  if (!email) return;
+
+  // Check roles
+  var domain = getDomain(email);
+  var roles = ['parishioner'];
+  if (isAdmin(email)) roles.push('admin');
+  if (isMinistryLead(email)) roles.push('leader');
+  if (!appConfig.setupComplete && emailMatchesSiteDomain(email) && !isConsumerDomain(domain)) {
+    roles.push('setup_admin');
+  }
+
+  // Derive name from email if we don't have it
+  var localPart = email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+  var nameParts = localPart.split(' ');
+  var firstName = nameParts[0] || '';
+  var lastName = nameParts.slice(1).join(' ') || '';
+
+  // Check if we have a name from the ministries data (for leads)
+  if (isMinistryLead(email)) {
+    var leadMinistry = MINISTRIES.find(function(m) {
+      return m.organizerEmail && m.organizerEmail.toLowerCase() === email;
+    });
+    if (leadMinistry && leadMinistry.organizerName) {
+      var parts = leadMinistry.organizerName.trim().split(/\s+/);
+      firstName = parts[0] || firstName;
+      lastName = parts.slice(1).join(' ') || lastName;
+    }
+  }
+
+  var userData = { email: email, firstName: firstName, lastName: lastName, picture: '' };
+
+  if (roles.length > 1) {
+    showRolePicker(roles, userData);
+  } else {
+    // Just a parishioner — save minimal profile and go to ministries
+    profile = {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phone: '',
+      wantsToJoinParish: false,
+      photoURL: ''
+    };
+    localStorage.setItem('ministry-fair-profile', JSON.stringify(profile));
+    showMinistriesList();
+  }
+});
+
 document.getElementById('register-form').addEventListener('submit', function(e) {
   e.preventDefault();
   var photoUrl = document.getElementById('register-form').dataset.photoUrl || '';

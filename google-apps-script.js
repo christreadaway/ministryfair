@@ -146,13 +146,32 @@ function handleGetMinistries(ss, sheetName) {
   }
 
   const data = ministriesSheet.getDataRange().getValues();
-  const ministries = [];
+  if (data.length < 2) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ministries: [], format: 'empty' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
+  // Detect column layout: check if headers match expected format
+  var headers = data[0].map(function(h) { return (h || '').toString().toLowerCase().trim(); });
+  var isStandardFormat = (headers[0] === 'id' && headers[1] === 'name') ||
+                         (headers[0] === 'id' && headers[2] === 'description');
+
+  if (isStandardFormat) {
+    return readStandardFormat(data);
+  }
+
+  // Non-standard format: detect columns by content analysis
+  return readSmartFormat(data);
+}
+
+// Read from the expected Ministries format (ID, Name, Description, Icon, ...)
+function readStandardFormat(data) {
+  var ministries = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
     if (!row[0]) continue;
-
-    const ministry = {
+    var ministry = {
       id: row[0],
       name: row[1],
       description: row[2],
@@ -162,33 +181,207 @@ function handleGetMinistries(ss, sheetName) {
       organizerPhone: row[6] || '',
       questions: []
     };
-
-    // Tags are in column K (index 10) - comma-separated
-    const tagsData = row[10];
+    var tagsData = row[10];
     if (tagsData) {
-      ministry.tags = tagsData.toString().split(',').map(s => s.trim()).filter(s => s);
+      ministry.tags = tagsData.toString().split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
     }
-
-    // Questions are in columns H, I, J (index 7, 8, 9)
-    for (let q = 0; q < 3; q++) {
-      const questionData = row[7 + q];
+    for (var q = 0; q < 3; q++) {
+      var questionData = row[7 + q];
       if (questionData) {
-        const parts = questionData.split('|');
-        const question = {
+        var parts = questionData.split('|');
+        ministry.questions.push({
           id: 'q' + (q + 1),
           type: parts.length > 1 ? (parts[0] || 'text') : 'text',
           label: parts.length > 1 ? (parts[1] || '') : parts[0],
-          options: parts[2] ? parts[2].split(',').map(s => s.trim()) : []
-        };
-        ministry.questions.push(question);
+          options: parts[2] ? parts[2].split(',').map(function(s) { return s.trim(); }) : []
+        });
       }
     }
-
     ministries.push(ministry);
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify({ ministries: ministries, format: 'standard' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Smart format: detect columns by scanning actual cell content
+function readSmartFormat(data) {
+  var headers = data[0];
+  var numCols = headers.length;
+  var sampleRows = data.slice(1, Math.min(data.length, 20));
+
+  // Score each column for what role it likely plays
+  var colScores = [];
+  for (var c = 0; c < numCols; c++) {
+    colScores.push({ email: 0, phone: 0, name: 0, ministry: 0, number: 0, description: 0, url: 0, date: 0, empty: 0 });
+  }
+
+  var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var phonePattern = /^[\d\s\(\)\-\+\.]{7,}$/;
+  var numberPattern = /^\d+$/;
+  var urlPattern = /^https?:\/\//;
+  var datePattern = /^\d{1,2}\/\d{1,2}\/\d{2,4}/;
+
+  for (var r = 0; r < sampleRows.length; r++) {
+    var row = sampleRows[r];
+    for (var c = 0; c < numCols; c++) {
+      var val = (row[c] || '').toString().trim();
+      if (!val) { colScores[c].empty++; continue; }
+
+      if (emailPattern.test(val)) colScores[c].email++;
+      else if (phonePattern.test(val)) colScores[c].phone++;
+      else if (numberPattern.test(val)) colScores[c].number++;
+      else if (urlPattern.test(val)) colScores[c].url++;
+      else if (datePattern.test(val)) colScores[c].date++;
+      else if (val.length > 80) colScores[c].description++;
+      else colScores[c].name++; // short text: either a name or a ministry title
+    }
+  }
+
+  // Also check header text for clues
+  var headerLower = headers.map(function(h) { return (h || '').toString().toLowerCase().trim(); });
+  for (var c = 0; c < numCols; c++) {
+    var h = headerLower[c];
+    if (h.indexOf('email') >= 0) colScores[c].email += 10;
+    if (h.indexOf('phone') >= 0 || h.indexOf('cell') >= 0 || h.indexOf('mobile') >= 0) colScores[c].phone += 10;
+    if (h.indexOf('name') >= 0 && h.indexOf('ministry') < 0) colScores[c].name += 5;
+    if (h.indexOf('ministry') >= 0 || h.indexOf('group') >= 0 || h.indexOf('team') >= 0) colScores[c].ministry += 10;
+    if (h.indexOf('description') >= 0 || h.indexOf('what') >= 0 || h.indexOf('about') >= 0) colScores[c].description += 10;
+    if (h.indexOf('contact') >= 0) colScores[c].name += 3;
+  }
+
+  // Assign columns to roles (pick highest-scoring column for each role)
+  var emailCol = -1, nameCol = -1, ministryCol = -1, phoneCol = -1, descCol = -1;
+
+  // Find email column first (most reliable pattern)
+  var bestEmail = -1, bestEmailScore = 0;
+  for (var c = 0; c < numCols; c++) {
+    if (colScores[c].email > bestEmailScore) {
+      bestEmailScore = colScores[c].email;
+      bestEmail = c;
+    }
+  }
+  if (bestEmailScore > 0) emailCol = bestEmail;
+
+  // Find phone column
+  var bestPhone = -1, bestPhoneScore = 0;
+  for (var c = 0; c < numCols; c++) {
+    if (c === emailCol) continue;
+    if (colScores[c].phone > bestPhoneScore) {
+      bestPhoneScore = colScores[c].phone;
+      bestPhone = c;
+    }
+  }
+  if (bestPhoneScore > 0) phoneCol = bestPhone;
+
+  // Find description column (longest text)
+  var bestDesc = -1, bestDescScore = 0;
+  for (var c = 0; c < numCols; c++) {
+    if (c === emailCol || c === phoneCol) continue;
+    if (colScores[c].description > bestDescScore) {
+      bestDescScore = colScores[c].description;
+      bestDesc = c;
+    }
+  }
+  if (bestDescScore > 0) descCol = bestDesc;
+
+  // For remaining text columns, distinguish ministry name from person name.
+  // The ministry name column likely has more unique values that look like titles.
+  // The person name column has values like "John Smith".
+  var textCols = [];
+  for (var c = 0; c < numCols; c++) {
+    if (c === emailCol || c === phoneCol || c === descCol) continue;
+    if (colScores[c].name > 0 || colScores[c].ministry > 0) {
+      textCols.push(c);
+    }
+  }
+
+  if (textCols.length >= 2) {
+    // Score: check for header hints first
+    var col1 = textCols[0], col2 = textCols[1];
+    var score1Ministry = colScores[col1].ministry;
+    var score2Ministry = colScores[col2].ministry;
+
+    // Heuristic: the column with more unique multi-word values that DON'T look
+    // like "FirstName LastName" is more likely ministry names
+    if (score1Ministry > score2Ministry) {
+      ministryCol = col1;
+      nameCol = col2;
+    } else if (score2Ministry > score1Ministry) {
+      ministryCol = col2;
+      nameCol = col1;
+    } else {
+      // Check which column has values that look more like org names vs person names
+      // Person names: typically 2 words, each capitalized. Ministry names: varied.
+      var personLike1 = 0, personLike2 = 0;
+      for (var r = 0; r < sampleRows.length; r++) {
+        var v1 = (sampleRows[r][col1] || '').toString().trim();
+        var v2 = (sampleRows[r][col2] || '').toString().trim();
+        if (/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(v1)) personLike1++;
+        if (/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(v2)) personLike2++;
+      }
+      if (personLike1 > personLike2) {
+        nameCol = col1; ministryCol = col2;
+      } else {
+        nameCol = col2; ministryCol = col1;
+      }
+    }
+  } else if (textCols.length === 1) {
+    // Only one text column — assume it's the ministry name
+    ministryCol = textCols[0];
+  }
+
+  // Build ministry list from detected columns, deduplicating by ministry name
+  var seen = {};
+  var ministries = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var mName = ministryCol >= 0 ? (row[ministryCol] || '').toString().trim() : '';
+    if (!mName) continue;
+
+    var mEmail = emailCol >= 0 ? (row[emailCol] || '').toString().trim() : '';
+    var mContact = nameCol >= 0 ? (row[nameCol] || '').toString().trim() : '';
+    var mPhone = phoneCol >= 0 ? (row[phoneCol] || '').toString().trim() : '';
+    var mDesc = descCol >= 0 ? (row[descCol] || '').toString().trim() : '';
+
+    // Skip rows where the "ministry name" looks like just a number or email
+    if (/^\d+$/.test(mName)) continue;
+    if (emailPattern.test(mName)) continue;
+
+    var key = mName.toLowerCase().replace(/\s+/g, ' ');
+    if (seen[key]) {
+      // Deduplicate: keep the one with more data, but merge contacts
+      continue;
+    }
+    seen[key] = true;
+
+    var id = mName.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 40);
+
+    ministries.push({
+      id: id,
+      name: mName,
+      description: mDesc,
+      icon: '📋',
+      organizerName: mContact,
+      organizerEmail: mEmail,
+      organizerPhone: mPhone,
+      questions: []
+    });
   }
 
   return ContentService
-    .createTextOutput(JSON.stringify({ ministries: ministries }))
+    .createTextOutput(JSON.stringify({
+      ministries: ministries,
+      format: 'detected',
+      columnMapping: {
+        email: emailCol, name: nameCol, ministry: ministryCol,
+        phone: phoneCol, description: descCol
+      }
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -259,9 +452,24 @@ function handleScanSheets(ss) {
     if (rowCount >= 10) score += 10;
     if (rowCount >= 20) score += 5;
 
+    // Scan sample data for email addresses — a column of emails is a strong signal
+    // of a contact/ministry directory
+    var emailsFound = 0;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (var s = 0; s < sampleData.length; s++) {
+      for (var sc = 0; sc < sampleData[s].length; sc++) {
+        if (emailRegex.test((sampleData[s][sc] || '').toString().trim())) {
+          emailsFound++;
+          break; // one email per row is enough
+        }
+      }
+    }
+    if (emailsFound >= 3) score += 15; // consistent emails = contact list
+
     // Bonus if tab name itself sounds ministry-related
     var nameLower = name.toLowerCase();
-    var tabKeywords = ['ministr', 'group', 'organization', 'team', 'committee', 'list', 'master', 'all'];
+    var tabKeywords = ['ministr', 'group', 'organization', 'team', 'committee', 'list',
+                       'master', 'all', 'table', 'contact', 'director'];
     for (var t = 0; t < tabKeywords.length; t++) {
       if (nameLower.indexOf(tabKeywords[t]) >= 0) {
         score += 10;
@@ -962,6 +1170,7 @@ function handleAiEnrich(data) {
       '1. Match it to an existing ministry by name (fuzzy matching is OK — "Lectors" matches "Lector Ministry")\n' +
       '2. Extract any new information: richer description, meeting times/schedule, location, requirements, who to contact, mission statement, activities, etc.\n\n' +
       'Also identify any ministries in the booklet that are NOT in our existing list.\n\n' +
+      'CONTENT MODERATION: Ensure all extracted text is appropriate for a public-facing parish website. Rewrite informal or poorly-worded descriptions into clear, welcoming language. Omit any inappropriate content.\n\n' +
       'Return ONLY a JSON object with this structure:\n' +
       '{\n' +
       '  "enrichments": [\n' +
@@ -996,13 +1205,20 @@ function handleAiEnrich(data) {
     var sampleData = data.sampleData || '';
     if (!sampleData) return jsonResponse({ success: false, error: 'No spreadsheet data provided' });
 
-    var prompt = 'I have a supplementary spreadsheet with additional information about church/parish ministries. I also have existing ministry records.\n\n' +
+    var prompt = 'I have a supplementary spreadsheet (possibly form responses) with additional information about church/parish ministries. I also have existing ministry records.\n\n' +
       'EXISTING MINISTRIES:\n' + ministryList + '\n\n' +
       'SUPPLEMENTARY SPREADSHEET DATA:\n' + sampleData + '\n\n' +
       'Analyze this spreadsheet and:\n' +
       '1. Match each row to an existing ministry by name (fuzzy matching OK)\n' +
       '2. Identify what new/additional data each row provides beyond what we already have\n' +
       '3. Map the columns to useful fields\n\n' +
+      'CONTENT MODERATION — IMPORTANT:\n' +
+      'This data may come from raw form responses. Before including any text in the enrichment output:\n' +
+      '- FILTER OUT casual remarks, jokes, off-topic comments, event logistics, complaints, internal notes, and anything not suitable for a public-facing ministry description.\n' +
+      '- FILTER OUT any profanity, inappropriate language, or content that would be offensive in a church/parish context.\n' +
+      '- ONLY extract substantive, professional descriptions of what the ministry does, its mission, activities, meeting details, and contact information.\n' +
+      '- REWRITE informal or poorly-written descriptions into clear, respectful, welcoming language appropriate for a parish website.\n' +
+      '- If a form response contains no usable ministry description (just junk, logistics, or inappropriate content), set description to null rather than including bad content.\n\n' +
       'Return ONLY a JSON object with this structure:\n' +
       '{\n' +
       '  "enrichments": [\n' +
