@@ -397,6 +397,45 @@
       flex: 1;
     }
 
+    .role-picker-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .role-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 2px solid #e8e4de;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .role-picker-btn:hover {
+      border-color: var(--primary);
+      background: #faf8f5;
+    }
+    .role-picker-icon {
+      font-size: 24px;
+      width: 40px;
+      text-align: center;
+    }
+    .role-picker-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .role-picker-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 2px;
+    }
+
     /* ======================================== */
     /* TOP NAVIGATION BAR                       */
     /* ======================================== */
@@ -2565,6 +2604,18 @@
   </div>
 </div>
 
+<!-- ROLE PICKER MODAL -->
+<div id="role-picker-modal" class="modal hidden">
+  <div class="modal-backdrop" onclick="document.getElementById('role-picker-modal').classList.add('hidden')"></div>
+  <div class="modal-content" style="max-width: 380px;">
+    <h3 class="modal-title">How would you like to sign in?</h3>
+    <p class="modal-text" style="margin-bottom: 12px;">You have multiple roles. Choose how you'd like to use the app right now.</p>
+    <div class="role-picker-options" id="role-picker-options">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
 <!-- ======================================== -->
 <!-- ADMIN DASHBOARD VIEW                    -->
 <!-- ======================================== -->
@@ -3039,8 +3090,17 @@ function isAdmin(email) {
   return admins.some(a => a.email.toLowerCase() === email.toLowerCase());
 }
 
+function isMinistryLead(email) {
+  if (!email || !MINISTRIES.length) return false;
+  var normalizedEmail = email.toLowerCase();
+  return MINISTRIES.some(function(m) {
+    return m.organizerEmail && m.organizerEmail.toLowerCase() === normalizedEmail;
+  });
+}
+
 function getUserRole(email) {
   if (isAdmin(email)) return 'admin';
+  if (isMinistryLead(email)) return 'leader';
   return 'parishioner';
 }
 
@@ -3236,6 +3296,27 @@ function getDomain(email) {
 
 function isConsumerDomain(domain) {
   return CONSUMER_DOMAINS.includes(domain);
+}
+
+// Extract base domain from the site URL (strips subdomains like "ministry.")
+// e.g. "ministry.st-theresa.org" → "st-theresa.org"
+function getSiteDomain() {
+  var hostname = window.location.hostname; // e.g. "ministry.st-theresa.org"
+  var parts = hostname.split('.');
+  // For domains like "st-theresa.org", return as-is
+  // For "ministry.st-theresa.org", return "st-theresa.org"
+  if (parts.length > 2) {
+    return parts.slice(1).join('.');
+  }
+  return hostname;
+}
+
+// Check if user's email domain matches the site's domain
+function emailMatchesSiteDomain(email) {
+  var emailDomain = getDomain(email);
+  var siteDomain = getSiteDomain();
+  if (!emailDomain || !siteDomain) return false;
+  return emailDomain === siteDomain;
 }
 
 // Check if this domain is already registered (local check for now)
@@ -3486,53 +3567,155 @@ function handleAdminSignIn(response) {
 // Parishioner sign-in (auto-fill registration form)
 function handleParishionerSignIn(response) {
   var payload = decodeJwt(response.credential);
+  var email = payload.email || '';
+  var firstName = payload.given_name || '';
+  var lastName = payload.family_name || '';
+  var picture = payload.picture || '';
+  var domain = getDomain(email);
 
-  // Check if this is a church domain + app not set up = potential first-time admin
-  var domain = getDomain(payload.email || '');
-  if (domain && !isConsumerDomain(domain) && !appConfig.setupComplete) {
-    // This looks like an org admin, not a parishioner
-    // Route them to /start wizard with their data pre-loaded
-    setupAdminData = {
-      email: payload.email || '',
-      firstName: payload.given_name || '',
-      lastName: payload.family_name || '',
-      picture: payload.picture || ''
-    };
-    showView('start');
-    showWizardStep(1);
-    // Trigger the signed-in state on the wizard
-    document.getElementById('admin-signed-in').classList.remove('hidden');
-    document.getElementById('admin-setup-initials').textContent =
-      (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
-    document.getElementById('admin-setup-name').textContent =
-      setupAdminData.firstName + ' ' + setupAdminData.lastName;
-    document.getElementById('admin-setup-email').textContent = setupAdminData.email;
-    document.getElementById('step1-next').disabled = false;
-    runDomainDetection(setupAdminData.email);
+  // Build list of roles this person has
+  var roles = ['parishioner']; // everyone can be a parishioner
+
+  // Check if email domain matches site domain → potential admin (especially for first-time setup)
+  var domainMatchesSite = emailMatchesSiteDomain(email);
+
+  // Check if they're a registered admin
+  var registeredAdmin = isAdmin(email);
+  if (registeredAdmin) {
+    roles.push('admin');
+  }
+
+  // Check if they're a ministry lead (based on loaded ministries data)
+  if (isMinistryLead(email)) {
+    roles.push('leader');
+  }
+
+  // If setup isn't complete and their email domain matches the site, offer admin setup
+  if (!appConfig.setupComplete && domainMatchesSite && !isConsumerDomain(domain)) {
+    roles.push('setup_admin');
+  }
+
+  // If they have multiple roles, show the role picker
+  if (roles.length > 1) {
+    showRolePicker(roles, { email: email, firstName: firstName, lastName: lastName, picture: picture });
     return;
   }
 
-  // Normal parishioner flow - auto-fill form and save photo URL
-  document.getElementById('firstName').value = payload.given_name || '';
-  document.getElementById('lastName').value = payload.family_name || '';
-  document.getElementById('email').value = payload.email || '';
-  // Store photo URL so it can be shown on the profile badge after registration
-  if (payload.picture) {
-    document.getElementById('register-form').dataset.photoUrl = payload.picture;
-  }
-  document.getElementById('phone').focus();
+  // Single role: just a parishioner — continue with normal flow
+  continueAsParishioner(firstName, lastName, email, picture);
+}
 
-  // If this person is an admin, create a session for them
-  if (isAdmin(payload.email)) {
+// Show the role picker modal
+function showRolePicker(roles, userData) {
+  var container = document.getElementById('role-picker-options');
+  container.innerHTML = '';
+
+  var roleConfig = {
+    parishioner: {
+      icon: '\u26EA', // church emoji
+      label: 'Parishioner',
+      desc: 'Browse ministries and sign up to serve'
+    },
+    admin: {
+      icon: '\u2699', // gear emoji
+      label: 'Administrator',
+      desc: 'Manage ministries, signups, and settings'
+    },
+    setup_admin: {
+      icon: '\uD83D\uDD27', // wrench emoji
+      label: 'Set Up This Site',
+      desc: 'Configure this Ministry Fair for your organization'
+    },
+    leader: {
+      icon: '\uD83D\uDCCB', // clipboard emoji
+      label: 'Ministry Lead',
+      desc: 'Manage your ministry and view signups'
+    }
+  };
+
+  roles.forEach(function(role) {
+    var config = roleConfig[role];
+    if (!config) return;
+
+    var btn = document.createElement('button');
+    btn.className = 'role-picker-btn';
+    btn.innerHTML =
+      '<div class="role-picker-icon">' + config.icon + '</div>' +
+      '<div><div class="role-picker-label">' + config.label + '</div>' +
+      '<div class="role-picker-desc">' + config.desc + '</div></div>';
+
+    btn.addEventListener('click', function() {
+      document.getElementById('role-picker-modal').classList.add('hidden');
+      handleRoleSelection(role, userData);
+    });
+
+    container.appendChild(btn);
+  });
+
+  document.getElementById('role-picker-modal').classList.remove('hidden');
+}
+
+// Handle the chosen role
+function handleRoleSelection(role, userData) {
+  if (role === 'setup_admin') {
+    // Route to the admin setup wizard
+    setupAdminData = {
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      picture: userData.picture
+    };
+    showView('start');
+    showWizardStep(1);
+    document.getElementById('admin-signed-in').classList.remove('hidden');
+    document.getElementById('admin-setup-initials').textContent =
+      (userData.firstName[0] || '') + (userData.lastName[0] || '');
+    document.getElementById('admin-setup-name').textContent =
+      userData.firstName + ' ' + userData.lastName;
+    document.getElementById('admin-setup-email').textContent = userData.email;
+    document.getElementById('step1-next').disabled = false;
+    runDomainDetection(userData.email);
+  } else if (role === 'admin') {
+    // Sign in as admin and go to admin dashboard
     currentSession = {
-      email: payload.email,
-      firstName: payload.given_name || '',
-      lastName: payload.family_name || '',
-      picture: payload.picture || '',
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      picture: userData.picture,
       role: 'admin'
     };
     saveSession(currentSession);
+    loadMinistries().then(function() {
+      showAdminDashboard();
+    });
+  } else if (role === 'leader') {
+    // Sign in as ministry lead
+    currentSession = {
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      picture: userData.picture,
+      role: 'leader'
+    };
+    saveSession(currentSession);
+    loadMinistries().then(function() {
+      showAdminDashboard();
+    });
+  } else {
+    // Parishioner
+    continueAsParishioner(userData.firstName, userData.lastName, userData.email, userData.picture);
   }
+}
+
+// Continue with normal parishioner registration flow
+function continueAsParishioner(firstName, lastName, email, picture) {
+  document.getElementById('firstName').value = firstName;
+  document.getElementById('lastName').value = lastName;
+  document.getElementById('email').value = email;
+  if (picture) {
+    document.getElementById('register-form').dataset.photoUrl = picture;
+  }
+  document.getElementById('phone').focus();
 }
 
 // ============================================
@@ -3547,7 +3730,7 @@ function updateNavBar() {
     document.getElementById('nav-user-name').textContent = currentSession.firstName + ' ' + currentSession.lastName;
     document.getElementById('nav-user-email').textContent = currentSession.email;
     var badge = document.getElementById('nav-role-badge');
-    badge.textContent = role === 'admin' ? 'Admin' : 'Member';
+    badge.textContent = role === 'admin' ? 'Admin' : role === 'leader' ? 'Ministry Lead' : 'Member';
     badge.className = 'role-badge role-' + role;
   } else if (hasSavedProfile()) {
     document.getElementById('nav-brand-text').textContent = appConfig.appTitle || 'Ministry Fair';
@@ -4684,8 +4867,8 @@ initTheme();
 function boot() {
   var hash = window.location.hash;
 
-  // If setup not complete, show wizard. Admins can access via #/start
-  if (!appConfig.setupComplete || (hash === '#/start' && currentSession && getUserRole(currentSession.email) === 'admin')) {
+  // Admins can access wizard directly via #/start
+  if (hash === '#/start' && currentSession && getUserRole(currentSession.email) === 'admin') {
     applyConfig();
     showView('start');
     showWizardStep(1);
