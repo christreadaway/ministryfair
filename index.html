@@ -2390,29 +2390,96 @@
           </div>
         </div>
 
-        <!-- Connect section (shown after analysis or if skipping upload) -->
+        <!-- Connect section -->
         <div style="margin-top: 24px;">
+          <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">&#128187;</span>
+            <div style="font-size: 13px; color: #5d4037; font-family: 'Inter', sans-serif;">
+              <strong>Best done on a desktop or laptop.</strong> The next steps involve Google Sheets and Apps Script, which are much easier to work with on a full-size screen.
+            </div>
+          </div>
+
+          <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Connect to Google Sheets</h3>
+          <p style="font-size: 13px; color: #666; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
+            This app uses a Google Sheet as its database. You'll set up a Sheet and add a small script that lets the app read and write data. Don't worry &mdash; we'll walk you through it.
+          </p>
+
           <div class="setup-step">
             <span class="step-number">1</span>
             <div class="setup-step-content">
-              <div class="setup-step-title">Import into Google Sheets</div>
-              <div class="setup-step-desc">Create a new Google Sheet. If you downloaded the formatted file above, use File &rarr; Import to bring it in. Otherwise, paste your ministry data directly.</div>
+              <div class="setup-step-title">Create or open a Google Sheet</div>
+              <div class="setup-step-desc">Go to <a href="https://sheets.new" target="_blank" style="color: #8B2635; font-weight: 600;">sheets.new</a> to create a blank sheet, or open an existing one that has your ministry data. If you downloaded the formatted file above, you can import it via <strong>File &rarr; Import</strong>.</div>
             </div>
           </div>
           <div class="setup-step">
             <span class="step-number">2</span>
             <div class="setup-step-content">
               <div class="setup-step-title">Add the backend script</div>
-              <div class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &rarr; Apps Script</strong>. Delete any existing code, paste the contents of <strong>google-apps-script.js</strong> (included with this app), and click Save.</div>
+              <div class="setup-step-desc">In your Google Sheet, click <strong>Extensions &rarr; Apps Script</strong>. This opens a code editor. We need to paste a small script there.</div>
             </div>
           </div>
           <div class="setup-step">
             <span class="step-number">3</span>
             <div class="setup-step-content">
-              <div class="setup-step-title">Deploy as a Web App</div>
-              <div class="setup-step-desc">In Apps Script, click <strong>Deploy &rarr; New deployment</strong>. Set type to "Web app", execute as "Me", access "Anyone". Click Deploy and copy the URL.</div>
+              <div class="setup-step-title">Deploy it as a Web App</div>
+              <div class="setup-step-desc">After pasting the script, you'll deploy it so this app can talk to your Sheet. You'll get a URL to paste below.</div>
             </div>
           </div>
+
+          <!-- Expandable detailed help -->
+          <details style="margin-top: 16px; border: 1px solid #e8e4de; border-radius: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: #8B2635; font-family: 'Inter', sans-serif; background: #fdf8f8; user-select: none;">
+              &#9432; Show me detailed step-by-step instructions
+            </summary>
+            <div style="padding: 16px; font-size: 13px; line-height: 1.8; color: #444; font-family: 'Inter', sans-serif;">
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 1: Create your Google Sheet</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>Go to <a href="https://sheets.new" target="_blank" style="color: #8B2635;">sheets.new</a> &mdash; this creates a brand-new spreadsheet.</li>
+                <li>Give it a name like <strong>"Ministry Fair Data"</strong> (click "Untitled spreadsheet" at the top left).</li>
+                <li><strong>If you have existing ministry data:</strong> You can paste it into Sheet1, or use <strong>File &rarr; Import</strong> to bring in a CSV/Excel file. The app will auto-detect your columns.</li>
+                <li><strong>If you're starting fresh:</strong> The script will create the proper sheets automatically when you first connect.</li>
+                <li>Copy the URL from your browser's address bar &mdash; you'll need it below.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 2: Add the Apps Script</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>In your Google Sheet, click <strong>Extensions</strong> in the menu bar at the top.</li>
+                <li>Click <strong>Apps Script</strong>. A new tab will open with a code editor.</li>
+                <li>You'll see some default code like <code>function myFunction() {}</code> &mdash; <strong>select all of it and delete it</strong> (Ctrl+A then Delete).</li>
+                <li>Open the file <strong>google-apps-script.js</strong> that came with this app (it's in the same folder as the app). Copy its entire contents.</li>
+                <li>Paste everything into the Apps Script editor (Ctrl+V).</li>
+                <li>Click the <strong>Save</strong> button (floppy disk icon) or press <strong>Ctrl+S</strong>.</li>
+                <li>You can rename the project from "Untitled project" to something like <strong>"Ministry Fair Backend"</strong> if you like.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 3: Deploy as a Web App</h4>
+              <ol style="margin: 0 0 16px 20px; padding: 0;">
+                <li>In the Apps Script editor, click the blue <strong>Deploy</strong> button in the top right.</li>
+                <li>Select <strong>New deployment</strong>.</li>
+                <li>Next to "Select type", click the <strong>gear icon</strong> (&#9881;) and choose <strong>Web app</strong>.</li>
+                <li>Fill in these settings:
+                  <ul style="margin: 4px 0 4px 16px;">
+                    <li><strong>Description:</strong> anything you like (e.g., "Ministry Fair")</li>
+                    <li><strong>Execute as:</strong> <strong>Me</strong> (your Google account)</li>
+                    <li><strong>Who has access:</strong> <strong>Anyone</strong></li>
+                  </ul>
+                </li>
+                <li>Click <strong>Deploy</strong>.</li>
+                <li>Google may ask you to <strong>authorize</strong> the script. Click <strong>Authorize access</strong>, choose your account, and if you see a "Google hasn't verified this app" warning, click <strong>Advanced</strong> &rarr; <strong>Go to Ministry Fair Backend (unsafe)</strong>. This is safe &mdash; it's your own script.</li>
+                <li>After deploying, you'll see a <strong>Web app URL</strong> that starts with <code>https://script.google.com/macros/s/...</code></li>
+                <li><strong>Copy this URL</strong> and paste it into the "Apps Script API URL" field below.</li>
+              </ol>
+
+              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Troubleshooting</h4>
+              <ul style="margin: 0 0 0 20px; padding: 0;">
+                <li><strong>"I don't see Extensions in the menu"</strong> &mdash; Make sure you're in Google Sheets (not Docs or Drive). The Extensions menu is in the top menu bar.</li>
+                <li><strong>"The authorization screen looks scary"</strong> &mdash; This is normal for custom scripts. Google shows this warning for any unverified script. Since you wrote (pasted) it yourself, it's safe.</li>
+                <li><strong>"I get a 'Script function not found' error"</strong> &mdash; Make sure you deleted the old default code before pasting. The script should start with <code>const SIGNUPS_SHEET_NAME = ...</code></li>
+                <li><strong>"The URL doesn't work"</strong> &mdash; Make sure you copied the <strong>Web app URL</strong> (not the deployment ID). It should end in <code>/exec</code>.</li>
+                <li><strong>"I need to update the script later"</strong> &mdash; Go to Extensions &rarr; Apps Script, make your changes, then Deploy &rarr; Manage deployments &rarr; click the pencil icon &rarr; set Version to "New version" &rarr; Deploy.</li>
+              </ul>
+            </div>
+          </details>
         </div>
 
         <div class="form" style="margin-top: 20px;">
