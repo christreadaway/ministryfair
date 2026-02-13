@@ -2788,6 +2788,7 @@
         <button class="btn-sm" id="add-ministry-btn">+ Add Ministry</button>
         <button class="btn-sm" id="enrich-booklet-btn" style="margin-left: 8px;">&#128214; Import Booklet</button>
         <button class="btn-sm" id="enrich-spreadsheet-btn" style="margin-left: 8px;">&#128196; Add Spreadsheet</button>
+        <button class="btn-sm" id="generate-icons-btn" style="margin-left: 8px;">&#127912; Generate Icons</button>
       </div>
 
       <!-- Enrichment Panel (hidden by default) -->
@@ -4881,7 +4882,9 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   // Apply config and load the app
   applyConfig();
   loadMinistries().then(function() {
-    // After loading, check for ministry leads and offer to notify them
+    // After loading, auto-assign icons to ministries that need them
+    autoAssignIconsIfNeeded();
+    // Check for ministry leads and offer to notify them
     showLeadInviteSummary();
   });
 });
@@ -5969,6 +5972,146 @@ function renderAdminMinistries() {
       openFollowupEditor(btn.dataset.id);
     });
   });
+}
+
+// ============================================
+// AUTO-ASSIGN MINISTRY ICONS
+// ============================================
+
+// Assign emoji icons to ministries that have the default 📋 or no icon
+async function autoAssignIcons(ministriesToUpdate) {
+  if (!ministriesToUpdate || ministriesToUpdate.length === 0) return;
+  if (!appConfig.apiUrl) return;
+
+  var ministryList = ministriesToUpdate.map(function(m) {
+    return { id: m.id, name: m.name, description: (m.description || '').substring(0, 100) };
+  });
+
+  var prompt = 'I need you to assign a single appropriate emoji icon to each of these church/parish ministries. ' +
+    'Choose emojis that visually represent what each ministry does. Be creative but appropriate — no obscene or offensive emojis.\n\n' +
+    'Guidelines:\n' +
+    '- Music/choir → 🎵 or 🎶\n' +
+    '- Youth → 🌟 or 👦\n' +
+    '- Prayer → 🙏\n' +
+    '- Food/meals → 🍞 or 🥘\n' +
+    '- Hospitality/greeting → 🤝 or 👋\n' +
+    '- Teaching/education → 📖 or 🎓\n' +
+    '- Service/outreach → 💛 or 🤲\n' +
+    '- Liturgy/altar → ⛪ or 🕯️\n' +
+    '- Technology/media → 💻 or 📡\n' +
+    '- Maintenance/facilities → 🔧 or 🏗️\n' +
+    '- Finance → 💰\n' +
+    '- Health/wellness → ❤️ or 🏥\n' +
+    'Use your judgment for other types.\n\n' +
+    'MINISTRIES:\n' +
+    JSON.stringify(ministryList) + '\n\n' +
+    'Return ONLY a JSON object mapping ministry id to a single emoji character:\n' +
+    '{"ministry-id": "🎵", "another-id": "🙏"}\n' +
+    'No markdown, no explanation — just the JSON.';
+
+  try {
+    var resp = await fetch(appConfig.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ai-analyze', sampleData: 'icons', prompt: prompt })
+    });
+    var result = await resp.json();
+
+    if (result.success && result.result) {
+      var iconMap = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
+      return iconMap;
+    }
+  } catch(err) {
+    console.error('Icon generation error:', err);
+  }
+  return null;
+}
+
+// Apply generated icons to ministries via the API
+async function applyIcons(iconMap) {
+  if (!iconMap) return 0;
+  var count = 0;
+
+  for (var i = 0; i < MINISTRIES.length; i++) {
+    var m = MINISTRIES[i];
+    var newIcon = iconMap[m.id];
+    if (!newIcon) continue;
+
+    // Only update if the ministry has the default icon or no icon
+    if (m.icon && m.icon !== '📋' && m.icon !== '&#128203;') continue;
+
+    try {
+      await fetch(appConfig.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminAction: 'updateMinistry',
+          adminEmail: currentSession ? currentSession.email : '',
+          id: m.id,
+          name: m.name,
+          description: m.description || '',
+          icon: newIcon,
+          organizerName: m.organizerName || '',
+          organizerEmail: m.organizerEmail || '',
+          organizerPhone: m.organizerPhone || ''
+        })
+      });
+      m.icon = newIcon; // update local state immediately
+      count++;
+    } catch(err) {
+      console.error('Error updating icon for', m.id, err);
+    }
+  }
+  return count;
+}
+
+// Button handler: generate icons for all ministries with default icon
+document.getElementById('generate-icons-btn').addEventListener('click', async function() {
+  var btn = document.getElementById('generate-icons-btn');
+  var needsIcons = MINISTRIES.filter(function(m) {
+    return !m.icon || m.icon === '📋' || m.icon === '&#128203;';
+  });
+
+  if (needsIcons.length === 0) {
+    alert('All ministries already have custom icons!');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  var iconMap = await autoAssignIcons(needsIcons);
+  if (iconMap) {
+    var count = await applyIcons(iconMap);
+    await loadMinistries();
+    renderAdminMinistries();
+    alert('Assigned icons to ' + count + ' ministr' + (count === 1 ? 'y' : 'ies') + '!');
+  } else {
+    alert('Could not generate icons. Check that your Claude API key is configured.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🎨 Generate Icons';
+});
+
+// Auto-assign icons after initial ministry import (runs once after first load with default icons)
+async function autoAssignIconsIfNeeded() {
+  var needsIcons = MINISTRIES.filter(function(m) {
+    return !m.icon || m.icon === '📋' || m.icon === '&#128203;';
+  });
+
+  // Only auto-run if most ministries need icons (looks like a fresh import)
+  if (needsIcons.length >= 3 && needsIcons.length >= MINISTRIES.length * 0.5) {
+    var iconMap = await autoAssignIcons(needsIcons);
+    if (iconMap) {
+      await applyIcons(iconMap);
+      await loadMinistries();
+      // Re-render if we're on the admin dashboard
+      if (!document.getElementById('view-admin').classList.contains('hidden')) {
+        renderAdminMinistries();
+      }
+    }
+  }
 }
 
 // ============================================
