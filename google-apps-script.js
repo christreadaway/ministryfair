@@ -9,7 +9,7 @@ const TIMEZONE = 'America/Chicago'; // Change to your timezone
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_(e);
 
     // ── Admin actions ─────────────────────────────
     if (data.adminAction) {
@@ -101,7 +101,10 @@ function doPost(e) {
 
 function doGet(e) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_(e);
+    if (!ss) {
+      return jsonResponse({ error: 'Could not open spreadsheet. If this is a standalone script, pass ?sheetUrl=YOUR_SHEET_URL or set SPREADSHEET_URL in Script Properties.' });
+    }
     const action = e && e.parameter && e.parameter.action ? e.parameter.action : 'getMinistries';
 
     switch (action) {
@@ -134,6 +137,37 @@ function doGet(e) {
       .createTextOutput(JSON.stringify({ error: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// Get the spreadsheet — tries container-bound first, then URL parameter, then Script Properties
+function getSpreadsheet_(e) {
+  // 1. Try container-bound (script created from Extensions > Apps Script inside a Sheet)
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) return ss;
+  } catch(ignore) {}
+
+  // 2. Try URL from query parameter (?sheetUrl=...)
+  var urlParam = e && e.parameter && e.parameter.sheetUrl;
+  if (urlParam) {
+    try {
+      return SpreadsheetApp.openByUrl(urlParam);
+    } catch(ignore) {}
+  }
+
+  // 3. Try URL from Script Properties
+  try {
+    var stored = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_URL');
+    if (stored) return SpreadsheetApp.openByUrl(stored);
+  } catch(ignore) {}
+
+  return null;
+}
+
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function handleGetMinistries(ss, sheetName) {
