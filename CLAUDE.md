@@ -1,64 +1,29 @@
-# Claude Code Instructions - MinistryFair
+# MinistryFair — CLAUDE.md
 
-## About This Project
-Ministry signup and volunteer management system for Catholic parishes. Allows parishioners to browse ministries, sign up, and volunteer. Includes admin dashboard for ministry leaders to manage signups, events, and volunteers.
+> **Repository:** `github.com/christreadaway/ministryfair`
+> **Category:** Church
+> **Stack:** Firebase, Google Auth, HTML/JS
+> **Localhost Port:** 3000
 
-## About Me (Chris Treadaway)
-Product builder, not a coder. I bring requirements and vision — you handle implementation.
+## What This Project Is
+Catholic parish ministry signup and fair management system
 
-**Working with me:**
-- Bias toward action - just do it, don't argue
-- Make terminal commands dummy-proof (always start with `cd ~/ministryfair`)
-- Minimize questions - make judgment calls and tell me what you chose
-- I get interrupted frequently - always end sessions with a handoff note
-- Match my writing style: conversational, grounded in experience, uses em-dashes and numbered lists
+## Session Start Protocol
+Before starting ANY work:
 
-## Tech Stack
-- **Frontend:** HTML, JavaScript, Tailwind CSS
-- **Backend:** Google Apps Script + Google Sheets (as database)
-- **Auth:** Firebase + Google Sign-In
-- **Deployment:** Netlify
-- **Data Storage:** Google Sheets with tabs for Ministries, Signups, Events, Tasks, Ministry Leads
-
-## Firebase Setup
-I use Firebase + Google Sign-In:
-- Firebase project already configured
-- Google Auth enabled
-- Config in `firebase-config.js` (never commit this file)
-- Google Sign-In button in login UI
-- Sign-out on logout
-
-## File Paths
-- **Always use:** `~/ministryfair/path/to/file`
-- **Never use:** `/Users/christreadaway/...`
-- **Always start commands with:** `cd ~/ministryfair`
-
-## PII Rules (CRITICAL - I'm Catholic, these are real communities)
-❌ NEVER include:
-- Real church names → use [Parish Name]
-- Staff/volunteer names → use [Staff Name], [Pastor Name]
-- Email addresses → use user@example.com
-- Phone numbers, addresses
-- Children's names
-- File paths with /Users/christreadaway → use ~/
-
-✅ ALWAYS use placeholders in square brackets
-
-## Key Features
-- Ministry browsing with cards and search
-- Signup forms with qualifying questions
-- Admin dashboard for ministry leads
-- Event creation and volunteer signup
-- Task assignment for events
-- Google Sign-In authentication
-- Mobile-responsive design
-
-## Known Integration
-This project merged features from the ministrylife repo:
-- Ministry lead dashboard
-- Event management
-- Task assignments
-- All now in one codebase (ministryfair)
+1. Run `git fetch origin` to get latest remote state
+2. If creating a new branch, ALWAYS branch from latest `origin/main`:
+   ```
+   git fetch origin
+   git checkout -b <branch-name> origin/main
+   ```
+3. If PROJECT_STATUS.md or SESSION_NOTES.md are missing on the current branch, recover them:
+   ```
+   git checkout origin/main -- PROJECT_STATUS.md SESSION_NOTES.md 2>/dev/null || true
+   ```
+4. Read CLAUDE.md (this file) fully before starting work
+5. Read SESSION_NOTES.md if it exists — check for prior session context, blockers, and next steps
+6. Confirm the current branch and its relationship to main before making changes
 
 ## Session End Routine
 Before ending EVERY session, Claude will automatically create/update SESSION_NOTES.md:
@@ -111,70 +76,30 @@ Ready to merge: [Yes/No - why or why not]
 
 SESSION_NOTES.md is committed to the repo and tracks all session progress over time.
 
-## Git Branch Strategy
-- Claude Code browser creates a new branch every session
-- At session end: Tell me if we should merge to main
-- If merging:
-  ```bash
-  cd ~/ministryfair
-  git checkout main
-  git merge [feature-branch]
-  git push origin main
-  git branch -d [feature-branch]
-  ```
-- Delete merged branches immediately to keep repo clean
+## Project-Specific Notes
+- Multi-parish support with admin controls
+- Ministry signup flows for parishioners
+- Deployed on Netlify
+- Firebase Firestore for data storage
+- Google authentication for admin access
 
-## Testing Approach
-- Test incrementally, not after hours of work
-- Give me exact terminal commands to run on my Mac
-- Don't assume dependencies are installed - tell me what to install
-- Flag any assumptions ("This assumes Firebase is configured")
+## Security Requirements
+- Proactively self-evaluate for SQL injection, XSS, CSRF, auth bypasses, and other common vulnerabilities
+- Flag security issues before completing builds — do not wait to be asked
+- NEVER expose API keys, tokens, or credentials in code or committed files
+- Use .env files with .gitignore for local secrets
+- Use secrets managers or environment variables for production
 
-## Deployment
-- Hosted on Netlify
-- Domain: [configured in Netlify]
-- Deploy from main branch
-- Build command: (none - static site)
-- Publish directory: `.` (root)
+## PII Rules
+- No real institution names, people, addresses, phones, or emails in code — use [Parish Name], [Staff Name], etc.
+- No local file paths in committed code — use ~/ or environment variables
+- No API keys, tokens, or credentials in any committed files
+- These rules apply to ALL code, artifacts, files, or snippets generated
 
-## Common Issues
-- **Google Sheets API quota**: Limited to 100 requests/100 seconds
-- **localStorage config**: Admin setup wizard checks `setupComplete` flag
-- **Branch confusion**: I often don't know what branch I'm on - always tell me
-- **Firebase config**: Never commit firebase-config.js - it's in .gitignore
+## User Context
+- Chris is a product builder, NOT a developer — provide detailed, dummy-proof instructions
+- When giving terminal commands, ALWAYS start with `cd` to the correct directory
+- Default to Windows paths (C:\Users\chris-treadaway\) — Chris works primarily on Windows
+- Minimize questions — make reasonable judgment calls and explain what you chose
+- Auth preference: Google Sign-In via Firebase (never username/password)
 
-## Project-Specific Context
-- Started Jan 29, 2025
-- Heavy development through Feb 14
-- Multiple feature branches merged (Firebase auth, profile photos, admin features)
-- Currently live and being tested
-- Real users at [Parish Name] are using this
-
----
-Last Updated: February 15, 2026
-
-
-## Session Management
-
-### Reading Past Work
-- `SESSION_NOTES.md` contains complete session history with detailed conversations
-- Read this file at session start if you need context on recent work
-- Sessions are ordered newest-first with full technical details
-
-### Ending Sessions
-At the end of each session, say:
-> "Append session notes to SESSION_NOTES.md"
-
-Claude will automatically:
-1. Generate a detailed session entry with conversation highlights
-2. Add it to the top of SESSION_NOTES.md (newest first)
-3. Include all technical work, files changed, commands used
-4. Commit the updated file
-
-### What Gets Logged
-- Conversation highlights (substantial exchanges)
-- Technical work and implementation details
-- Files modified/created
-- Commands executed
-- URLs and documentation referenced
-- Problem-solving context and decisions made
