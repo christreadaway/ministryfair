@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" async defer></script>
+  <!-- Microsoft Authentication Library (MSAL) for Microsoft 365 integration -->
+  <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js" async defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -2199,6 +2201,211 @@
     body.dark .followup-link-box input { color: #e0e0e0; }
     body.dark .followup-q-row { background: #2a2a2a; }
     body.dark .btn-add-q { background: #1e1e1e; border-color: #3a3a3a; color: #909090; }
+
+    /* ============================================ */
+    /* CHURCH GATE VIEW                             */
+    /* ============================================ */
+    .gate-hero {
+      text-align: center;
+      padding: 48px 20px 32px;
+      background: linear-gradient(145deg, #faf8f5 0%, #f5f0e8 100%);
+    }
+    .gate-hero-icon { font-size: 64px; margin-bottom: 16px; }
+    .gate-hero-title {
+      font-size: 32px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .gate-hero-sub {
+      font-size: 17px;
+      color: #666;
+      line-height: 1.6;
+      max-width: 440px;
+      margin: 0 auto;
+      font-family: 'Inter', sans-serif;
+    }
+    .gate-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      max-width: 460px;
+      margin: 24px auto;
+      text-align: center;
+    }
+    .gate-card h3 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .gate-card p {
+      font-size: 15px;
+      color: #666;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .gate-signin-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .gate-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      color: #999;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+    }
+    .gate-divider::before,
+    .gate-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
+    }
+    .gate-ms-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: #333;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 300px;
+      justify-content: center;
+    }
+    .gate-ms-btn:hover { border-color: #0078d4; box-shadow: 0 2px 8px rgba(0,120,212,0.15); }
+    .gate-ms-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .gate-status {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .gate-status .detection-card {
+      text-align: left;
+    }
+    .gate-info-text {
+      font-size: 12px;
+      color: #999;
+      font-family: 'Inter', sans-serif;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    body.dark .gate-hero { background: linear-gradient(145deg, #1a1a1a 0%, #121212 100%); }
+    body.dark .gate-hero-title { color: #e0e0e0; }
+    body.dark .gate-hero-sub { color: #909090; }
+    body.dark .gate-card { background: #1e1e1e; }
+    body.dark .gate-card h3 { color: #e0e0e0; }
+    body.dark .gate-card p { color: #909090; }
+    body.dark .gate-ms-btn { background: #2a2a2a; border-color: #3a3a3a; color: #e0e0e0; }
+    body.dark .gate-ms-btn:hover { border-color: #0078d4; }
+    body.dark .gate-divider { color: #666; }
+    body.dark .gate-divider::before,
+    body.dark .gate-divider::after { background: #3a3a3a; }
+
+    /* ============================================ */
+    /* PLATFORM SELECTION                           */
+    /* ============================================ */
+    .platform-cards {
+      display: flex;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .platform-card {
+      flex: 1;
+      border: 2px solid #e8e4de;
+      border-radius: 14px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+    .platform-card:hover { border-color: #8B2635; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .platform-card.selected { border-color: #8B2635; background: rgba(139,38,53,0.04); box-shadow: 0 4px 12px rgba(139,38,53,0.12); }
+    .platform-card-icon { font-size: 40px; margin-bottom: 12px; }
+    .platform-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 4px;
+    }
+    .platform-card-desc {
+      font-size: 13px;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.4;
+    }
+    .platform-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+    .platform-badge-ready { background: #d4edda; color: #155724; }
+    .platform-badge-preview { background: #fff3cd; color: #856404; }
+    body.dark .platform-card { background: #2a2a2a; border-color: #3a3a3a; }
+    body.dark .platform-card:hover { border-color: #8B2635; }
+    body.dark .platform-card.selected { background: rgba(139,38,53,0.1); border-color: #8B2635; }
+    body.dark .platform-card-name { color: #e0e0e0; }
+    body.dark .platform-card-desc { color: #909090; }
+
+    /* Microsoft-specific setup instructions */
+    .ms-setup-instructions {
+      background: #f0f6ff;
+      border: 1px solid #cce0ff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .ms-setup-instructions h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0078d4;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 8px;
+    }
+    .ms-setup-instructions p {
+      font-size: 13px;
+      color: #555;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+    }
+    body.dark .ms-setup-instructions { background: #1a2a3a; border-color: #2a4a6a; }
+    body.dark .ms-setup-instructions h4 { color: #4da6ff; }
+    body.dark .ms-setup-instructions p { color: #b0b0b0; }
+
+    /* Provider indicator in settings */
+    .provider-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+    .provider-badge-google { background: #e8f5e9; color: #2e7d32; }
+    .provider-badge-microsoft { background: #e3f2fd; color: #1565c0; }
+    body.dark .provider-badge-google { background: #1a3a1a; color: #66bb6a; }
+    body.dark .provider-badge-microsoft { background: #1a2a3a; color: #42a5f5; }
   </style>
 </head>
 <body>
@@ -2225,6 +2432,34 @@
     <button class="nav-btn" id="nav-logout-btn" title="Log out">&#10140;</button>
   </div>
 </nav>
+
+<!-- ======================================== -->
+<!-- CHURCH GATE VIEW                         -->
+<!-- First screen: identify the church        -->
+<!-- ======================================== -->
+<div id="view-church-gate" class="hidden">
+  <div class="gate-hero">
+    <div class="gate-hero-icon">&#9962;</div>
+    <h1 class="gate-hero-title">Ministry Fair</h1>
+    <p class="gate-hero-sub">A simple way for your community to explore and sign up for ministries.</p>
+  </div>
+  <div class="gate-card">
+    <h3>Get Started</h3>
+    <p>Sign in with your church email and we'll set things up for you. If your church is already on Ministry Fair, you'll be taken right in.</p>
+    <div class="gate-signin-section">
+      <div id="g_id_signin_gate"></div>
+      <div class="gate-divider">or</div>
+      <button class="gate-ms-btn" id="gate-ms-signin-btn" type="button">
+        <svg viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        Sign in with Microsoft
+      </button>
+    </div>
+    <div id="gate-status" class="gate-status hidden"></div>
+    <p class="gate-info-text">
+      We host the app for you. Your church manages its own data in Google Sheets or Microsoft Excel &mdash; all member information stays under your control.
+    </p>
+  </div>
+</div>
 
 <!-- LOADING VIEW -->
 <div id="view-loading">
@@ -2262,16 +2497,15 @@
   </div>
 
   <div class="content">
-    <!-- STEP 1: Sign In -->
+    <!-- STEP 1: Confirm Identity + Choose Platform -->
     <div class="wizard-step active" data-wizard-step="1">
       <div class="card">
-        <h2 class="section-title">Sign In as Administrator</h2>
+        <h2 class="section-title">Welcome, Administrator</h2>
         <p class="welcome-text">
-          Sign in with your Google account. You'll be the first administrator and can add others later.
+          You'll be the first administrator for your church. Let's choose how you'd like to manage your ministry data.
         </p>
-        <div class="google-signin-section">
-          <div id="g_id_signin_admin"></div>
-        </div>
+
+        <!-- Signed-in admin info (populated from gate) -->
         <div id="admin-signed-in" class="hidden">
           <div class="signed-in-as">
             <div class="profile-icon" id="admin-setup-initials"></div>
@@ -2281,9 +2515,35 @@
             </div>
             <div class="signed-in-check">&#10003;</div>
           </div>
-          <!-- Domain detection results -->
           <div id="domain-detection" class="hidden"></div>
         </div>
+
+        <!-- Fallback sign-in if user arrived at wizard directly -->
+        <div id="wizard-signin-fallback">
+          <div class="google-signin-section">
+            <div id="g_id_signin_admin"></div>
+          </div>
+        </div>
+
+        <!-- Platform selection -->
+        <div id="platform-selection" style="margin-top: 24px;">
+          <label class="label" style="margin-bottom: 12px; display: block;">Where will your ministry data live?</label>
+          <div class="platform-cards">
+            <div class="platform-card selected" id="platform-google" data-provider="google">
+              <div class="platform-card-icon">&#128218;</div>
+              <div class="platform-card-name">Google Sheets</div>
+              <div class="platform-card-desc">Your church creates and owns a Google Sheet. All member data stays in your Google account.</div>
+              <span class="platform-badge platform-badge-ready">Ready</span>
+            </div>
+            <div class="platform-card" id="platform-microsoft" data-provider="microsoft">
+              <div class="platform-card-icon">&#128202;</div>
+              <div class="platform-card-name">Microsoft 365</div>
+              <div class="platform-card-desc">Use Excel in OneDrive or SharePoint. Your church manages data through Microsoft.</div>
+              <span class="platform-badge platform-badge-preview">Preview</span>
+            </div>
+          </div>
+        </div>
+
         <div class="form" style="margin-top: 24px;">
           <div class="input-group">
             <label class="label">Claude API Key</label>
@@ -2334,7 +2594,7 @@
       </div>
     </div>
 
-    <!-- STEP 3: Upload & Analyze Spreadsheet -->
+    <!-- STEP 3: Upload & Connect Spreadsheet (platform-aware) -->
     <div class="wizard-step" data-wizard-step="3">
       <div class="card">
         <!-- ─── HOSTING MODE CHOICE (hidden for now — defaults to self-hosted) ─── -->
@@ -2386,13 +2646,10 @@
 
         <!-- AI analysis area (hidden until file uploaded) -->
         <div id="analysis-section" class="hidden">
-          <!-- Progress spinner -->
           <div id="analysis-progress" class="analysis-progress hidden">
             <div class="analysis-spinner"></div>
             <div class="analysis-status-text">Reading your spreadsheet with AI...</div>
           </div>
-
-          <!-- Mapping results -->
           <div id="mapping-results" class="hidden">
             <div id="mapping-summary-box"></div>
             <table class="mapping-table" id="mapping-table">
@@ -2405,34 +2662,19 @@
               </thead>
               <tbody id="mapping-table-body"></tbody>
             </table>
-
             <div id="mapping-suggestions"></div>
-
             <p style="font-size: 14px; font-weight: 600; color: #333; margin-top: 20px; font-family: 'Inter', sans-serif;">
               Preview (first 3 rows):
             </p>
             <div class="data-preview-scroll">
               <table class="sheet-preview" id="data-preview-table"></table>
             </div>
-
             <button class="btn-download" id="download-formatted-btn" style="margin-top: 16px;">&#128196; Download Formatted Sheet (.csv)</button>
           </div>
         </div>
 
-        <!-- Connect section -->
-        <div style="margin-top: 24px;">
-          <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 20px;">&#128187;</span>
-            <div style="font-size: 13px; color: #5d4037; font-family: 'Inter', sans-serif;">
-              <strong>Best done on a desktop or laptop.</strong> The next steps involve Google Sheets and Apps Script, which are much easier to work with on a full-size screen.
-            </div>
-          </div>
-
-          <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Connect to Google Sheets</h3>
-          <p style="font-size: 13px; color: #666; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
-            This app uses a Google Sheet as its database. You'll set up a Sheet and add a small script that lets the app read and write data. Don't worry &mdash; we'll walk you through it.
-          </p>
-
+        <!-- ========== GOOGLE SHEETS INSTRUCTIONS ========== -->
+        <div id="setup-google-instructions" style="margin-top: 24px;">
           <div class="setup-step">
             <span class="step-number">1</span>
             <div class="setup-step-content">
@@ -2454,80 +2696,65 @@
               <div class="setup-step-desc">After pasting the script, you'll deploy it so this app can talk to your Sheet. You'll get a URL to paste below.</div>
             </div>
           </div>
-
-          <!-- Expandable detailed help -->
-          <details style="margin-top: 16px; border: 1px solid #e8e4de; border-radius: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: #8B2635; font-family: 'Inter', sans-serif; background: #fdf8f8; user-select: none;">
-              &#9432; Show me detailed step-by-step instructions
-            </summary>
-            <div style="padding: 16px; font-size: 13px; line-height: 1.8; color: #444; font-family: 'Inter', sans-serif;">
-              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 1: Create your Google Sheet</h4>
-              <ol style="margin: 0 0 16px 20px; padding: 0;">
-                <li>Go to <a href="https://sheets.new" target="_blank" style="color: #8B2635;">sheets.new</a> &mdash; this creates a brand-new spreadsheet.</li>
-                <li>Give it a name like <strong>"Ministry Fair Data"</strong> (click "Untitled spreadsheet" at the top left).</li>
-                <li><strong>If you have existing ministry data:</strong> You can paste it into Sheet1, or use <strong>File &rarr; Import</strong> to bring in a CSV/Excel file. The app will auto-detect your columns.</li>
-                <li><strong>If you're starting fresh:</strong> The script will create the proper sheets automatically when you first connect.</li>
-                <li>Copy the URL from your browser's address bar &mdash; you'll need it below.</li>
-              </ol>
-
-              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 2: Add the Apps Script</h4>
-              <ol style="margin: 0 0 16px 20px; padding: 0;">
-                <li>In your Google Sheet, click <strong>Extensions</strong> in the menu bar at the top.</li>
-                <li>Click <strong>Apps Script</strong>. A new tab will open with a code editor.</li>
-                <li>You'll see some default code like <code>function myFunction() {}</code> &mdash; <strong>select all of it and delete it</strong> (Ctrl+A then Delete).</li>
-                <li>Open the file <strong>google-apps-script.js</strong> that came with this app (it's in the same folder as the app). Copy its entire contents.</li>
-                <li>Paste everything into the Apps Script editor (Ctrl+V).</li>
-                <li>Click the <strong>Save</strong> button (floppy disk icon) or press <strong>Ctrl+S</strong>.</li>
-                <li>You can rename the project from "Untitled project" to something like <strong>"Ministry Fair Backend"</strong> if you like.</li>
-              </ol>
-
-              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Step 3: Deploy as a Web App</h4>
-              <ol style="margin: 0 0 16px 20px; padding: 0;">
-                <li>In the Apps Script editor, click the blue <strong>Deploy</strong> button in the top right.</li>
-                <li>Select <strong>New deployment</strong>.</li>
-                <li>Next to "Select type", click the <strong>gear icon</strong> (&#9881;) and choose <strong>Web app</strong>.</li>
-                <li>Fill in these settings:
-                  <ul style="margin: 4px 0 4px 16px;">
-                    <li><strong>Description:</strong> anything you like (e.g., "Ministry Fair")</li>
-                    <li><strong>Execute as:</strong> <strong>Me</strong> (your Google account)</li>
-                    <li><strong>Who has access:</strong> <strong>Anyone</strong></li>
-                  </ul>
-                </li>
-                <li>Click <strong>Deploy</strong>.</li>
-                <li>Google may ask you to <strong>authorize</strong> the script. Click <strong>Authorize access</strong>, choose your account, and if you see a "Google hasn't verified this app" warning, click <strong>Advanced</strong> &rarr; <strong>Go to Ministry Fair Backend (unsafe)</strong>. This is safe &mdash; it's your own script.</li>
-                <li>After deploying, you'll see a <strong>Web app URL</strong> that starts with <code>https://script.google.com/macros/s/...</code></li>
-                <li><strong>Copy this URL</strong> and paste it into the "Apps Script API URL" field below.</li>
-              </ol>
-
-              <h4 style="font-size: 14px; color: #333; margin: 0 0 8px 0;">Troubleshooting</h4>
-              <ul style="margin: 0 0 0 20px; padding: 0;">
-                <li><strong>"I don't see Extensions in the menu"</strong> &mdash; Make sure you're in Google Sheets (not Docs or Drive). The Extensions menu is in the top menu bar.</li>
-                <li><strong>"The authorization screen looks scary"</strong> &mdash; This is normal for custom scripts. Google shows this warning for any unverified script. Since you wrote (pasted) it yourself, it's safe.</li>
-                <li><strong>"I get a 'Script function not found' error"</strong> &mdash; Make sure you deleted the old default code before pasting. The script should start with <code>const SIGNUPS_SHEET_NAME = ...</code></li>
-                <li><strong>"The URL doesn't work"</strong> &mdash; Make sure you copied the <strong>Web app URL</strong> (not the deployment ID). It should end in <code>/exec</code>.</li>
-                <li><strong>"I need to update the script later"</strong> &mdash; Go to Extensions &rarr; Apps Script, make your changes, then Deploy &rarr; Manage deployments &rarr; click the pencil icon &rarr; set Version to "New version" &rarr; Deploy.</li>
-              </ul>
+          <div class="form" style="margin-top: 20px;">
+            <div class="input-group">
+              <label class="label">Google Sheet URL</label>
+              <input type="url" class="input" id="setup-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/...">
             </div>
-          </details>
+            <div class="input-group">
+              <label class="label">Apps Script API URL</label>
+              <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Test Connection</button>
+            <div id="connection-status"></div>
+          </div>
         </div>
 
-        <div class="form" style="margin-top: 20px;">
-          <div class="input-group">
-            <label class="label">Google Sheet URL</label>
-            <input type="url" class="input" id="setup-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+        <!-- ========== MICROSOFT 365 INSTRUCTIONS ========== -->
+        <div id="setup-microsoft-instructions" class="hidden" style="margin-top: 24px;">
+          <div class="ms-setup-instructions">
+            <h4>Microsoft 365 Integration (Preview)</h4>
+            <p>Ministry Fair can connect to an Excel workbook in your church's OneDrive or SharePoint. Your IT administrator will need to set up a few things first.</p>
           </div>
-          <div class="input-group">
-            <label class="label">Apps Script API URL</label>
-            <input type="url" class="input" id="setup-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+          <div class="setup-step" style="margin-top: 16px;">
+            <span class="step-number">1</span>
+            <div class="setup-step-content">
+              <div class="setup-step-title">Create an Excel Workbook</div>
+              <div class="setup-step-desc">Create a new Excel workbook in OneDrive or SharePoint. If you uploaded a ministry list above, import it. Otherwise, the app will create the required sheets for you.</div>
+            </div>
           </div>
-          <button class="btn-secondary" id="test-connection-btn" type="button">&#128268; Scan &amp; Connect</button>
-          <div id="connection-status"></div>
-          <!-- Sheet tab picker (hidden until scan results arrive) -->
-          <div id="sheet-tab-picker" class="hidden" style="margin-top: 16px;">
-            <div id="sheet-tab-list"></div>
-            <div id="sheet-tab-preview" style="margin-top: 12px;"></div>
+          <div class="setup-step">
+            <span class="step-number">2</span>
+            <div class="setup-step-content">
+              <div class="setup-step-title">Register an Azure AD Application</div>
+              <div class="setup-step-desc">In your Microsoft 365 admin center, go to <strong>Azure Active Directory &rarr; App registrations &rarr; New registration</strong>. Set the redirect URI to this app's URL. Grant <strong>Files.ReadWrite</strong> and <strong>Sites.ReadWrite.All</strong> permissions.</div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <span class="step-number">3</span>
+            <div class="setup-step-content">
+              <div class="setup-step-title">Share the Workbook</div>
+              <div class="setup-step-desc">Ensure the workbook is accessible via the app. Copy the sharing link or note the SharePoint site URL and workbook path.</div>
+            </div>
+          </div>
+          <div class="form" style="margin-top: 20px;">
+            <div class="input-group">
+              <label class="label">Azure AD Application (Client) ID</label>
+              <input type="text" class="input" id="setup-ms-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <div class="input-group">
+              <label class="label">Azure AD Tenant ID</label>
+              <input type="text" class="input" id="setup-ms-tenant-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <div class="input-group">
+              <label class="label">Excel Workbook URL</label>
+              <input type="url" class="input" id="setup-ms-workbook-url" placeholder="https://yourtenant.sharepoint.com/sites/.../workbook.xlsx">
+            </div>
+            <button class="btn-secondary" id="test-ms-connection-btn" type="button">&#128268; Test Connection</button>
+            <div id="ms-connection-status"></div>
           </div>
         </div>
+
         <div class="wizard-nav">
           <button class="btn-secondary" id="step3-back">&larr; Back</button>
           <button class="btn" id="step3-next">Next &rarr;</button>
@@ -3220,22 +3447,16 @@
 // CONFIGURATION
 // ============================================
 const DEFAULT_CONFIG = {
-  organizationName: 'St. Theresa',
+  organizationName: '',
   appTitle: 'Ministry Fair',
   tagline: 'Find your place to serve',
-  apiUrl: 'https://script.google.com/macros/s/AKfycbx31uyxV4pntlslmpcApd_cL_8AXz4e1ReLmSryJ-v4QuzCJid6wwB9Vg6tDkuuSVZxrQ/exec',
-  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1ize-jKdf70YY6fy9yxbnXvlDzSIPRJ2daT8SAQ1-ktE/edit',
+  apiUrl: '',
+  spreadsheetUrl: '',
   primaryColor: '#8B2635',
   primaryColorDark: '#6B1D29',
   googleClientId: '1054492643145-oc8io3rqen2k1hqgrrj86a4op47nkg0m.apps.googleusercontent.com',
-  setupComplete: false,
-  // ── Hosting mode ──────────────────────────────
-  // 'self'   = Free tier: user sets up their own Google Sheet + Apps Script
-  // 'hosted' = Paid tier: we provide the backend, no GAS setup needed
-  hostingMode: 'self',
-  // hostedApiUrl: '',      // FUTURE: URL of hosted backend for paid tier
-  // subscriptionId: '',    // FUTURE: Stripe/payment subscription ID
-  // subscriptionStatus: '' // FUTURE: 'active', 'trial', 'expired'
+  provider: 'google',
+  setupComplete: false
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -3402,6 +3623,8 @@ let showAll = false;
 let searchTerm = '';
 let wizardStep = 1;
 let setupAdminData = null; // temp admin data during wizard
+let selectedProvider = 'google'; // 'google' or 'microsoft'
+let gateSignInSource = null; // 'google' or 'microsoft' - tracks how user signed in at gate
 
 // Load saved parishioner data
 function hasSavedProfile() { return !!localStorage.getItem('ministry-fair-profile'); }
@@ -3423,9 +3646,335 @@ const FALLBACK_MINISTRIES = [
 ];
 
 // ============================================
+// CHURCH REGISTRY
+// Tracks which domains are recognized and their configs.
+// Currently localStorage-based; will become a central API.
+// ============================================
+function loadChurchRegistry() {
+  try {
+    var saved = localStorage.getItem('mf-church-registry');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return {};
+}
+
+function saveChurchRegistry(registry) {
+  localStorage.setItem('mf-church-registry', JSON.stringify(registry));
+}
+
+function registerChurch(domain, config) {
+  var registry = loadChurchRegistry();
+  registry[domain.toLowerCase()] = {
+    organizationName: config.organizationName || '',
+    provider: config.provider || 'google',
+    apiUrl: config.apiUrl || '',
+    spreadsheetUrl: config.spreadsheetUrl || '',
+    msClientId: config.msClientId || '',
+    msTenantId: config.msTenantId || '',
+    msWorkbookUrl: config.msWorkbookUrl || '',
+    primaryColor: config.primaryColor || '#8B2635',
+    primaryColorDark: config.primaryColorDark || '#6B1D29',
+    appTitle: config.appTitle || 'Ministry Fair',
+    tagline: config.tagline || 'Find your place to serve',
+    setupComplete: true,
+    registeredAt: new Date().toISOString()
+  };
+  saveChurchRegistry(registry);
+}
+
+function lookupChurchByDomain(domain) {
+  if (!domain) return null;
+  var registry = loadChurchRegistry();
+  return registry[domain.toLowerCase()] || null;
+}
+
+function isChurchRegistered(domain) {
+  return !!lookupChurchByDomain(domain);
+}
+
+// Migrate existing single-tenant config into registry if setup is complete
+function migrateExistingConfig() {
+  if (appConfig.setupComplete && appConfig.orgDomain) {
+    var existing = lookupChurchByDomain(appConfig.orgDomain);
+    if (!existing) {
+      registerChurch(appConfig.orgDomain, {
+        organizationName: appConfig.organizationName,
+        provider: appConfig.provider || 'google',
+        apiUrl: appConfig.apiUrl,
+        spreadsheetUrl: appConfig.spreadsheetUrl,
+        primaryColor: appConfig.primaryColor,
+        primaryColorDark: appConfig.primaryColorDark,
+        appTitle: appConfig.appTitle,
+        tagline: appConfig.tagline
+      });
+    }
+  }
+}
+migrateExistingConfig();
+
+// ============================================
+// SPREADSHEET PROVIDER ABSTRACTION
+// A common interface for Google Sheets and Microsoft Excel.
+// Each provider implements the same set of operations.
+// ============================================
+var SpreadsheetProviders = {
+
+  // ---- GOOGLE SHEETS PROVIDER ----
+  google: {
+    type: 'google',
+    name: 'Google Sheets',
+
+    // Test if the configured API URL is reachable
+    testConnection: async function(config) {
+      if (!config.apiUrl) return { success: false, error: 'No API URL configured' };
+      try {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+        var response = await fetch(config.apiUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        var data = await response.json();
+        return { success: true, data: data };
+      } catch(err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    // Fetch ministries from Google Apps Script
+    getMinistries: async function(config) {
+      if (!config.apiUrl) return [];
+      try {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+        var response = await fetch(config.apiUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        var data = await response.json();
+        return (data.ministries && data.ministries.length > 0) ? data.ministries : [];
+      } catch(err) {
+        console.error('Google provider getMinistries error:', err);
+        return [];
+      }
+    },
+
+    // Submit a signup via Google Apps Script
+    submitSignup: async function(config, signupData) {
+      if (!config.apiUrl) throw new Error('No API URL configured');
+      var response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(signupData)
+      });
+      return response.json();
+    },
+
+    // Generic POST to the GAS backend
+    post: async function(config, payload) {
+      if (!config.apiUrl) throw new Error('No API URL configured');
+      var response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return response.json();
+    },
+
+    // Generic GET with params
+    get: async function(config, params) {
+      if (!config.apiUrl) throw new Error('No API URL configured');
+      var url = config.apiUrl + '?' + new URLSearchParams(params).toString();
+      var response = await fetch(url);
+      return response.json();
+    },
+
+    // Returns the setup fields needed for this provider
+    getSetupFields: function() {
+      return ['spreadsheetUrl', 'apiUrl'];
+    }
+  },
+
+  // ---- MICROSOFT 365 / EXCEL PROVIDER (Scaffolding) ----
+  microsoft: {
+    type: 'microsoft',
+    name: 'Microsoft 365 Excel',
+    _msalInstance: null,
+    _accessToken: null,
+
+    // Initialize MSAL (Microsoft Authentication Library)
+    _initMsal: function(config) {
+      if (this._msalInstance) return this._msalInstance;
+      if (typeof msal === 'undefined') {
+        console.warn('MSAL library not loaded');
+        return null;
+      }
+      var msalConfig = {
+        auth: {
+          clientId: config.msClientId || '',
+          authority: 'https://login.microsoftonline.com/' + (config.msTenantId || 'common'),
+          redirectUri: window.location.origin + window.location.pathname
+        },
+        cache: {
+          cacheLocation: 'sessionStorage',
+          storeAuthStateInCookie: false
+        }
+      };
+      try {
+        this._msalInstance = new msal.PublicClientApplication(msalConfig);
+        return this._msalInstance;
+      } catch(err) {
+        console.error('MSAL init error:', err);
+        return null;
+      }
+    },
+
+    // Acquire an access token for Microsoft Graph
+    _getToken: async function(config) {
+      var msalApp = this._initMsal(config);
+      if (!msalApp) throw new Error('Microsoft authentication not available');
+
+      var scopes = ['Files.ReadWrite', 'Sites.ReadWrite.All'];
+      try {
+        // Try silent token acquisition first
+        var accounts = msalApp.getAllAccounts();
+        if (accounts.length > 0) {
+          var silentResult = await msalApp.acquireTokenSilent({
+            scopes: scopes,
+            account: accounts[0]
+          });
+          this._accessToken = silentResult.accessToken;
+          return this._accessToken;
+        }
+      } catch(err) {
+        // Silent failed, will try interactive below
+      }
+
+      // Interactive login
+      var interactiveResult = await msalApp.acquireTokenPopup({ scopes: scopes });
+      this._accessToken = interactiveResult.accessToken;
+      return this._accessToken;
+    },
+
+    // Make a Microsoft Graph API call
+    _graphCall: async function(config, endpoint, method, body) {
+      var token = await this._getToken(config);
+      var opts = {
+        method: method || 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      var response = await fetch('https://graph.microsoft.com/v1.0' + endpoint, opts);
+      if (!response.ok) {
+        var errData = await response.json().catch(function() { return {}; });
+        throw new Error('Graph API error: ' + (errData.error ? errData.error.message : response.statusText));
+      }
+      return response.json();
+    },
+
+    // Parse workbook URL to extract drive item path
+    _parseWorkbookUrl: function(url) {
+      // SharePoint: https://tenant.sharepoint.com/sites/sitename/Shared Documents/workbook.xlsx
+      // OneDrive: https://onedrive.live.com/edit.aspx?resid=...
+      // For now, store the workbook ID after first successful connection
+      return url; // placeholder - actual parsing depends on URL format
+    },
+
+    // Test connection to the Excel workbook via Graph API
+    testConnection: async function(config) {
+      if (!config.msClientId || !config.msTenantId) {
+        return { success: false, error: 'Azure AD Client ID and Tenant ID are required' };
+      }
+      if (!config.msWorkbookUrl) {
+        return { success: false, error: 'Excel workbook URL is required' };
+      }
+      try {
+        // Attempt to authenticate and read workbook metadata
+        await this._getToken(config);
+        // TODO: Validate workbook access via Graph API
+        // var worksheets = await this._graphCall(config, '/me/drive/items/{item-id}/workbook/worksheets');
+        return { success: true, data: { message: 'Authentication successful. Workbook access will be validated on first use.' } };
+      } catch(err) {
+        return { success: false, error: err.message };
+      }
+    },
+
+    // Fetch ministries from Excel workbook via Graph API
+    getMinistries: async function(config) {
+      try {
+        // TODO: Implement Graph API call to read Ministries sheet
+        // var range = await this._graphCall(config, '/me/drive/items/{item-id}/workbook/worksheets/Ministries/usedRange');
+        // return parseExcelMinistriesToArray(range);
+        console.warn('Microsoft Excel getMinistries: not yet implemented');
+        return [];
+      } catch(err) {
+        console.error('Microsoft provider getMinistries error:', err);
+        return [];
+      }
+    },
+
+    // Submit a signup to Excel workbook via Graph API
+    submitSignup: async function(config, signupData) {
+      try {
+        // TODO: Implement Graph API call to append row to App Signups sheet
+        // await this._graphCall(config, '/me/drive/items/{item-id}/workbook/worksheets/App Signups/tables/{table-id}/rows', 'POST', { values: [...] });
+        console.warn('Microsoft Excel submitSignup: not yet implemented');
+        return { success: false, error: 'Microsoft Excel integration not yet implemented' };
+      } catch(err) {
+        console.error('Microsoft provider submitSignup error:', err);
+        throw err;
+      }
+    },
+
+    // Generic POST equivalent for Microsoft
+    post: async function(config, payload) {
+      // Route based on action type to appropriate Graph API calls
+      var action = payload.action || payload.adminAction || '';
+      console.warn('Microsoft Excel post action "' + action + '": not yet implemented');
+      return { success: false, error: 'Microsoft Excel integration not yet implemented for action: ' + action };
+    },
+
+    // Generic GET equivalent for Microsoft
+    get: async function(config, params) {
+      var action = params.action || '';
+      console.warn('Microsoft Excel get action "' + action + '": not yet implemented');
+      return { success: false, error: 'Microsoft Excel integration not yet implemented for action: ' + action };
+    },
+
+    // Returns the setup fields needed for this provider
+    getSetupFields: function() {
+      return ['msClientId', 'msTenantId', 'msWorkbookUrl'];
+    },
+
+    // Sign in with Microsoft at the gate
+    signIn: async function(config) {
+      var msalApp = this._initMsal(config || { msClientId: '', msTenantId: 'common' });
+      if (!msalApp) throw new Error('Microsoft authentication not available. Please try again.');
+
+      var result = await msalApp.loginPopup({
+        scopes: ['User.Read', 'Files.ReadWrite']
+      });
+      return {
+        email: result.account.username,
+        firstName: result.account.name ? result.account.name.split(' ')[0] : '',
+        lastName: result.account.name ? result.account.name.split(' ').slice(1).join(' ') : '',
+        picture: '',
+        tenantId: result.account.tenantId
+      };
+    }
+  }
+};
+
+// Get the active provider based on current config
+function getProvider() {
+  var providerType = appConfig.provider || 'google';
+  return SpreadsheetProviders[providerType] || SpreadsheetProviders.google;
+}
+
+// ============================================
 // VIEWS
 // ============================================
 const views = {
+  churchGate: document.getElementById('view-church-gate'),
   loading: document.getElementById('view-loading'),
   start: document.getElementById('view-start'),
   register: document.getElementById('view-register'),
@@ -3459,7 +4008,7 @@ function showView(viewName) {
 
   // Show/hide nav bar - visible for parishioners with saved profiles too
   const nav = document.getElementById('top-nav');
-  if (viewName === 'start' || viewName === 'loading' || viewName === 'register') {
+  if (viewName === 'churchGate' || viewName === 'start' || viewName === 'loading' || viewName === 'register') {
     nav.classList.add('hidden');
   } else if (currentSession || hasSavedProfile()) {
     updateNavBar();
@@ -3473,6 +4022,9 @@ function showView(viewName) {
   if (followupModal) followupModal.classList.add('hidden');
 
   // Render Google buttons when those views show
+  if (viewName === 'churchGate') {
+    renderGoogleButton('g_id_signin_gate', handleGateGoogleSignIn);
+  }
   if (viewName === 'register') {
     renderGoogleButton('g_id_signin', handleParishionerSignIn);
   }
@@ -3807,6 +4359,229 @@ document.getElementById('setup-api-key').addEventListener('change', function() {
 });
 
 // ============================================
+// CHURCH GATE SIGN-IN HANDLERS
+// ============================================
+
+// Handle sign-in at the church gate (Google)
+function handleGateGoogleSignIn(response) {
+  var payload = decodeJwt(response.credential);
+  gateSignInSource = 'google';
+  processGateSignIn({
+    email: payload.email || '',
+    firstName: payload.given_name || '',
+    lastName: payload.family_name || '',
+    picture: payload.picture || ''
+  });
+}
+
+// Handle sign-in at the church gate (Microsoft)
+async function handleGateMicrosoftSignIn() {
+  var statusDiv = document.getElementById('gate-status');
+  statusDiv.classList.remove('hidden');
+  statusDiv.innerHTML =
+    '<div class="detection-card detecting">' +
+      '<div class="detection-spinner-sm"></div>' +
+      '<span class="detection-detail">Signing in with Microsoft...</span>' +
+    '</div>';
+
+  try {
+    var msProvider = SpreadsheetProviders.microsoft;
+    var userData = await msProvider.signIn({ msClientId: '', msTenantId: 'common' });
+    gateSignInSource = 'microsoft';
+    processGateSignIn(userData);
+  } catch(err) {
+    statusDiv.innerHTML =
+      '<div class="detection-card not-found">' +
+        '<div class="detection-icon">&#9888;</div>' +
+        '<div class="detection-title">Sign-in failed</div>' +
+        '<div class="detection-detail">' + escapeHtml(err.message || 'Could not sign in with Microsoft. Please try again.') + '</div>' +
+      '</div>';
+  }
+}
+
+// Process the gate sign-in regardless of provider
+function processGateSignIn(userData) {
+  var statusDiv = document.getElementById('gate-status');
+  var domain = getDomain(userData.email);
+
+  statusDiv.classList.remove('hidden');
+  statusDiv.innerHTML =
+    '<div class="detection-card detecting">' +
+      '<div class="detection-spinner-sm"></div>' +
+      '<span class="detection-detail">Checking ' + escapeHtml(domain || userData.email) + '...</span>' +
+    '</div>';
+
+  // Check church registry for this domain
+  var churchConfig = lookupChurchByDomain(domain);
+
+  if (churchConfig && churchConfig.setupComplete) {
+    // ---- RECOGNIZED CHURCH ----
+    statusDiv.innerHTML =
+      '<div class="detection-card found">' +
+        '<div class="detection-icon">&#9989;</div>' +
+        '<div class="detection-title">Welcome to ' + escapeHtml(churchConfig.organizationName || 'your church') + '!</div>' +
+        '<div class="detection-detail">Loading your ministry fair...</div>' +
+      '</div>';
+
+    // Load this church's config into the app
+    appConfig = Object.assign({}, appConfig, {
+      organizationName: churchConfig.organizationName,
+      provider: churchConfig.provider || 'google',
+      apiUrl: churchConfig.apiUrl || '',
+      spreadsheetUrl: churchConfig.spreadsheetUrl || '',
+      msClientId: churchConfig.msClientId || '',
+      msTenantId: churchConfig.msTenantId || '',
+      msWorkbookUrl: churchConfig.msWorkbookUrl || '',
+      primaryColor: churchConfig.primaryColor || appConfig.primaryColor,
+      primaryColorDark: churchConfig.primaryColorDark || appConfig.primaryColorDark,
+      appTitle: churchConfig.appTitle || appConfig.appTitle,
+      tagline: churchConfig.tagline || appConfig.tagline,
+      orgDomain: domain,
+      setupComplete: true
+    });
+    saveAppConfig(appConfig);
+
+    // If this person is an admin, set up their session
+    if (isAdmin(userData.email)) {
+      currentSession = {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        picture: userData.picture || '',
+        role: 'admin'
+      };
+      saveSession(currentSession);
+    }
+
+    // Proceed to normal app flow
+    applyConfig();
+    loadMinistries();
+    return;
+  }
+
+  // ---- ALSO CHECK: setupComplete in current appConfig with matching admin domain ----
+  if (appConfig.setupComplete && !isConsumerDomain(domain)) {
+    var admins = loadAdmins();
+    var domainMatch = admins.some(function(a) { return getDomain(a.email) === domain; });
+    if (domainMatch) {
+      // Existing setup matches this domain
+      if (isAdmin(userData.email)) {
+        currentSession = {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          picture: userData.picture || '',
+          role: 'admin'
+        };
+        saveSession(currentSession);
+      }
+      applyConfig();
+      loadMinistries();
+      return;
+    }
+  }
+
+  // ---- UNRECOGNIZED DOMAIN → Start setup wizard ----
+  statusDiv.innerHTML =
+    '<div class="detection-card not-found">' +
+      '<div class="detection-icon">&#127970;</div>' +
+      '<div class="detection-title">New church detected</div>' +
+      '<div class="detection-detail">We don\'t have <strong>' + escapeHtml(domain || 'your organization') + '</strong> set up yet. Let\'s get your ministry fair running!</div>' +
+    '</div>';
+
+  // Store admin data for the wizard
+  setupAdminData = {
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    picture: userData.picture || ''
+  };
+
+  // Auto-select provider based on sign-in method
+  if (gateSignInSource === 'microsoft') {
+    selectedProvider = 'microsoft';
+  }
+
+  // Slight delay so user can read the message
+  setTimeout(function() {
+    transitionGateToWizard();
+  }, 1500);
+}
+
+// Transition from gate to the setup wizard with admin data pre-populated
+function transitionGateToWizard() {
+  appConfig.setupComplete = false;
+  saveAppConfig(appConfig);
+
+  showView('start');
+  showWizardStep(1);
+
+  // Pre-populate admin info in wizard
+  if (setupAdminData) {
+    document.getElementById('admin-signed-in').classList.remove('hidden');
+    var fallback = document.getElementById('wizard-signin-fallback');
+    if (fallback) fallback.classList.add('hidden');
+    document.getElementById('admin-setup-initials').textContent =
+      (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
+    document.getElementById('admin-setup-name').textContent =
+      setupAdminData.firstName + ' ' + setupAdminData.lastName;
+    document.getElementById('admin-setup-email').textContent = setupAdminData.email;
+    document.getElementById('step1-next').disabled = false;
+
+    // Run domain detection
+    runDomainDetection(setupAdminData.email);
+  }
+
+  // Pre-select the provider
+  updatePlatformSelection(selectedProvider);
+}
+
+// Wire up gate Microsoft sign-in button
+document.getElementById('gate-ms-signin-btn').addEventListener('click', handleGateMicrosoftSignIn);
+
+// ============================================
+// PLATFORM SELECTION LOGIC
+// ============================================
+function updatePlatformSelection(provider) {
+  selectedProvider = provider;
+  var googleCard = document.getElementById('platform-google');
+  var msCard = document.getElementById('platform-microsoft');
+  googleCard.classList.toggle('selected', provider === 'google');
+  msCard.classList.toggle('selected', provider === 'microsoft');
+
+  // Toggle the appropriate setup instructions in step 3
+  var googleInstr = document.getElementById('setup-google-instructions');
+  var msInstr = document.getElementById('setup-microsoft-instructions');
+  if (googleInstr) googleInstr.classList.toggle('hidden', provider !== 'google');
+  if (msInstr) msInstr.classList.toggle('hidden', provider !== 'microsoft');
+}
+
+document.getElementById('platform-google').addEventListener('click', function() {
+  updatePlatformSelection('google');
+});
+
+document.getElementById('platform-microsoft').addEventListener('click', function() {
+  updatePlatformSelection('microsoft');
+});
+
+// Test Microsoft connection button
+document.getElementById('test-ms-connection-btn').addEventListener('click', async function() {
+  var statusDiv = document.getElementById('ms-connection-status');
+  statusDiv.innerHTML = '<span style="color:#666;font-family:Inter,sans-serif;font-size:14px;">Testing connection...</span>';
+  var config = {
+    msClientId: document.getElementById('setup-ms-client-id').value.trim(),
+    msTenantId: document.getElementById('setup-ms-tenant-id').value.trim(),
+    msWorkbookUrl: document.getElementById('setup-ms-workbook-url').value.trim()
+  };
+  var result = await SpreadsheetProviders.microsoft.testConnection(config);
+  if (result.success) {
+    statusDiv.innerHTML = '<span style="color:#27ae60;font-family:Inter,sans-serif;font-size:14px;">&#9989; Connected successfully!</span>';
+  } else {
+    statusDiv.innerHTML = '<span style="color:#e74c3c;font-family:Inter,sans-serif;font-size:14px;">&#10060; ' + escapeHtml(result.error) + '</span>';
+  }
+});
+
+// ============================================
 // GOOGLE SIGN-IN HANDLERS
 // ============================================
 
@@ -3820,18 +4595,10 @@ function handleAdminSignIn(response) {
     picture: payload.picture || ''
   };
 
-  // Save session so wizard sign-in persists across reloads
-  currentSession = {
-    email: setupAdminData.email,
-    firstName: setupAdminData.firstName,
-    lastName: setupAdminData.lastName,
-    picture: setupAdminData.picture,
-    role: 'setup_admin'
-  };
-  saveSession(currentSession);
-
-  // Show signed-in state
+  // Show signed-in state, hide fallback sign-in section
   document.getElementById('admin-signed-in').classList.remove('hidden');
+  var fallback = document.getElementById('wizard-signin-fallback');
+  if (fallback) fallback.classList.add('hidden');
   document.getElementById('admin-setup-initials').textContent =
     (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
   document.getElementById('admin-setup-name').textContent =
@@ -3854,31 +4621,18 @@ function handleParishionerSignIn(response) {
   var picture = payload.picture || '';
   var domain = getDomain(email);
 
-  // Build list of roles this person has
-  var roles = ['parishioner']; // everyone can be a parishioner
-
-  // Check if email domain matches site domain → potential admin (especially for first-time setup)
-  var domainMatchesSite = emailMatchesSiteDomain(email);
-
-  // Check if they're a registered admin
-  var registeredAdmin = isAdmin(email);
-  if (registeredAdmin) {
-    roles.push('admin');
-  }
-
-  // Check if they're a ministry lead (based on loaded ministries data)
-  if (isMinistryLead(email)) {
-    roles.push('leader');
-  }
-
-  // If setup isn't complete and their email domain matches the site, offer admin setup
-  if (!appConfig.setupComplete && domainMatchesSite && !isConsumerDomain(domain)) {
-    roles.push('setup_admin');
-  }
-
-  // If they have multiple roles, show the role picker
-  if (roles.length > 1) {
-    showRolePicker(roles, { email: email, firstName: firstName, lastName: lastName, picture: picture });
+  // Check if this is a church domain + app not set up = potential first-time admin
+  var domain = getDomain(payload.email || '');
+  if (domain && !isConsumerDomain(domain) && !appConfig.setupComplete) {
+    // This looks like an org admin, not a parishioner
+    // Route them through the gate flow (domain check + setup wizard)
+    gateSignInSource = 'google';
+    processGateSignIn({
+      email: payload.email || '',
+      firstName: payload.given_name || '',
+      lastName: payload.family_name || '',
+      picture: payload.picture || ''
+    });
     return;
   }
 
@@ -4252,7 +5006,18 @@ function showWizardStep(step) {
   });
 
   // Step-specific init
+  if (step === 1) {
+    // Show/hide fallback sign-in based on whether we have admin data from gate
+    var fallback = document.getElementById('wizard-signin-fallback');
+    if (fallback) {
+      fallback.classList.toggle('hidden', !!setupAdminData);
+    }
+  }
   if (step === 2) initStep2();
+  if (step === 3) {
+    // Ensure the correct provider instructions are shown
+    updatePlatformSelection(selectedProvider);
+  }
   if (step === 4) renderAdminList();
   if (step === 5) renderSummary();
 }
@@ -4944,16 +5709,26 @@ function renderSummary() {
   var orgName = document.getElementById('setup-org-name').value || '(not set)';
   var appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
   var tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
-  var apiUrl = document.getElementById('setup-api-url').value || '(not set)';
-  var sheetUrl = document.getElementById('setup-sheet-url').value || '(not set)';
   var adminCount = loadAdmins().length;
+  var providerName = selectedProvider === 'microsoft' ? 'Microsoft 365 Excel' : 'Google Sheets';
+
+  // Provider-specific connection info
+  var connectionInfo = '';
+  if (selectedProvider === 'google') {
+    var apiUrl = document.getElementById('setup-api-url').value || '(not set)';
+    connectionInfo = escapeHtml(apiUrl.length > 30 ? apiUrl.substring(0, 30) + '...' : apiUrl);
+  } else {
+    var msWorkbook = document.getElementById('setup-ms-workbook-url').value || '(not set)';
+    connectionInfo = escapeHtml(msWorkbook.length > 30 ? msWorkbook.substring(0, 30) + '...' : msWorkbook);
+  }
 
   document.getElementById('setup-summary').innerHTML =
     '<div class="summary-row"><span class="summary-label">Organization</span><span class="summary-value">' + escapeHtml(orgName) + '</span></div>' +
     '<div class="summary-row"><span class="summary-label">App Title</span><span class="summary-value">' + escapeHtml(appTitle) + '</span></div>' +
     '<div class="summary-row"><span class="summary-label">Tagline</span><span class="summary-value">' + escapeHtml(tagline) + '</span></div>' +
     '<div class="summary-row"><span class="summary-label">Theme</span><span class="summary-value"><span style="display:inline-block;width:20px;height:20px;border-radius:4px;vertical-align:middle;background:' + escapeHtml(appConfig.primaryColor) + '"></span></span></div>' +
-    '<div class="summary-row"><span class="summary-label">API URL</span><span class="summary-value">' + escapeHtml(apiUrl.length > 30 ? apiUrl.substring(0, 30) + '...' : apiUrl) + '</span></div>' +
+    '<div class="summary-row"><span class="summary-label">Data Platform</span><span class="summary-value"><span class="provider-badge provider-badge-' + selectedProvider + '">' + escapeHtml(providerName) + '</span></span></div>' +
+    '<div class="summary-row"><span class="summary-label">Connection</span><span class="summary-value">' + connectionInfo + '</span></div>' +
     '<div class="summary-row"><span class="summary-label">Admins</span><span class="summary-value">' + adminCount + '</span></div>';
 }
 
@@ -5025,13 +5800,22 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   // }
   // ──────────────────────────────────────────────
 
-  // Save all config
+  // Save all config (provider-aware)
   appConfig.organizationName = document.getElementById('setup-org-name').value || '';
   appConfig.appTitle = document.getElementById('setup-app-title').value || 'Ministry Fair';
   appConfig.tagline = document.getElementById('setup-tagline').value || 'Find your place to serve';
-  appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
-  appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
-  if (selectedSheetTab) appConfig.ministriesSheetTab = selectedSheetTab;
+  appConfig.provider = selectedProvider; // 'google' or 'microsoft'
+
+  // Provider-specific config
+  if (selectedProvider === 'google') {
+    appConfig.apiUrl = document.getElementById('setup-api-url').value || '';
+    appConfig.spreadsheetUrl = document.getElementById('setup-sheet-url').value || '';
+  } else if (selectedProvider === 'microsoft') {
+    appConfig.msClientId = document.getElementById('setup-ms-client-id').value || '';
+    appConfig.msTenantId = document.getElementById('setup-ms-tenant-id').value || '';
+    appConfig.msWorkbookUrl = document.getElementById('setup-ms-workbook-url').value || '';
+  }
+
   var enteredKey = document.getElementById('setup-api-key').value || '';
   setApiKey(enteredKey); // session-only backup
   appConfig.orgDomain = setupAdminData ? getDomain(setupAdminData.email) : '';
@@ -5040,8 +5824,22 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   appConfig.setupComplete = true;
   saveAppConfig(appConfig);
 
-  // Clean up wizard state
-  try { localStorage.removeItem('mf-wizard-step'); } catch(e) {}
+  // Register this church in the registry
+  if (appConfig.orgDomain) {
+    registerChurch(appConfig.orgDomain, {
+      organizationName: appConfig.organizationName,
+      provider: selectedProvider,
+      apiUrl: appConfig.apiUrl || '',
+      spreadsheetUrl: appConfig.spreadsheetUrl || '',
+      msClientId: appConfig.msClientId || '',
+      msTenantId: appConfig.msTenantId || '',
+      msWorkbookUrl: appConfig.msWorkbookUrl || '',
+      primaryColor: appConfig.primaryColor,
+      primaryColorDark: appConfig.primaryColorDark,
+      appTitle: appConfig.appTitle,
+      tagline: appConfig.tagline
+    });
+  }
 
   // Create admin session
   if (setupAdminData) {
@@ -5058,14 +5856,13 @@ document.getElementById('launch-btn').addEventListener('click', function() {
   // Save default notification settings
   saveNotificationSettings(notificationSettings);
 
-  // Send API key to GAS for secure server-side storage
-  if (enteredKey && appConfig.apiUrl) {
+  // Send API key to GAS for secure server-side storage (Google provider)
+  if (enteredKey && appConfig.apiUrl && selectedProvider === 'google') {
     fetch(appConfig.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'store-api-key', apiKey: enteredKey })
     }).then(function() {
-      // Key stored server-side; clear from session
       setApiKey('');
     }).catch(function(err) {
       console.warn('Could not store API key server-side, keeping in session:', err);
@@ -5159,9 +5956,15 @@ function showSettingsView() {
   document.getElementById('settings-app-title-val').textContent = appConfig.appTitle || 'Ministry Fair';
   document.getElementById('settings-color-swatch').style.background = appConfig.primaryColor;
 
-  // API/sheet status
-  document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
-  document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
+  // API/sheet status (provider-aware)
+  var providerType = appConfig.provider || 'google';
+  if (providerType === 'microsoft') {
+    document.getElementById('settings-api-status').textContent = appConfig.msClientId ? 'Microsoft 365' : 'Not configured';
+    document.getElementById('settings-sheet-status').textContent = appConfig.msWorkbookUrl ? 'Excel Linked' : 'Not set';
+  } else {
+    document.getElementById('settings-api-status').textContent = appConfig.apiUrl ? 'Connected' : 'Not configured';
+    document.getElementById('settings-sheet-status').textContent = appConfig.spreadsheetUrl ? 'Linked' : 'Not set';
+  }
   // Check server-side key status
   var keyStatusEl = document.getElementById('settings-claude-key-status');
   var sessionKey = getApiKey();
@@ -5392,25 +6195,26 @@ function applyConfig() {
 // FETCH MINISTRIES
 // ============================================
 async function loadMinistries() {
-  var apiUrl = appConfig.apiUrl;
-  if (!apiUrl) {
+  var provider = getProvider();
+
+  // Check if provider has required config
+  var hasConfig = false;
+  if (provider.type === 'google') {
+    hasConfig = !!appConfig.apiUrl;
+  } else if (provider.type === 'microsoft') {
+    hasConfig = !!(appConfig.msClientId && appConfig.msWorkbookUrl);
+  }
+
+  if (!hasConfig) {
     MINISTRIES = FALLBACK_MINISTRIES;
     initializeApp();
     return;
   }
 
   try {
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
-    var fetchUrl = apiUrl;
-    if (appConfig.ministriesSheetTab) {
-      fetchUrl += (apiUrl.includes('?') ? '&' : '?') + 'action=getMinistries&sheet=' + encodeURIComponent(appConfig.ministriesSheetTab);
-    }
-    var response = await fetch(fetchUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    var data = await response.json();
-    if (data.ministries && data.ministries.length > 0) {
-      MINISTRIES = data.ministries;
+    var ministries = await provider.getMinistries(appConfig);
+    if (ministries && ministries.length > 0) {
+      MINISTRIES = ministries;
     } else {
       MINISTRIES = FALLBACK_MINISTRIES;
     }
@@ -5511,66 +6315,32 @@ function boot() {
   var hash = window.location.hash;
   applyConfig();
 
-  // ── Setup not complete: always show the setup wizard ──
-  if (!appConfig.setupComplete) {
-    showView('start');
-
-    // Resume wizard step if admin already signed in
-    var savedWizardStep = 1;
-    if (currentSession && (currentSession.role === 'admin' || currentSession.role === 'setup_admin')) {
-      setupAdminData = {
-        email: currentSession.email,
-        firstName: currentSession.firstName,
-        lastName: currentSession.lastName,
-        picture: currentSession.picture || ''
-      };
-      document.getElementById('admin-signed-in').classList.remove('hidden');
-      document.getElementById('admin-setup-initials').textContent =
-        (currentSession.firstName[0] || '') + (currentSession.lastName[0] || '');
-      document.getElementById('admin-setup-name').textContent =
-        currentSession.firstName + ' ' + currentSession.lastName;
-      document.getElementById('admin-setup-email').textContent = currentSession.email;
-      document.getElementById('step1-next').disabled = false;
-      runDomainDetection(currentSession.email);
-
-      // Restore the wizard step the admin was on (at least step 1 since they signed in)
-      try {
-        var stored = parseInt(localStorage.getItem('mf-wizard-step'));
-        if (stored >= 1 && stored <= 5) savedWizardStep = stored;
-      } catch(e) {}
-
-      // Pre-fill wizard form fields from config
-      if (appConfig.apiUrl) {
-        var apiInput = document.getElementById('setup-api-url');
-        if (apiInput && !apiInput.value) apiInput.value = appConfig.apiUrl;
-      }
-      if (appConfig.spreadsheetUrl) {
-        var sheetInput = document.getElementById('setup-sheet-url');
-        if (sheetInput && !sheetInput.value) sheetInput.value = appConfig.spreadsheetUrl;
-      }
-      if (appConfig.organizationName) {
-        var orgInput = document.getElementById('setup-org-name');
-        if (orgInput && !orgInput.value) orgInput.value = appConfig.organizationName;
-      }
-      if (appConfig.appTitle) {
-        var titleInput = document.getElementById('setup-app-title');
-        if (titleInput && !titleInput.value) titleInput.value = appConfig.appTitle;
-      }
-      if (appConfig.tagline) {
-        var tagInput = document.getElementById('setup-tagline');
-        if (tagInput && !tagInput.value) tagInput.value = appConfig.tagline;
-      }
-    }
-    showWizardStep(savedWizardStep);
+  // ---- CHURCH GATE: First-time entry point ----
+  // If setup is not complete and no admin session exists,
+  // show the church gate so the user identifies their church first.
+  if (!appConfig.setupComplete && !currentSession && !hasSavedProfile() && hash !== '#/start') {
+    showView('churchGate');
+    renderGoogleButton('g_id_signin_gate', handleGateGoogleSignIn);
     return;
   }
 
-  // ── Setup is complete: normal routing ──
-
-  // Admins can access wizard directly via #/start
-  if (hash === '#/start' && currentSession && getUserRole(currentSession.email) === 'admin') {
+  // If setup not complete but we have admin data (mid-wizard), show wizard
+  if (!appConfig.setupComplete || (hash === '#/start' && currentSession && getUserRole(currentSession.email) === 'admin')) {
+    applyConfig();
     showView('start');
     showWizardStep(1);
+    // If admin data exists from gate, pre-populate
+    if (setupAdminData) {
+      document.getElementById('admin-signed-in').classList.remove('hidden');
+      var fallback = document.getElementById('wizard-signin-fallback');
+      if (fallback) fallback.classList.add('hidden');
+      document.getElementById('admin-setup-initials').textContent =
+        (setupAdminData.firstName[0] || '') + (setupAdminData.lastName[0] || '');
+      document.getElementById('admin-setup-name').textContent =
+        setupAdminData.firstName + ' ' + setupAdminData.lastName;
+      document.getElementById('admin-setup-email').textContent = setupAdminData.email;
+      document.getElementById('step1-next').disabled = false;
+    }
     return;
   }
 

@@ -17,10 +17,22 @@ function ministriesFetch(ministries = DUMMY_MINISTRIES) {
 // BOOT & ROUTING
 // ============================================
 describe('Boot & Routing', () => {
-  test('shows wizard when setupComplete is false', () => {
+  test('shows church gate when setupComplete is false and no session/profile', () => {
     const dom = createTestDom({
       localStorage: {
         'mf-app-config': JSON.stringify({ setupComplete: false }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const gateView = dom.window.document.getElementById('view-church-gate');
+    expect(gateView.classList.contains('hidden')).toBe(false);
+  });
+
+  test('shows wizard when setupComplete is false but has saved profile', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
       },
       fetchMock: ministriesFetch(),
     });
@@ -516,5 +528,232 @@ describe('Hash Navigation', () => {
     // Should still NOT show wizard since setup is complete
     const startView = dom.window.document.getElementById('view-start');
     expect(startView.classList.contains('hidden')).toBe(true);
+  });
+});
+
+// ============================================
+// CHURCH REGISTRY
+// ============================================
+describe('Church Registry', () => {
+  test('registerChurch stores church config in registry', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    dom.window._app.registerChurch('sttheresa.org', {
+      organizationName: 'St. Theresa Catholic Church',
+      provider: 'google',
+      apiUrl: 'https://script.google.com/macros/s/test/exec',
+    });
+    const registry = JSON.parse(dom.window.localStorage.getItem('mf-church-registry'));
+    expect(registry['sttheresa.org']).toBeDefined();
+    expect(registry['sttheresa.org'].organizationName).toBe('St. Theresa Catholic Church');
+    expect(registry['sttheresa.org'].provider).toBe('google');
+    expect(registry['sttheresa.org'].setupComplete).toBe(true);
+  });
+
+  test('lookupChurchByDomain finds registered church', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+        'mf-church-registry': JSON.stringify({
+          'sttheresa.org': {
+            organizationName: 'St. Theresa',
+            provider: 'google',
+            setupComplete: true,
+          },
+        }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const result = dom.window._app.lookupChurchByDomain('sttheresa.org');
+    expect(result).not.toBeNull();
+    expect(result.organizationName).toBe('St. Theresa');
+  });
+
+  test('lookupChurchByDomain returns null for unknown domain', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const result = dom.window._app.lookupChurchByDomain('unknown.org');
+    expect(result).toBeNull();
+  });
+
+  test('isChurchRegistered returns true for registered domain', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+        'mf-church-registry': JSON.stringify({
+          'parish.org': { organizationName: 'Test Parish', setupComplete: true },
+        }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    expect(dom.window._app.isChurchRegistered('parish.org')).toBe(true);
+    expect(dom.window._app.isChurchRegistered('other.org')).toBe(false);
+  });
+});
+
+// ============================================
+// SPREADSHEET PROVIDER
+// ============================================
+describe('Spreadsheet Provider', () => {
+  test('getProvider returns google provider by default', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const provider = dom.window._app.getProvider();
+    expect(provider.type).toBe('google');
+    expect(provider.name).toBe('Google Sheets');
+  });
+
+  test('getProvider returns microsoft provider when configured', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+        'mf-app-config': JSON.stringify({
+          setupComplete: true,
+          provider: 'microsoft',
+        }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const provider = dom.window._app.getProvider();
+    expect(provider.type).toBe('microsoft');
+    expect(provider.name).toBe('Microsoft 365 Excel');
+  });
+
+  test('google provider getSetupFields returns expected fields', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const fields = dom.window._app.SpreadsheetProviders.google.getSetupFields();
+    expect(fields).toContain('spreadsheetUrl');
+    expect(fields).toContain('apiUrl');
+  });
+
+  test('microsoft provider getSetupFields returns expected fields', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const fields = dom.window._app.SpreadsheetProviders.microsoft.getSetupFields();
+    expect(fields).toContain('msClientId');
+    expect(fields).toContain('msTenantId');
+    expect(fields).toContain('msWorkbookUrl');
+  });
+});
+
+// ============================================
+// PLATFORM SELECTION
+// ============================================
+describe('Platform Selection', () => {
+  test('platform cards exist in wizard step 1', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const googleCard = dom.window.document.getElementById('platform-google');
+    const msCard = dom.window.document.getElementById('platform-microsoft');
+    expect(googleCard).not.toBeNull();
+    expect(msCard).not.toBeNull();
+  });
+
+  test('google platform is selected by default', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const googleCard = dom.window.document.getElementById('platform-google');
+    expect(googleCard.classList.contains('selected')).toBe(true);
+  });
+
+  test('church gate view contains Google and Microsoft sign-in options', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const gateView = dom.window.document.getElementById('view-church-gate');
+    expect(gateView).not.toBeNull();
+    const googleBtn = gateView.querySelector('#g_id_signin_gate');
+    const msBtn = gateView.querySelector('#gate-ms-signin-btn');
+    expect(googleBtn).not.toBeNull();
+    expect(msBtn).not.toBeNull();
+  });
+});
+
+// ============================================
+// CHURCH GATE VIEW
+// ============================================
+describe('Church Gate', () => {
+  test('gate view is shown for first-time visitors with no setup', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const gateView = dom.window.document.getElementById('view-church-gate');
+    expect(gateView.classList.contains('hidden')).toBe(false);
+  });
+
+  test('gate view is hidden when setupComplete is true', async () => {
+    const dom = createTestDom({
+      localStorage: {
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    await waitForApp();
+    const gateView = dom.window.document.getElementById('view-church-gate');
+    expect(gateView.classList.contains('hidden')).toBe(true);
+  });
+
+  test('Microsoft 365 instructions exist in wizard step 3', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const msInstructions = dom.window.document.getElementById('setup-microsoft-instructions');
+    expect(msInstructions).not.toBeNull();
+    // Microsoft instructions hidden by default (Google selected)
+    expect(msInstructions.classList.contains('hidden')).toBe(true);
+  });
+
+  test('Google instructions visible by default in wizard step 3', () => {
+    const dom = createTestDom({
+      localStorage: {
+        'mf-app-config': JSON.stringify({ setupComplete: false }),
+        'ministry-fair-profile': JSON.stringify(DUMMY_PROFILE),
+      },
+      fetchMock: ministriesFetch(),
+    });
+    const googleInstructions = dom.window.document.getElementById('setup-google-instructions');
+    expect(googleInstructions).not.toBeNull();
+    expect(googleInstructions.classList.contains('hidden')).toBe(false);
   });
 });
